@@ -31,5 +31,5 @@ yarn-error.log*
 public/appneta-proxy.properties
 public/spectrum-proxy.properties
 
-# Per-developer Claude Code settings (project-wide settings.json is checked in)
-.claude/settings.local.json
+# Local dev tooling — not for this repo
+.claude/
