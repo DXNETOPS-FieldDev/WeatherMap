@@ -1,0 +1,47 @@
+{
+  "owmApiKey": "25f59e73f3785bfc0b07df69c1ea5080",
+  "mapDefaults": {
+    "center": [37.0902, -95.7129],
+    "zoom": 4
+  },
+  "clusterRadius": 40,
+  "odata": {
+    "topLimit": 500,
+    "resolution": "RATE"
+  },
+  "powerOutages": {
+    "apiUrl": "https://ornl.opendatasoft.com/api/explore/v2.1/catalog/datasets/odin-real-time-outages-county",
+    "maxRecords": 5000,
+    "refreshIntervalMs": 600000
+  },
+  "tunnels": {
+    "apiPath": "/pc/odata4/api/sdntunnels",
+    "lookbackSeconds": 3600,
+    "refreshIntervalMs": 60000,
+    "maxRecords": 5000,
+    "curveMagnitude": 0.9,
+    "thresholds": {
+      "packetLoss": [3, 4, 5],
+      "latency": [100, 300, 500],
+      "jitter": [100, 200, 300]
+    }
+  },
+  "appnetaPaths": {
+    "lookbackSeconds": 300,
+    "refreshIntervalMs": 60000,
+    "curveMagnitude": 0.9,
+    "thresholds": {
+      "latency": [100, 300, 500],
+      "dataLoss": [1, 3, 5],
+      "dataJitter": [10, 30, 50]
+    }
+  },
+  "includeAppNeta": false,
+  "includeSdwanControllers": false,
+  "showAlarmLegend": false,
+  "showTunnelLegend": true,
+  "showAppNetaPaths": true,
+  "showAppNetaLegend": true,
+  "showOrphanAppnetaMps": false,
+  "triageViewPageId": 1029043
+}

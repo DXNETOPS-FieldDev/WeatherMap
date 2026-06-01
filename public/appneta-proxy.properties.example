@@ -1,0 +1,39 @@
+# ============================================================================
+# AppNeta proxy configuration — read by appneta-proxy.jsp at startup.
+#
+# To use: copy this file to `appneta-proxy.properties` (in the same
+# directory) and fill in the values for your environment. The real file
+# is gitignored so the API token never ends up in source control.
+#
+# The servlet container must be restarted (or the JSP recompiled) for
+# changes to take effect.
+# ============================================================================
+
+# AppNeta REST base URL. Must end with a trailing slash.
+# Example: https://demo.pm.appneta.com/api/  (shared demo + customer dev)
+#          https://<your-tenant>.pm.appneta.com/api/
+appneta.base.url=https://CHANGE-ME.pm.appneta.com/api/
+
+# AppNeta organisation id. The proxy injects this on every request, so
+# the App View code never sees it and callers cannot query other orgs.
+# Get this from your AppNeta tenant admin (it's the numeric `orgId`
+# AppNeta uses to scope MPs and paths).
+appneta.org.id=CHANGE-ME
+
+# AppNeta API token. The proxy never sends this to the browser — it
+# uses it server-side to build an `Authorization: Token <key>` header.
+# Generate the token in AppNeta UI: user profile → API Access Tokens.
+# The token is per-user, scoped to whichever orgs that user has access to.
+#
+# On first request the JSP rewrites the token line with an {obfuscated}
+# prefix (so it isn't sitting in plaintext on disk). The prefix tells
+# the JSP on subsequent loads to decode the value rather than treat it
+# as raw. To rotate the token, replace the value (with or without
+# prefix) and restart the container — the JSP re-obfuscates on the
+# next request.
+appneta.token=CHANGE-ME
+
+# Upstream SSL verification. Public AppNeta tenants have valid certs so
+# this stays true. Flip to false only for an on-prem AppNeta deployment
+# with a self-signed cert (and ideally fix the trust store instead).
+appneta.ssl.verify=true

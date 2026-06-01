@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+WeatherMap/
+WeatherMap.zip
+
+# Python
+__pycache__/
+*.pyc
+
+# Vite / local caches
+.vite/
+*.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local proxy properties with credentials — copy from *.example and fill in.
+public/appneta-proxy.properties
+public/spectrum-proxy.properties
+
+# Per-developer Claude Code settings (project-wide settings.json is checked in)
+.claude/settings.local.json

@@ -1,0 +1,688 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.app {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+/* Status banner — shows loading/error/count above the map */
+.status-banner {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.status-loading { background: #f0f0f0; color: #555; }
+.status-error   { background: #ffd4d4; color: #a00; }
+.status-empty   { background: #fff4d4; color: #806000; }
+.status-ok      { background: rgba(255, 255, 255, 0.92); color: #333; }
+
+/* Device markers (Leaflet divIcons) */
+.device-marker {
+  background: transparent !important;
+  border: none !important;
+}
+.device-marker-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* CPU metric bar in the popup */
+.cpu-metric {
+  margin: 6px 0;
+}
+.cpu-label {
+  margin: 0 0 4px 0;
+  font-size: 13px;
+}
+.cpu-bar-track {
+  height: 10px;
+  width: 100%;
+  background: #e8e8e8;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.cpu-bar-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+.metrics-footnote {
+  margin-top: 6px;
+  color: #888;
+}
+
+/* Tabbed popup */
+.tabbed-popup {
+  min-width: 260px;
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid #d0d0d0;
+  margin: -8px -12px 8px -12px;
+}
+
+.tab {
+  flex: 1;
+  padding: 8px 10px;
+  border: none;
+  background: #f4f4f4;
+  cursor: pointer;
+  font-size: 12px;
+  color: #555;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.tab:hover {
+  background: #ebebeb;
+}
+
+.tab.active {
+  background: #fff;
+  color: #0078a8;
+  border-bottom-color: #0078a8;
+}
+
+.tab-content {
+  padding-top: 4px;
+}
+
+.tab-content p {
+  margin: 5px 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.tab-content .error {
+  color: #c0392b;
+}
+
+.triage-link {
+  margin-left: 28px;
+  vertical-align: middle;
+}
+
+.triage-link img {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.triage-jump {
+  margin: 0 0 8px;
+}
+
+.triage-jump a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.tab-content .placeholder {
+  color: #888;
+  font-style: italic;
+}
+
+/* SD-WAN tunnel popup — one entry per underlying tunnel record. */
+.tunnel-list {
+  max-height: 280px;
+  overflow-y: auto;
+  font-size: 12px;
+}
+
+.tunnel-row {
+  padding: 5px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.tunnel-row:last-child {
+  border-bottom: none;
+}
+
+/* Subtle tint when a sub-tunnel's worst metric crosses a threshold band.
+   Same palette + alpha as the legend's row tinting for visual parity. */
+.tunnel-row.tunnel-row-minor { background: rgba(251, 192, 45, 0.14); }
+.tunnel-row.tunnel-row-warn  { background: rgba(245, 124,  0, 0.14); }
+.tunnel-row.tunnel-row-bad   { background: rgba(211,  47, 47, 0.16); }
+
+.tunnel-name {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  color: #444;
+  word-break: break-all;
+  margin-bottom: 2px;
+}
+
+.tunnel-metrics {
+  color: #666;
+}
+
+.outage-warning {
+  background: #fff8e1;
+  border-left: 3px solid #f57c00;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  border-radius: 2px;
+}
+
+.outage-warning strong {
+  color: #b15400;
+}
+
+.outage-warning small {
+  color: #5d4037;
+}
+
+.weather-headline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.weather-headline strong {
+  font-size: 18px;
+}
+
+.alarm-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.alarm-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 13px;
+  line-height: 1.4;
+  border-bottom: 1px solid #eee;
+}
+
+.alarm-item:last-child {
+  border-bottom: none;
+}
+
+.alarm-severity {
+  display: inline-block;
+  min-width: 56px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.alarm-title {
+  flex: 1;
+  word-break: break-word;
+}
+
+/* Tighten up Leaflet's default popup padding */
+.leaflet-popup-content {
+  margin: 10px 14px;
+  min-width: 260px;
+}
+
+/* Cluster bubble — colored by the highest-severity device inside. */
+.device-cluster {
+  background: transparent;
+}
+
+.device-cluster-bubble {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+/* Alarm-severity legend (bottom-right). To remove the legend entirely,
+   delete the <Legend /> usage in App.jsx; this block can stay or go. */
+.severity-legend {
+  background: #fff;
+  padding: 8px 28px 8px 10px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+  font-size: 12px;
+  line-height: 1.4;
+  position: relative;
+  min-width: 130px;
+}
+
+.severity-legend .legend-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  cursor: move;
+  user-select: none;
+}
+
+.severity-legend .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0;
+}
+
+.severity-legend .legend-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.severity-legend .legend-close {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  cursor: pointer;
+  color: #888;
+  line-height: 1;
+  padding: 2px 4px;
+}
+
+.severity-legend .legend-close:hover {
+  color: #333;
+}
+
+/* SDWAN-style "Sites" panel: centered title, threshold gradient + labels for
+   one metric at a time, arrow-cycle to switch metrics, table of per-site
+   averages. Horizontally resizable — wider than WIDE_THRESHOLD_PX (380) flips
+   the .wide class on and the table shows all 3 metric columns instead of
+   just the active one. Shares the close/title behavior of .severity-legend. */
+.tunnel-legend {
+  background: #fff;
+  padding: 8px 28px 10px 10px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+  font-size: 12px;
+  line-height: 1.3;
+  position: relative;
+  min-width: 240px;
+  max-width: 560px;
+  min-height: 160px;
+  resize: both;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Fixed-height chrome (title, bar, thresholds, selector) keeps its natural
+   height; only the table-wrap absorbs/releases vertical space when the user
+   drags the panel taller or shorter. */
+.tunnel-legend > * {
+  flex-shrink: 0;
+}
+
+.tunnel-legend .legend-title {
+  font-weight: 600;
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 6px;
+  cursor: move;
+  user-select: none;
+}
+
+.tunnel-legend .legend-close {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  cursor: pointer;
+  color: #888;
+  line-height: 1;
+  padding: 2px 4px;
+}
+
+.tunnel-legend .legend-close:hover {
+  color: #333;
+}
+
+.tunnel-legend-bands {
+  display: flex;
+  height: 10px;
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 0 20px;
+}
+
+.tunnel-legend-band {
+  flex: 1;
+}
+
+/* Threshold values sit at the boundaries between the 4 color bands
+   (i.e. at 25%, 50%, 75% of the bar). The bar has 20px side margins so the
+   25% / 75% labels don't get clipped at the panel edge. */
+.tunnel-legend-thresholds {
+  position: relative;
+  height: 14px;
+  margin: 1px 20px 0;
+}
+
+.tunnel-legend-thresholds span {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: #555;
+  white-space: nowrap;
+}
+
+.tunnel-legend-thresholds span:nth-child(1) { left: 25%; }
+.tunnel-legend-thresholds span:nth-child(2) { left: 50%; }
+.tunnel-legend-thresholds span:nth-child(3) { left: 75%; }
+
+.tunnel-legend-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 6px 0 8px;
+}
+
+.tunnel-legend-arrow {
+  border: none;
+  background: transparent;
+  color: #555;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 6px;
+  line-height: 1;
+}
+
+.tunnel-legend-arrow:hover {
+  color: #000;
+}
+
+.tunnel-legend-metric-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.tunnel-legend-filter {
+  margin: 0 0 8px;
+}
+
+.tunnel-legend-filter-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 3px 6px 3px 24px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.5' y2='16.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 7px center;
+  background-size: 14px 14px;
+}
+
+/* Vertical-scroll wrapper: caps natural growth at ~5 rows (max-height) but
+   also shrinks below that when the user drags the panel shorter (flex). The
+   table header is sticky so it stays visible while body rows scroll. */
+.tunnel-legend-table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 175px;
+  overflow-y: auto;
+}
+
+.tunnel-legend-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.tunnel-legend-table th,
+.tunnel-legend-table td {
+  padding: 4px 6px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.tunnel-legend-table .metric-col {
+  text-align: right;
+}
+
+/* Per-device visibility checkbox column. Narrow, centered, no extra
+   horizontal padding so it stays tight against the Location column. */
+.tunnel-legend-table .tunnel-legend-check-col {
+  width: 24px;
+  padding: 4px 0;
+  text-align: center;
+}
+
+.tunnel-legend-table .tunnel-legend-check-col input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.tunnel-legend-table th {
+  font-weight: 500;
+  color: #555;
+  background: #f2f2f2;
+  border-bottom: 1px solid #ddd;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.tunnel-legend-table tbody tr + tr td {
+  border-top: 1px solid #f0f0f0;
+}
+
+/* Subtle row tint when a site's worst metric crosses a threshold band.
+   Color matches the threshold-bar band; alpha kept low so the tint is a
+   hint, not a dominant visual. Applied per <td> so the row separator
+   border still shows cleanly above it. */
+.tunnel-legend-table tr.tunnel-row-minor td { background: rgba(251, 192, 45, 0.14); }
+.tunnel-legend-table tr.tunnel-row-warn  td { background: rgba(245, 124,  0, 0.14); }
+.tunnel-legend-table tr.tunnel-row-bad   td { background: rgba(211,  47, 47, 0.16); }
+
+/* Narrow mode: only the active metric column shows. Wide mode (when the
+   container is dragged past WIDE_THRESHOLD_PX in TunnelLegend.jsx, which
+   adds the .wide class) reveals all 3. */
+.tunnel-legend-table .metric-col { display: none; }
+.tunnel-legend-table .metric-col.active { display: table-cell; }
+.tunnel-legend.wide .tunnel-legend-table .metric-col { display: table-cell; }
+
+.tunnel-legend-empty {
+  margin-top: 8px;
+  color: #888;
+  font-style: italic;
+}
+
+/* Default popup border — subtle gray frame so non-severity popups (tunnel
+   link popup, etc.) have a defined edge. Severity-tagged popups below
+   override with a thicker colored border. */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  border: 1px solid #d0d0d0;
+}
+
+/* Subtle severity-colored border around the popup. The class is applied
+   to the popup root by TabbedPopup; we color the visible wrapper + tip. */
+.popup-severity-critical .leaflet-popup-content-wrapper,
+.popup-severity-critical .leaflet-popup-tip {
+  border: 2px solid #d32f2f;
+}
+.popup-severity-major .leaflet-popup-content-wrapper,
+.popup-severity-major .leaflet-popup-tip {
+  border: 2px solid #f57c00;
+}
+.popup-severity-minor .leaflet-popup-content-wrapper,
+.popup-severity-minor .leaflet-popup-tip {
+  border: 2px solid #fbc02d;
+}
+.popup-severity-initial .leaflet-popup-content-wrapper,
+.popup-severity-initial .leaflet-popup-tip {
+  border: 2px solid #1976d2;
+}
+.popup-severity-normal .leaflet-popup-content-wrapper,
+.popup-severity-normal .leaflet-popup-tip {
+  border: 2px solid #388e3c;
+}
+
+/* Rainviewer toggle button: icon + "Radar" label. The !important overrides
+   are needed because Leaflet's .leaflet-bar a defaults to a fixed 26px
+   square — we want a wider, labeled button. Inline SVG data URI works
+   under the portal CSP (data: is whitelisted in img-src). */
+.leaflet-control-rainviewer-button {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  width: auto !important;
+  height: auto !important;
+  padding: 6px 10px !important;
+  line-height: 1 !important;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333 !important;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Lift the radar control 50px above the bottom edge of the 700px-tall App
+   View iframe (~7% of map height). The title button doubles as the drag
+   handle (L.Draggable in RainviewerControl.jsx). */
+.leaflet-control-rainviewer {
+  margin-bottom: 50px !important;
+}
+
+.leaflet-control-rainviewer-button {
+  cursor: move;
+}
+
+/* Expanded control panel: stack the controls vertically so the panel stays
+   narrow. Row 1 = the wrapped buttons row (prev / play / next inside a flex
+   div, plugin-side). Rows 2-3 = label + slider, with sliders sitting right
+   next to their labels in a 2-col grid (no empty column from the buttons). */
+.leaflet-control-rainviewer-container {
+  display: grid !important;
+  grid-template-columns: auto 1fr;
+  gap: 4px 6px;
+  align-items: center;
+  padding: 6px 8px;
+  min-width: 200px;
+  max-width: 240px;
+}
+
+.leaflet-control-rainviewer-buttons {
+  grid-column: 1 / 3;
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+}
+
+.leaflet-control-rainviewer-positionslider,
+.leaflet-control-rainviewer-opacityslider {
+  width: 100%;
+}
+
+/* Two stacked LayersControl widgets at top-right: tint + corner letter
+   so users can tell the otherwise-identical stack-of-papers icons apart.
+   The native browser tooltip (title attribute, applied via JS) gives the
+   full name on hover.
+
+   Style the `.leaflet-control-layers-toggle` (the visible <a>) — applying
+   background to the outer container gets hidden by the toggle. Also
+   visible only while collapsed: once expanded Leaflet hides the toggle
+   and shows the list, so these styles auto-disappear on hover. */
+.layers-control-network .leaflet-control-layers-toggle,
+.layers-control-env     .leaflet-control-layers-toggle {
+  position: relative;
+}
+.layers-control-network .leaflet-control-layers-toggle {
+  background-color: #bbdefb;
+}
+.layers-control-env     .leaflet-control-layers-toggle {
+  background-color: #ffe0b2;
+}
+/* Badge: full-word strip across the bottom of the toggle. Reads the
+   `data-badge` attribute set by configureLayersControl(), so the JS
+   owns the text and the CSS owns the look. White-ish background keeps
+   the text readable on top of the colored toggle background. */
+.layers-control-network .leaflet-control-layers-toggle::after,
+.layers-control-env     .leaflet-control-layers-toggle::after {
+  content: attr(data-badge);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  font-size: 7px;
+  font-weight: 800;
+  line-height: 9px;
+  text-align: center;
+  letter-spacing: -0.2px;
+  background: rgba(255, 255, 255, 0.85);
+  pointer-events: none;
+}
+.layers-control-network .leaflet-control-layers-toggle::after { color: #0d47a1; }
+.layers-control-env     .leaflet-control-layers-toggle::after { color: #e65100; }
+
+/* Custom hover tooltip (bold + larger than the browser default). Reads
+   data-tooltip via attr(). Pops out to the LEFT of the icon since both
+   icons sit flush against the right edge of the map. */
+.layers-control-network .leaflet-control-layers-toggle:hover::before,
+.layers-control-env     .leaflet-control-layers-toggle:hover::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 8px);
+  transform: translateY(-50%);
+  padding: 5px 10px;
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.leaflet-control-rainviewer-icon {
+  display: inline-block;
+  width: 26px;
+  height: 26px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='1.8' stroke-linecap='round'><circle cx='12' cy='12' r='3'/><circle cx='12' cy='12' r='7'/><circle cx='12' cy='12' r='11'/><line x1='12' y1='12' x2='20' y2='4'/></svg>");
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: contain;
+}
