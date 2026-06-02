@@ -26,7 +26,7 @@ up another tool."*
 ### See what's down — and where
 
 - **One pin per device, colored by alarm severity.** Critical sites pop
-  red the moment Spectrum sees the event; Major/Minor/Initial roll up
+  red the moment DX NetOps sees the event; Major/Minor/Initial roll up
   the same way. No alarm list to scan — the map *is* the alarm list.
 - **Marker clustering** at low zoom rolls nearby sites into a bubble
   that inherits the worst severity inside it, so a single red dot at
