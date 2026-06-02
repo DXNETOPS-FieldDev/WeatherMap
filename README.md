@@ -112,7 +112,7 @@ up another tool."*
 
 1. **Download** `WeatherMap.zip` from this repository's Releases (or
    build it yourself — see [Build for deployment](#build-for-deployment)).
-2. **Log in** to DX NetOps Performance Center as a user with the
+2. **Log in** to DX NetOps Portal as a user with the
    **Administrator** role.
 3. **Administration → Configuration Settings → App Deployment.**
 4. In the **App** field, browse and select `WeatherMap.zip`, then click
