@@ -61,7 +61,7 @@ up another tool."*
 
 ### Visualize your SD-WAN, not just your devices
 
-- **SD-WAN tunnel overlay** — every Viptela / Versa / generic SD-WAN
+- **SD-WAN tunnel overlay** — every DX NetOps managed SD-WAN
   tunnel between branches drawn on the map as a line between the two
   device pins, **colored by jitter / latency / packet loss** so you can
   see at a glance where the WAN overlay is healthy and where it's
