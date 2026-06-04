@@ -30,6 +30,7 @@ yarn-error.log*
 # Local proxy properties with credentials — copy from *.example and fill in.
 public/appneta-proxy.properties
 public/spectrum-proxy.properties
+public/da-proxy.properties
 
 # Local dev tooling — not for this repo
 .claude/

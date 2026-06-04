@@ -9,6 +9,7 @@ import { fetchSpectrumAlarmsForDevices } from './api/spectrum.js'
 import { fetchActiveOutages, correlateOutagesToDevices } from './api/odin.js'
 import { fetchTunnels } from './api/tunnels.js'
 import { fetchAppNetaPaths, fetchAppNetaMpDevices } from './api/appneta.js'
+import { fetchNetworkPathDetails } from './api/networkpath.js'
 import { getConfig } from './lib/config.js'
 import DeviceMarker from './components/DeviceMarker.jsx'
 import RainviewerControl from './components/RainviewerControl.jsx'
@@ -229,7 +230,35 @@ export default function App() {
     for (const m of appnetaMps) if (m.name) byName.set(m.name, m)
     const load = () => {
       fetchAppNetaPaths(byName, { debug: params.debug })
-        .then((data) => { if (!cancelled) setAppnetaPaths(data) })
+        .then(async (data) => {
+          if (cancelled) return
+          // Enrich each path with PC metadata (LocalID for the popup
+          // redirector link, plus PC's Description and CreateTime for
+          // display). PC OData doesn't expose path inventory, so we
+          // get this from the Data Aggregator. Best-effort: if DA is
+          // unreachable, paths still render without the deep-link or
+          // extra metadata.
+          try {
+            const details = await fetchNetworkPathDetails(data, {
+              debug: params.debug,
+            })
+            if (cancelled) return
+            setAppnetaPaths(
+              data.map((p) => {
+                const d = details.get(Number(p.id))
+                return {
+                  ...p,
+                  localId: d?.localId ?? null,
+                  pcDescription: d?.description ?? null,
+                  pcCreatedAt: d?.createTime ?? null,
+                }
+              }),
+            )
+          } catch (e) {
+            console.warn('DA networkpath mapping failed:', e.message)
+            if (!cancelled) setAppnetaPaths(data)
+          }
+        })
         .catch((e) => console.warn('AppNeta path fetch failed:', e.message))
     }
     load()

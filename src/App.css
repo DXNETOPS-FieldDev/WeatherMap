@@ -177,6 +177,18 @@ body,
   color: #666;
 }
 
+.path-popup-route {
+  color: #555;
+}
+
+.path-popup-created {
+  margin-top: 6px;
+  padding-top: 4px;
+  border-top: 1px solid #eee;
+  font-size: 11px;
+  color: #888;
+}
+
 .outage-warning {
   background: #fff8e1;
   border-left: 3px solid #f57c00;

@@ -75,6 +75,14 @@ function fmt(n, suffix = '') {
   return `${Math.round(n * 100) / 100}${suffix}`
 }
 
+function formatDate(s) {
+  if (!s) return ''
+  const d = new Date(s)
+  return isNaN(d.getTime())
+    ? s
+    : d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
 // Hash → [-1, 1] used to bow each line in a different direction. AppNeta
 // has many MP→same-target lines (e.g. 4 MPs all pointing at chicago-isp-1,
 // or one MP with two paths to two ISP labels at the same coordinate), so
@@ -175,7 +183,19 @@ export default function AppNetaLayer({ paths, appnetaMps }) {
         >
           <Popup>
             <div className="appneta-popup">
-              <strong>{m.name}</strong>
+              <strong>
+                {m.globalId != null ? (
+                  <a
+                    href={`/pc/redirector?ItemID=${m.globalId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {m.name}
+                  </a>
+                ) : (
+                  m.name
+                )}
+              </strong>
               <br />
               <small>AppNeta Monitoring Point</small>
               {m.ip && <><br /><small>{m.ip}</small></>}
@@ -229,9 +249,27 @@ export default function AppNetaLayer({ paths, appnetaMps }) {
           >
             <Popup>
               <div className="tunnel-popup">
-                <strong>{p.sourceName} → {p.target}</strong>
+                <strong>
+                  {p.localId != null ? (
+                    <a
+                      href={`/pc/redirector?SourceType=262144&LocalID=${p.localId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {p.sourceName} → {p.target}
+                    </a>
+                  ) : (
+                    <>{p.sourceName} → {p.target}</>
+                  )}
+                </strong>
                 <br />
                 <small>{p.protocol}{p.ispName ? ` · ${p.ispName}` : ''}{p.dualEnded ? ' · dual-ended' : ''}</small>
+                {p.pcDescription && (
+                  <>
+                    <br />
+                    <small className="path-popup-route">{p.pcDescription.replace(' <-> ', ' ↔ ')}</small>
+                  </>
+                )}
                 <hr />
                 <div className={`tunnel-row${tintCls}`}>
                   <div className="tunnel-metrics">
@@ -241,6 +279,9 @@ export default function AppNetaLayer({ paths, appnetaMps }) {
                     RTT: {fmt(p.rtt, ' ms')} · MOS: {fmt(p.mos)} · Voice loss: {fmt(p.voiceLoss, '%')} · Voice jitter: {fmt(p.voiceJitter, ' ms')}
                   </div>
                 </div>
+                {p.pcCreatedAt && (
+                  <div className="path-popup-created">Created {formatDate(p.pcCreatedAt)}</div>
+                )}
               </div>
             </Popup>
           </Polyline>

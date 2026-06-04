@@ -28,7 +28,7 @@ export async function fetchAppNetaMpDevices({ id, debug } = {}) {
   const { topLimit } = getConfig().odata
   const url =
     '/pc/odata4/api/devices' +
-    '?$select=ID,Name,PrimaryIPAddress,Latitude,Longitude' +
+    '?$select=GlobalID,ID,Name,PrimaryIPAddress,Latitude,Longitude' +
     '&$filter=(Latitude ne null)' +
       ` and (groups/any(L1:L1/ID eq ${id}))` +
       " and (contains(tolower(Name),'vk35') or " +
@@ -47,6 +47,7 @@ export async function fetchAppNetaMpDevices({ id, debug } = {}) {
     .filter((row) => row.ID && row.Name && row.Latitude != null && row.Longitude != null)
     .map((row) => ({
       id: row.ID,
+      globalId: row.GlobalID,
       name: row.Name,
       ip: row.PrimaryIPAddress,
       latitude: Number(row.Latitude),

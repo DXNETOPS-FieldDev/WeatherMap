@@ -58,6 +58,11 @@ up another tool."*
   to the device name and an "Investigate in Triage View →" link inside
   the Alarms tab take operators one click from *"the map shows red"* to
   the full per-device drill-down in Performance Center.
+- **Click-through from MPs and paths into PC** — AppNeta Monitoring
+  Point names link straight to their PC inventory page, and Network
+  Path titles link to the per-path detail view in PC. Operators jump
+  from *"this path looks bad"* to the full drill-down without leaving
+  the map.
 
 ### Visualize your SD-WAN, not just your devices
 
@@ -79,6 +84,10 @@ up another tool."*
   degradation and overlay degradation read the same way at a glance.
 - **MP filter** in the legend for narrowing long path lists down to the
   ones you care about.
+- **Path popup with PC metadata** — clicking a path line shows the
+  geographic route (e.g. `"Miami, FL ↔ Seattle, WA"`), the date PC
+  first saw the path, and the live latency / loss / jitter / MOS — both
+  the AppNeta-measured metrics and PC's own path inventory in one place.
 
 ### Operator-friendly controls
 
@@ -196,7 +205,28 @@ cp appneta-proxy.properties.example appneta-proxy.properties
 | `appneta.token` | AppNeta API token. Generate in AppNeta UI under user profile → API Access Tokens. Browser never sees it. Auto-obfuscated on disk after first request. |
 | `appneta.ssl.verify` | `true` for public AppNeta tenants. Only flip to `false` for on-prem AppNeta with a self-signed cert. |
 
-Changes to either `.properties` file require the servlet container to
+### `da-proxy.properties` — Data Aggregator WebServices *(optional, paired with AppNeta)*
+
+Only needed if you want the **Network Path → PC deep-link** in the
+AppNeta path popup. PC OData doesn't expose AppNeta path inventory,
+so we look it up via the Data Aggregator's REST WebServices. Same
+template pattern:
+
+```bash
+cp da-proxy.properties.example da-proxy.properties
+# then edit da-proxy.properties — fill in your values
+```
+
+| Key | What to set |
+|---|---|
+| `da.target.url` | Full URL of the DA's `/rest/sdn/networkpath/filtered/` endpoint, reached through your DA-facing nginx (e.g. `https://dev-netopsda.example.com/rest/sdn/networkpath/filtered/`). Direct calls to the internal DA host are typically unreachable from PC's servlet container — go through the public nginx. **Requires an `/rest/` `location` block on the DA-facing nginx** — see [DA REST endpoint nginx requirement](#data-aggregator-rest-endpoint) below. |
+| `da.user` / `da.password` | Same credentials you use to log into NetOps Portal. Browser never sees them. Auto-obfuscated on disk after the first request. |
+| `da.ssl.verify` | `true` for production with a valid cert, `false` for self-signed dev certs. |
+
+If this file is missing the path popup just falls back to a plain-text
+title — paths still render, links don't.
+
+Changes to any `.properties` file require the servlet container to
 recompile the JSP (typically a Tomcat / Jetty restart).
 
 ---
@@ -235,10 +265,40 @@ The whitelisted origins:
 | `https://tilecache.rainviewer.com` | img-src | Rainviewer radar tile images |
 | `https://ornl.opendatasoft.com` | connect-src | ODIN power-outage API |
 
-The Spectrum and AppNeta APIs don't need CSP entries — they're proxied
-same-origin through the shipped JSPs.
+The Spectrum, AppNeta, and Data Aggregator APIs don't need CSP entries
+— they're proxied same-origin through the shipped JSPs.
 
 Apply with `sudo nginx -t && sudo systemctl reload nginx`.
+
+---
+
+## Data Aggregator REST endpoint
+
+*(Skip this section if you're not using the AppNeta path deep-link — i.e. you
+haven't set up `da-proxy.properties`.)*
+
+The Data Aggregator typically sits behind a separate nginx server
+block (`dev-netopsda.example.com` in the canonical dev landscape),
+which by default only forwards `/odataquery` and `/sso`. Add a
+`location /rest/` block so the path-inventory endpoint is reachable:
+
+```nginx
+# In the DA-facing nginx server { ... } block:
+location /rest/ {
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-For  $remote_addr;
+    proxy_set_header Host             $host:$server_port;
+    proxy_pass https://<DA-internal-host>:8582/rest/;
+}
+```
+
+Notes:
+- Port **8582** is correct in the verified landscape (Broadcom techdocs
+  say 8581 — *they're wrong for this PC version*; verify before
+  assuming).
+- Once added, the URL set in `da.target.url` becomes
+  `https://<your-DA-frontend-host>/rest/sdn/networkpath/filtered/`.
+- Apply with `sudo nginx -t && sudo systemctl reload nginx`.
 
 ---
 
@@ -303,6 +363,15 @@ for the group, or the proxied call failed. Check DevTools → Network for
 missing or has a bad token. A 200 with empty results means the
 configured org id has no MPs visible to the token's user.
 
+**Path titles don't link to PC** — the DA proxy isn't responding.
+DevTools → Network, look for `da-proxy.jsp`. A 502 usually means the
+DA-facing nginx hasn't been configured with a `location /rest/` block
+(see [Data Aggregator REST endpoint](#data-aggregator-rest-endpoint)),
+or the upstream port in that block is wrong (verified port is **8582**,
+not 8581 as some docs say). A 500 means `da-proxy.properties` is
+missing or unreadable. A 200 with an empty `<NetworkPathList/>` means
+the DA found no matching paths for the AppNeta path IDs sent.
+
 **"Investigate in Triage View" link doesn't appear** —
 `triageViewPageId` in `runtime-config.json` is null. Set it to the
 Triage View page id for your environment.
@@ -347,6 +416,8 @@ WeatherMap/
 │   ├── spectrum-proxy.properties.example
 │   ├── appneta-proxy.jsp               ← AppNeta same-origin proxy
 │   ├── appneta-proxy.properties.example
+│   ├── da-proxy.jsp                    ← Data Aggregator WebServices proxy
+│   ├── da-proxy.properties.example
 │   ├── topo-icon.png                   ← Triage View deep-link icon
 │   ├── appneta-mp-icon.png             ← AppNeta MP bullseye icon
 │   ├── appneta-target-icon.png         ← AppNeta target globe icon
@@ -360,6 +431,7 @@ WeatherMap/
     │   ├── spectrum.js                 ← alarms via proxy
     │   ├── tunnels.js                  ← SD-WAN tunnels via PC OData
     │   ├── appneta.js                  ← AppNeta MPs + paths via proxy
+    │   ├── networkpath.js              ← AppNeta-pathId → PC-LocalID via DA proxy
     │   └── odin.js                     ← power outages from ODIN
     ├── hooks/
     │   └── useUrlParams.js             ← parses id, startTime, endTime, debug

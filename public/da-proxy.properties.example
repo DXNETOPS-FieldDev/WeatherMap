@@ -1,0 +1,38 @@
+# ============================================================================
+# Data Aggregator proxy configuration — read by da-proxy.jsp at startup.
+#
+# To use: copy this file to `da-proxy.properties` (in the same
+# directory) and fill in the values for your environment. The real file
+# is gitignored so credentials never end up in source control.
+#
+# The servlet container must be restarted (or the JSP recompiled) for
+# changes to take effect.
+#
+# This proxy is used only to call the Data Aggregator's
+# /rest/sdn/networkpath/filtered/ endpoint. It maps AppNeta path ids
+# to PC SdnItemIDs so the App View's network-path popup can link into
+# the right PC item via the redirector.
+# ============================================================================
+
+# Full Data Aggregator WebServices URL the proxy POSTs to. Must include
+# scheme, host, port (if non-standard), and path. No trailing query string.
+# Example: https://dev-oa4noda.example.com/rest/sdn/networkpath/filtered/
+da.target.url=https://CHANGE-ME-da-host/rest/sdn/networkpath/filtered/
+
+# NetOps Portal credentials. The DA uses the same Basic auth as the
+# Portal login. The proxy never sends these to the browser — it uses
+# them server-side to build an `Authorization: Basic <...>` header.
+#
+# On first request, the JSP rewrites the password line with an
+# {obfuscated} prefix (so it isn't sitting in plaintext on disk). The
+# prefix tells the JSP on subsequent loads to decode the value rather
+# than treat it as raw. To rotate, replace the value (with or without
+# prefix) and restart the container — the JSP re-obfuscates on the
+# next request.
+da.user=CHANGE-ME
+da.password=CHANGE-ME
+
+# Disable upstream SSL verification (true for self-signed dev certs).
+# For production, install the DA cert in the container's truststore
+# and set this to false.
+da.ssl.verify=false
