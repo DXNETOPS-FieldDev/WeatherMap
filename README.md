@@ -11,7 +11,7 @@ wrong, *where*, in the first second of looking.
 
 ## Why operators love it
 
-Network outages don't happen in spreadsheets — they happen in physcal places.
+Network outages don't happen in spreadsheets — they happen in physical places.
 A circuit slows down because there's a thunderstorm sitting on top of the
 branch. Sites in a metro go dark because a utility cut power for
 maintenance. A tunnel between two POPs starts dropping packets after a
