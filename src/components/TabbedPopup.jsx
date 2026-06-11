@@ -189,6 +189,9 @@ export default function TabbedPopup({ device, apiKey }) {
                         {label}
                       </span>
                       <span className="alarm-title">
+                        {a.component && (
+                          <div className="alarm-component">Interface · {a.component}</div>
+                        )}
                         {a.title || '(no title)'}
                         {a.occurredAt && (
                           <><br /><small>{a.occurredAt.toLocaleString()}</small></>

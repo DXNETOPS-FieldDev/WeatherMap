@@ -1,11 +1,14 @@
 import { useMemo } from 'react'
 import { Marker } from 'react-leaflet'
 import L from 'leaflet'
-import { topSeverity } from '../api/spectrum.js'
+import { topDeviceSeverity, topComponentSeverity } from '../api/spectrum.js'
 import TabbedPopup from './TabbedPopup.jsx'
 
-// Marker color follows the most-severe alarm on the device. Devices with
-// no actionable alarms get the "Normal" green.
+// Marker dot color follows the device's own alarm severity. A small corner
+// badge is added when the device has *component* (interface) alarms — same
+// visual convention as topology / OneClick: device-fine + subcomponent-issue
+// reads as "green disc with a colored dot" rather than turning the whole
+// marker orange.
 const SEVERITY_COLOR = {
   Critical: '#d32f2f',
   Major: '#f57c00',
@@ -13,19 +16,25 @@ const SEVERITY_COLOR = {
   Initial: '#1976d2',
 }
 const NORMAL_COLOR = '#388e3c'
+// Maintenance / Suppressed are intentional non-issues and don't badge.
+const BADGE_SEVERITIES = new Set(['Critical', 'Major', 'Minor', 'Initial'])
 
 const iconCache = new Map()
 
-function getIcon(color, severity) {
-  const key = `${color}|${severity}`
+function getIcon(color, severity, badgeColor, badgeSeverity) {
+  const key = `${color}|${severity}|${badgeColor || ''}|${badgeSeverity || ''}`
   if (!iconCache.has(key)) {
+    const badge = badgeColor
+      ? `<div class="device-marker-badge" style="background:${badgeColor}" ` +
+        `data-severity="${badgeSeverity}"></div>`
+      : ''
     iconCache.set(
       key,
       L.divIcon({
         className: 'device-marker',
         html:
           `<div class="device-marker-dot" style="background:${color}" ` +
-          `data-severity="${severity}"></div>`,
+          `data-severity="${severity}">${badge}</div>`,
         iconSize: [18, 18],
         iconAnchor: [9, 9],
         popupAnchor: [0, -9],
@@ -37,9 +46,16 @@ function getIcon(color, severity) {
 
 export default function DeviceMarker({ device, weatherApiKey }) {
   const icon = useMemo(() => {
-    const top = topSeverity(device.alarms)
-    const color = SEVERITY_COLOR[top] || NORMAL_COLOR
-    return getIcon(color, top || 'Normal')
+    const deviceTop = topDeviceSeverity(device.alarms)
+    const color = SEVERITY_COLOR[deviceTop] || NORMAL_COLOR
+    const componentTop = topComponentSeverity(device.alarms)
+    const showBadge = BADGE_SEVERITIES.has(componentTop)
+    return getIcon(
+      color,
+      deviceTop || 'Normal',
+      showBadge ? SEVERITY_COLOR[componentTop] : null,
+      showBadge ? componentTop : null,
+    )
   }, [device.alarms])
 
   return (

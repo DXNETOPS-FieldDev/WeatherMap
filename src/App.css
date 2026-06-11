@@ -43,6 +43,17 @@ body,
   border-radius: 50%;
   border: 2px solid white;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+.device-marker-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid white;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
 }
 
 /* CPU metric bar in the popup */
@@ -251,6 +262,13 @@ body,
 .alarm-title {
   flex: 1;
   word-break: break-word;
+}
+
+.alarm-component {
+  font-size: 11px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 2px;
 }
 
 /* Tighten up Leaflet's default popup padding */
