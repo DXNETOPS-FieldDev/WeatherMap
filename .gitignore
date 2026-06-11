@@ -34,3 +34,7 @@ public/da-proxy.properties
 
 # Local dev tooling — not for this repo
 .claude/
+
+# One-off probe scripts with embedded credential paths — local only
+probe_b.py
+probe_iface_alarms.py
