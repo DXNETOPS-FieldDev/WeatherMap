@@ -1,4 +1,4 @@
-# NetOps WeatherMap — App View for DX NetOps Performance Management
+# NetOps WeatherMap — App View for DX NetOps Portal
 
 A geographic, single-pane operations view that puts your network **on the
 map** — devices, SD-WAN tunnels, AppNeta paths, alarms, weather, and
