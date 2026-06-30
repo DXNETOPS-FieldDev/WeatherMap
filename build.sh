@@ -6,21 +6,22 @@
 # Make executable once with:
 #     chmod +x build.sh
 # Then run with:
-#     ./build.sh
-#
-# Optional: set SCP_TARGET to scp the resulting WeatherMap.zip somewhere.
-#   SCP_TARGET=user@host:/path ./build.sh   # copy to that location
-#   SCP_TARGET=none ./build.sh              # skip the scp step
-#   ./build.sh                              # uses the default below
+#     SCP_TARGET=user@host:/path ./build.sh   # build + scp to that location
+#     SCP_TARGET=none ./build.sh              # build only, no scp
 
 set -euo pipefail
 
-SCP_TARGET="${SCP_TARGET:-omar.ocampo@34.168.120.10:~/.}"
-
-# Sanity check — make sure we're in the project root
 if [[ ! -f package.json ]]; then
     echo "Error: no package.json found in $(pwd)" >&2
     echo "Run this script from the WeatherMap-NetOps project root." >&2
+    exit 1
+fi
+
+if [[ -z "${SCP_TARGET:-}" ]]; then
+    echo "Error: SCP_TARGET is not set." >&2
+    echo "" >&2
+    echo "  Example: export SCP_TARGET=<user>@<portal-host>:~/." >&2
+    echo "  Skip:    export SCP_TARGET=none" >&2
     exit 1
 fi
 

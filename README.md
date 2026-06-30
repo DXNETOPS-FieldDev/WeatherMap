@@ -8,8 +8,8 @@ wrong, *where*, in the first second of looking.
 ![NetOps WeatherMap](docs/weathermap-screenshot.png)
 
 > This guide covers downloading, installing, configuring, and running
-> WeatherMap from a pre-built release. Building it from source has its
-> own guide (coming soon).
+> WeatherMap from a pre-built release. Building it from source is
+> covered in the [Build Guide](docs/BUILD.md).
 
 ---
 
@@ -124,7 +124,7 @@ up another tool."*
 ## Download
 
 Download the latest `WeatherMap.zip` from this repository's Releases
-page. (Building WeatherMap from source has its own guide — coming soon.)
+page. (To build it from source instead, see the [Build Guide](docs/BUILD.md).)
 
 ---
 
