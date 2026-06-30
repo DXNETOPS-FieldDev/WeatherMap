@@ -7,6 +7,10 @@ wrong, *where*, in the first second of looking.
 
 ![NetOps WeatherMap](docs/weathermap-screenshot.png)
 
+> This guide covers downloading, installing, configuring, and running
+> WeatherMap from a pre-built release. Building it from source has its
+> own guide (coming soon).
+
 ---
 
 ## Why operators love it
@@ -107,40 +111,91 @@ up another tool."*
 
 ## Prerequisites
 
-- Node.js 18 or 20
-- npm (ships with Node)
-- Administrator access to your NetOps Portal for the upload step
-- Ability to update the portal's reverse-proxy CSP (typically nginx) —
-  see [Portal CSP requirements](#portal-csp-requirements) below
+- **One of:**
+  - Administrator role on your NetOps Portal account (for [Method A](#method-a--upload-via-portal-ui)), or
+  - SSH + sudo access to the portal server (for [Method B](#method-b--direct-deploy-via-ssh))
+- Ability to get your portal's reverse-proxy CSP updated (typically nginx)
+  — see [Backend Configuration](docs/BACKEND_CONFIGURATION.md)
 - *(Optional)* An AppNeta tenant + API token, if you want the AppNeta
   Monitoring Points feature
 
 ---
 
-## Install
+## Download
 
-1. **Download** `WeatherMap.zip` from this repository's Releases (or
-   build it yourself — see [Build for deployment](#build-for-deployment)).
-2. **Log in** to DX NetOps Portal as a user with the
-   **Administrator** role.
-3. **Administration → Configuration Settings → App Deployment.**
-4. In the **App** field, browse and select `WeatherMap.zip`, then click
-   **Add**. The portal unzips into `/pc/apps/user/WeatherMap/` — no
-   restart needed.
-5. *(One-time per environment)* Edit the configuration files in the
-   unzipped folder for your environment — see
-   [Configuration](#configuration).
-6. Open or create a **group-level dashboard**, edit it → **Add App
-   View** → pick **NetOps WeatherMap** from the dropdown, save. The map
-   should auto-zoom to fit your group's devices.
+Download the latest `WeatherMap.zip` from this repository's Releases
+page. (Building WeatherMap from source has its own guide — coming soon.)
 
 ---
 
-## Configuration
+## Install
+
+Two ways to deploy the zip. Use whichever access you have.
+
+### Method A — Upload via Portal UI
+
+Requires the Administrator role on the portal.
+
+1. Log in to DX NetOps Portal as a user with the **Administrator** role.
+2. **Administration → Configuration Settings → App Deployment.**
+3. In the **App** field, browse and select `WeatherMap.zip`, then click
+   **Add**. The portal unzips into `/pc/apps/user/WeatherMap/` — no
+   restart needed.
+
+**If this menu is missing or returns a permissions error**, your
+account lacks the Administrator role — use Method B, or ask your
+portal admin to grant it.
+
+### Method B — Direct deploy via SSH
+
+Use this when you have server access but not the portal Administrator
+role. This unzips the app directly into the portal's user-apps
+directory, bypassing the web UI.
+
+1. **Find the apps directory** (the exact path varies by installation):
+   ```bash
+   ssh <user>@<portal-host>
+   find /opt -type d -name 'user' 2>/dev/null | grep -i 'apps'
+   ```
+   Expected result on a standard install:
+   ```
+   /opt/CA/PerformanceCenter/PC/webapps/pc/apps/user
+   ```
+2. **Copy and extract the zip:**
+   ```bash
+   # From your local machine:
+   scp WeatherMap.zip <user>@<portal-host>:/tmp/WeatherMap.zip
+
+   # On the portal server:
+   cd /opt/CA/PerformanceCenter/PC/webapps/pc/apps/user
+   sudo unzip -o /tmp/WeatherMap.zip
+   ```
+   The `-o` flag overwrites existing files — safe for redeploying an
+   update.
+3. **Verify:**
+   ```bash
+   curl -sk -o /dev/null -w "%{http_code}" \
+     https://<portal-host>/pc/apps/user/WeatherMap/index.html
+   ```
+   Should return `200`.
+
+If `sudo unzip` leaves files owned by root and the portal needs write
+access to them (rare), fix with:
+```bash
+sudo chown -R capc:capc /opt/CA/PerformanceCenter/PC/webapps/pc/apps/user/WeatherMap
+```
+
+Both methods deploy live — no portal restart needed either way. Once
+deployed, continue to [Configure](#configure) before adding it to a
+dashboard.
+
+---
+
+## Configure
 
 All environment-specific values live in files that ship inside
-`WeatherMap.zip`. The customer edits these in the unzipped App View
-folder — **no rebuild required.**
+`WeatherMap.zip`. Edit these directly in the deployed folder —
+**no rebuild required**; just save and hard-refresh the dashboard.
 
 ### `appConfig.properties` — portal-facing metadata
 
@@ -172,175 +227,41 @@ the iframe — no build needed.
 | `powerOutages.maxRecords` | Pagination cap for ODIN. 5000 covers nationwide storms comfortably. |
 | `triageViewPageId` | The Performance Center page id for Triage View in **your** environment. Required for the "Investigate in Triage View" deep-links to appear — set it to whichever page id your portal uses for the Triage View context page. Leave `null` to hide the deep-links. |
 
-### `spectrum-proxy.properties` — Spectrum backend
+### Backend connections and Portal CSP
 
-The Spectrum proxy needs to know where your Spectrum server is and how
-to authenticate. **Copy the shipped template and fill it in:**
+WeatherMap reaches Spectrum (required), and optionally AppNeta and the
+Data Aggregator, through same-origin JSP proxies shipped inside the
+zip. Wiring those up — and the one-time nginx CSP change your portal
+needs for the weather, radar, and power-outage overlays to load — is
+covered in **[Backend Configuration](docs/BACKEND_CONFIGURATION.md)**.
 
-```bash
-cp spectrum-proxy.properties.example spectrum-proxy.properties
-# then edit spectrum-proxy.properties — fill in your values
-```
-
-| Key | What to set |
-|---|---|
-| `spectrum.base.url` | Your Spectrum REST URL, e.g. `https://spectrum.example.com:8443/spectrum/` (trailing slash required) |
-| `spectrum.user` / `spectrum.password` | Spectrum credentials. Browser never sees them. Auto-obfuscated on disk after the first request (see template comments). |
-| `spectrum.ssl.verify` | `true` for production with valid certs, `false` for self-signed dev certs |
-
-### `appneta-proxy.properties` — AppNeta backend *(optional)*
-
-Only needed if you want the AppNeta Monitoring Points feature. Same
-pattern as the Spectrum proxy:
-
-```bash
-cp appneta-proxy.properties.example appneta-proxy.properties
-# then edit appneta-proxy.properties — fill in your values
-```
-
-| Key | What to set |
-|---|---|
-| `appneta.base.url` | Your AppNeta tenant REST URL, e.g. `https://demo.pm.appneta.com/api/` (trailing slash required) |
-| `appneta.org.id` | Numeric AppNeta org id. Injected server-side so the App View can't query other orgs. Get this from your AppNeta tenant admin. |
-| `appneta.token` | AppNeta API token. Generate in AppNeta UI under user profile → API Access Tokens. Browser never sees it. Auto-obfuscated on disk after first request. |
-| `appneta.ssl.verify` | `true` for public AppNeta tenants. Only flip to `false` for on-prem AppNeta with a self-signed cert. |
-
-### `da-proxy.properties` — Data Aggregator WebServices *(optional, paired with AppNeta)*
-
-Only needed if you want the **Network Path → PC deep-link** in the
-AppNeta path popup. PC OData doesn't expose AppNeta path inventory,
-so we look it up via the Data Aggregator's REST WebServices. Same
-template pattern:
-
-```bash
-cp da-proxy.properties.example da-proxy.properties
-# then edit da-proxy.properties — fill in your values
-```
-
-| Key | What to set |
-|---|---|
-| `da.target.url` | Full URL of the DA's `/rest/sdn/networkpath/filtered/` endpoint, reached through your DA-facing nginx (e.g. `https://dev-netopsda.example.com/rest/sdn/networkpath/filtered/`). Direct calls to the internal DA host are typically unreachable from PC's servlet container — go through the public nginx. **Requires an `/rest/` `location` block on the DA-facing nginx** — see [DA REST endpoint nginx requirement](#data-aggregator-rest-endpoint) below. |
-| `da.user` / `da.password` | Same credentials you use to log into NetOps Portal. Browser never sees them. Auto-obfuscated on disk after the first request. |
-| `da.ssl.verify` | `true` for production with a valid cert, `false` for self-signed dev certs. |
-
-If this file is missing the path popup just falls back to a plain-text
-title — paths still render, links don't.
-
-Changes to any `.properties` file require the servlet container to
-recompile the JSP (typically a Tomcat / Jetty restart).
+At minimum, configure the Spectrum proxy before going live. AppNeta and
+the Data Aggregator deep-link are optional.
 
 ---
 
-## Portal CSP requirements
+## Run
 
-NetOps Portal sets a strict Content Security Policy on App View
-responses that by default blocks the external image / fetch origins
-WeatherMap relies on. The portal's reverse proxy (typically nginx)
-must override the CSP for App View paths to whitelist these origins.
+1. Open or create a **group-level dashboard** in NetOps Portal.
+2. Edit it → **Add App View** → pick **NetOps WeatherMap** from the
+   dropdown → save.
+3. The map should auto-zoom to fit your group's devices.
 
-Inside the nginx `server` block, add this location **before** the
-generic `/pc` block:
-
-```nginx
-location ~ ^/pc/apps/user/ {
-    proxy_set_header X-Forwarded-Host $host;
-    proxy_set_header X-Forwarded-For $remote_addr;
-    proxy_set_header Host    $host:$server_port;
-    proxy_pass https://<backend-host>:443;
-
-    proxy_hide_header Content-Security-Policy;
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' *.ipce.broadcom.com:* 'unsafe-inline' 'unsafe-eval'; connect-src 'self' *.ipce.broadcom.com:* ws: wss: https://api.openweathermap.org https://api.rainviewer.com https://ornl.opendatasoft.com; img-src 'self' data: https://*.tile.openstreetmap.org https://tile.openweathermap.org https://openweathermap.org https://tilecache.rainviewer.com; style-src 'self' 'unsafe-inline'; base-uri 'self'; frame-ancestors 'self'; font-src 'self'; frame-src 'self'" always;
-}
-```
-
-The whitelisted origins:
-
-| Origin | CSP directive | Why |
-|---|---|---|
-| `https://*.tile.openstreetmap.org` | img-src | OSM base map tiles |
-| `https://tile.openweathermap.org` | img-src | Weather overlay tiles |
-| `https://openweathermap.org` | img-src | Weather condition icons in the popup |
-| `https://api.openweathermap.org` | connect-src | Current-conditions API |
-| `https://api.rainviewer.com` | connect-src | Rainviewer available-timestamps API |
-| `https://tilecache.rainviewer.com` | img-src | Rainviewer radar tile images |
-| `https://ornl.opendatasoft.com` | connect-src | ODIN power-outage API |
-
-The Spectrum, AppNeta, and Data Aggregator APIs don't need CSP entries
-— they're proxied same-origin through the shipped JSPs.
-
-Apply with `sudo nginx -t && sudo systemctl reload nginx`.
-
----
-
-## Data Aggregator REST endpoint
-
-*(Skip this section if you're not using the AppNeta path deep-link — i.e. you
-haven't set up `da-proxy.properties`.)*
-
-The Data Aggregator typically sits behind a separate nginx server
-block (`dev-netopsda.example.com` in the canonical dev landscape),
-which by default only forwards `/odataquery` and `/sso`. Add a
-`location /rest/` block so the path-inventory endpoint is reachable:
-
-```nginx
-# In the DA-facing nginx server { ... } block:
-location /rest/ {
-    proxy_set_header X-Forwarded-Host $host;
-    proxy_set_header X-Forwarded-For  $remote_addr;
-    proxy_set_header Host             $host:$server_port;
-    proxy_pass https://<DA-internal-host>:8582/rest/;
-}
-```
-
-Notes:
-- Port **8582** is correct in the verified landscape (Broadcom techdocs
-  say 8581 — *they're wrong for this PC version*; verify before
-  assuming).
-- Once added, the URL set in `da.target.url` becomes
-  `https://<your-DA-frontend-host>/rest/sdn/networkpath/filtered/`.
-- Apply with `sudo nginx -t && sudo systemctl reload nginx`.
-
----
-
-## Build for deployment
-
-The wrapper script handles build + package + (optional) scp:
-
-```bash
-./build.sh                                    # builds + scps to default dev host
-SCP_TARGET=user@host:/path ./build.sh         # scp somewhere else
-SCP_TARGET=none ./build.sh                    # build only, no scp
-```
-
-Or manually:
-
-```bash
-npm install
-npm run build
-rm -rf WeatherMap WeatherMap.zip
-mv dist WeatherMap
-zip -r WeatherMap.zip WeatherMap
-```
-
-Either way produces `WeatherMap.zip`, ready to upload via **Administration →
-Configuration Settings → App Deployment** in NetOps Portal.
-
----
-
-## Local development *(optional)*
-
-```bash
-npm install
-npm run dev
-```
-
-Vite serves the app at http://localhost:8888. Append `?debug=1` to
-bypass the OData / Spectrum / AppNeta calls and render sample devices
-across the US — useful for visual checks without portal access.
+**Smoke test before wiring up real credentials:** append `?debug=1` to
+the App View's URL to render sample devices across the US without
+hitting Spectrum, PC OData, or AppNeta at all. If you see a populated
+map with `?debug=1` but a blank one without it, the deployment itself
+is fine and the issue is in your backend configuration — see
+[Backend Configuration](docs/BACKEND_CONFIGURATION.md).
 
 ---
 
 ## Troubleshooting
+
+Issues with Spectrum, AppNeta, or Data Aggregator proxies, or with the
+portal's Content-Security-Policy, are covered in
+[Backend Configuration](docs/BACKEND_CONFIGURATION.md#troubleshooting)
+instead of here.
 
 **Status banner: "Failed to load runtime-config.json"** — the file is
 missing, malformed JSON, or blocked by CSP. Check the browser console.
@@ -348,107 +269,31 @@ missing, malformed JSON, or blocked by CSP. Check the browser console.
 **Status banner: "No geo-located devices found"** — the group either has
 no devices, or none of them have `Latitude` / `Longitude` set in NetOps.
 
-**All markers green / no alarms in popup** — the Spectrum proxy failed.
-Open DevTools → Network, look for `spectrum-proxy.jsp`, check the
-response. `502 Proxy error` means the JSP reached the backend but
-couldn't talk to Spectrum — verify `spectrum-proxy.properties`. `500
-Proxy misconfigured` means the JSP couldn't load its properties file.
-
 **No SD-WAN tunnels showing** — the PC OData query returned no tunnels
 for the group, or the proxied call failed. Check DevTools → Network for
 `/pc/odata4/api/tunnels` and verify the response.
-
-**No AppNeta MPs / paths showing** — open DevTools → Network, look for
-`appneta-proxy.jsp`. A 500 usually means `appneta-proxy.properties` is
-missing or has a bad token. A 200 with empty results means the
-configured org id has no MPs visible to the token's user.
-
-**Path titles don't link to PC** — the DA proxy isn't responding.
-DevTools → Network, look for `da-proxy.jsp`. A 502 usually means the
-DA-facing nginx hasn't been configured with a `location /rest/` block
-(see [Data Aggregator REST endpoint](#data-aggregator-rest-endpoint)),
-or the upstream port in that block is wrong (verified port is **8582**,
-not 8581 as some docs say). A 500 means `da-proxy.properties` is
-missing or unreadable. A 200 with an empty `<NetworkPathList/>` means
-the DA found no matching paths for the AppNeta path IDs sent.
 
 **"Investigate in Triage View" link doesn't appear** —
 `triageViewPageId` in `runtime-config.json` is null. Set it to the
 Triage View page id for your environment.
 
 **Weather tab says "Couldn't load weather"** — either the OWM API key is
-bad (rotate it in `runtime-config.json`) or `https://api.openweathermap.org`
-isn't in CSP `connect-src`.
+bad (rotate it in `runtime-config.json`), or your portal's CSP isn't
+whitelisting OpenWeatherMap — see
+[Backend Configuration](docs/BACKEND_CONFIGURATION.md).
 
-**Weather overlay tiles don't display** — `https://tile.openweathermap.org`
-isn't in CSP `img-src`.
-
-**Power Outages overlay shows no count or stays empty** — if the browser
-console shows a CSP `connect-src` violation for `ornl.opendatasoft.com`,
-the CSP whitelist hasn't been updated for ODIN. Note that ODIN coverage
-is voluntary — some utilities (notably FPL in Florida, PG&E in Northern
-California) don't participate, so absence of polygons in those areas
-may be real, not a bug.
-
-**Gray box instead of a map** — CSP is blocking OSM tiles. Confirm
-`https://*.tile.openstreetmap.org` is in the portal's `img-src`.
+**Power Outages overlay shows no count or stays empty** — first check
+whether your portal's CSP allows the ODIN API (see
+[Backend Configuration](docs/BACKEND_CONFIGURATION.md)). If CSP is fine,
+note that ODIN coverage is voluntary — some utilities (notably FPL in
+Florida, PG&E in Northern California) don't participate, so absence of
+polygons in those areas may be real, not a bug.
 
 **Old version showing after redeploy** — the browser caches the iframe's
 JS bundle. Hard refresh (Ctrl+Shift+R) or use an incognito window.
 
 ---
 
-## Project layout
-
-```
-WeatherMap/
-├── README.md
-├── package.json
-├── vite.config.js                      ← base: './' is critical
-├── index.html
-├── build.sh                            ← build + zip + optional scp
-├── docs/
-│   └── weathermap-screenshot.png
-├── public/                             ← copied verbatim into the zip
-│   ├── appConfig.properties
-│   ├── runtime-config.json
-│   ├── spectrum-proxy.jsp              ← Spectrum same-origin proxy
-│   ├── spectrum-proxy.properties.example
-│   ├── appneta-proxy.jsp               ← AppNeta same-origin proxy
-│   ├── appneta-proxy.properties.example
-│   ├── da-proxy.jsp                    ← Data Aggregator WebServices proxy
-│   ├── da-proxy.properties.example
-│   ├── topo-icon.png                   ← Triage View deep-link icon
-│   ├── appneta-mp-icon.png             ← AppNeta MP bullseye icon
-│   ├── appneta-target-icon.png         ← AppNeta target globe icon
-│   └── sample-devices.csv              ← used by ?debug=1
-└── src/
-    ├── main.jsx                        ← loads runtime-config, mounts React
-    ├── App.jsx                         ← map + overlays + data fetches
-    ├── App.css
-    ├── api/
-    │   ├── odata.js                    ← PC devices + metrics
-    │   ├── spectrum.js                 ← alarms via proxy
-    │   ├── tunnels.js                  ← SD-WAN tunnels via PC OData
-    │   ├── appneta.js                  ← AppNeta MPs + paths via proxy
-    │   ├── networkpath.js              ← AppNeta-pathId → PC-LocalID via DA proxy
-    │   └── odin.js                     ← power outages from ODIN
-    ├── hooks/
-    │   └── useUrlParams.js             ← parses id, startTime, endTime, debug
-    ├── lib/
-    │   ├── config.js                   ← runtime-config.json loader
-    │   └── leaflet.rainviewer.js       ← vendored Rainviewer plugin
-    └── components/
-        ├── DeviceMarker.jsx            ← color-by-severity device pin
-        ├── TabbedPopup.jsx             ← Site Info / Weather / Metrics / Alarms
-        ├── TunnelLayer.jsx             ← SD-WAN tunnel lines
-        ├── TunnelLegend.jsx            ← SD-WAN sites legend + filter
-        ├── AppNetaLayer.jsx            ← AppNeta MPs + targets + paths
-        ├── AppNetaLegend.jsx           ← AppNeta MPs legend + filter
-        ├── PowerOutageLayer.jsx        ← ODIN outages as polygons
-        ├── RainviewerControl.jsx       ← animated radar bottom-left
-        └── Legend.jsx                  ← severity legend (bottom-right)
-```
 #### Copyright (c) 2026 CA Technologies, A Broadcom Company
 
 The MIT License
