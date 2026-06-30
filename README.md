@@ -152,14 +152,15 @@ Use this when you have server access but not the portal Administrator
 role. This unzips the app directly into the portal's user-apps
 directory, bypassing the web UI.
 
-1. **Find the apps directory** (the exact path varies by installation):
+1. **Find the apps directory** (the exact path varies by installation —
+   `<PC_HOME>` below is your Performance Center installation root):
    ```bash
    ssh <user>@<portal-host>
    find /opt -type d -name 'user' 2>/dev/null | grep -i 'apps'
    ```
    Expected result on a standard install:
    ```
-   /opt/CA/PerformanceCenter/PC/webapps/pc/apps/user
+   <PC_HOME>/PC/webapps/pc/apps/user
    ```
 2. **Copy and extract the zip:**
    ```bash
@@ -167,7 +168,7 @@ directory, bypassing the web UI.
    scp WeatherMap.zip <user>@<portal-host>:/tmp/WeatherMap.zip
 
    # On the portal server:
-   cd /opt/CA/PerformanceCenter/PC/webapps/pc/apps/user
+   cd <PC_HOME>/PC/webapps/pc/apps/user
    sudo unzip -o /tmp/WeatherMap.zip
    ```
    The `-o` flag overwrites existing files — safe for redeploying an
@@ -182,7 +183,7 @@ directory, bypassing the web UI.
 If `sudo unzip` leaves files owned by root and the portal needs write
 access to them (rare), fix with:
 ```bash
-sudo chown -R capc:capc /opt/CA/PerformanceCenter/PC/webapps/pc/apps/user/WeatherMap
+sudo chown -R capc:capc <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap
 ```
 
 Both methods deploy live — no portal restart needed either way. Once
