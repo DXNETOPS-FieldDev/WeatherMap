@@ -1,5 +1,7 @@
 // Rainviewer plugin for Leaflet — animated radar overlay with playback controls.
-// Source: https://github.com/rainviewer/rainviewer-api-example (MIT).
+// Source: https://github.com/mwasil/Leaflet.Rainviewer — NOT rainviewer/rainviewer-api-example
+// as previously (incorrectly) cited here. Neither repo publishes a license;
+// see LICENSE.md's "Third-Party Software Notices" for the unresolved status.
 // Modified for use in a Vite/ESM bundle: added explicit Leaflet import at the top
 // so the plugin doesn't depend on `L` being a global.
 

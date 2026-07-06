@@ -295,12 +295,19 @@ JS bundle. Hard refresh (Ctrl+Shift+R) or use an incognito window.
 
 ---
 
-#### Copyright (c) 2026 CA Technologies, A Broadcom Company
+## Data Sources & Attributions
 
-The MIT License
+WeatherMap displays data from several third-party services. Some require
+visible attribution as a condition of their free API terms; others are
+credited as a courtesy.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+| Source | Used for | Attribution |
+|---|---|---|
+| [OpenStreetMap](https://www.openstreetmap.org/copyright) | Base map tiles | Required by OSM's tile usage policy. Shown in the map's attribution corner whenever the map is displayed. |
+| [OpenWeatherMap](https://openweathermap.org/) | Precipitation / temperature / wind / clouds overlays, current-conditions popup | Required by OWM's terms. Shown in the map's attribution corner while any weather overlay is active. |
+| [RainViewer](https://www.rainviewer.com/) | Animated radar playback | Required under RainViewer's free API terms ("Weather data by RainViewer" with a link back to rainviewer.com). Shown in the map's attribution corner while the radar overlay is active. |
+| [ODIN](https://ornl.opendatasoft.com/) (DoE / Oak Ridge National Laboratory) | Power-grid outage overlay | Courtesy credit — no explicit attribution requirement was found in ODIN's published terms. |
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Software licenses for the open-source libraries WeatherMap is built on —
+including two items flagged for legal review — are in
+**[LICENSE.md](LICENSE.md)**.
