@@ -27,8 +27,8 @@ output.
 
 ### ⚠️ Flagged for legal review
 
-Two items below are not standard, unambiguous open-source licenses. They're
-called out here so they aren't missed, but resolving them is a legal
+The item below is not a standard, unambiguous open-source license. It's
+called out here so it isn't missed, but resolving it is a legal
 determination outside the scope of this document.
 
 #### `react-leaflet` — Hippocratic License 2.1
@@ -92,34 +92,20 @@ requirement):
 >
 > Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: the above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 
-#### `src/lib/leaflet.rainviewer.js` — origin and license unresolved
+#### `src/lib/leaflet.rainviewer.js` — RESOLVED, removed 2026-07-06
 
-This project vendors (copies directly into source, rather than installing
-via npm) a Leaflet control for the animated radar overlay. Its in-file
-comment previously cited `https://github.com/rainviewer/rainviewer-api-example`
-as the source, "(MIT)". **That citation is incorrect.**
-
-Verified 2026-07-06 by comparing file contents line-by-line: the actual
-source is `https://github.com/mwasil/Leaflet.Rainviewer` — confirmed via a
-near-verbatim match of variable names (`this.timestamps`, `this.radarLayers`,
-`this.currentTimestamp`), JSDoc comments, and overall code structure.
-`rainviewer/rainviewer-api-example` contains a different, simpler vanilla-JS
-demo (titled "Personal Use" in its own HTML) with no Leaflet Control class
-at all — it cannot be the source of this file.
-
-**Neither repository publishes a license.** Checked via GitHub's API
-(`license` field returns `null` for both) and each repository's raw
-README (no license or terms-of-use text in either). Under default
-copyright law, the absence of an explicit license means the original
-author retains all rights, and redistribution — which `WeatherMap.zip`
-does with every release — is not clearly authorized.
-
-**This needs resolution before further distribution.** Options include:
-contacting the `mwasil/Leaflet.Rainviewer` author for explicit permission,
-rewriting the control from scratch using only RainViewer's public API
-documentation (https://www.rainviewer.com/api/weather-maps-api.html) as
-reference, or removing the animated radar feature. This is a legal
-determination outside the scope of this document.
+This project used to vendor a Leaflet control for the animated radar
+overlay, copied from a third party whose actual source
+(`https://github.com/mwasil/Leaflet.Rainviewer` — the file's original
+citation of `rainviewer/rainviewer-api-example` was itself incorrect)
+published no license at all. Rather than pursue permission from that
+author, the control was rewritten from scratch against RainViewer's
+public API documentation
+(https://www.rainviewer.com/api/weather-maps-api.html) and this app's
+own existing conventions for custom map overlays. The vendored file no
+longer exists in this repository. See
+`src/api/rainviewer.js` and `src/components/RainviewerLayer.jsx` for
+the current, originally-authored implementation.
 
 ---
 

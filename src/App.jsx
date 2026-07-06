@@ -10,9 +10,10 @@ import { fetchActiveOutages, correlateOutagesToDevices } from './api/odin.js'
 import { fetchTunnels } from './api/tunnels.js'
 import { fetchAppNetaPaths, fetchAppNetaMpDevices } from './api/appneta.js'
 import { fetchNetworkPathDetails } from './api/networkpath.js'
+import { fetchRadarFrames } from './api/rainviewer.js'
 import { getConfig } from './lib/config.js'
 import DeviceMarker from './components/DeviceMarker.jsx'
-import RainviewerControl from './components/RainviewerControl.jsx'
+import RainviewerLayer from './components/RainviewerLayer.jsx'
 import Legend from './components/Legend.jsx'
 import PowerOutageLayer from './components/PowerOutageLayer.jsx'
 import TunnelLayer from './components/TunnelLayer.jsx'
@@ -83,6 +84,7 @@ export default function App() {
   const [tunnels, setTunnels] = useState([])
   const [appnetaPaths, setAppnetaPaths] = useState([])
   const [appnetaMps, setAppnetaMps] = useState([])
+  const [radarFrames, setRadarFrames] = useState({ host: '', frames: [] })
 
   useEffect(() => {
     let cancelled = false
@@ -135,6 +137,21 @@ export default function App() {
     const timer = setInterval(load, config.powerOutages.refreshIntervalMs)
     return () => { cancelled = true; clearInterval(timer) }
   }, [config.powerOutages.refreshIntervalMs])
+
+  // RainViewer radar frames — independent of devices/alarms. Non-fatal on
+  // failure: the overlay just shows nothing rather than blocking the map.
+  // Refreshes on an interval since RainViewer's frames update every ~10 min.
+  useEffect(() => {
+    let cancelled = false
+    const load = () => {
+      fetchRadarFrames()
+        .then((data) => { if (!cancelled) setRadarFrames(data) })
+        .catch((e) => console.warn('RainViewer fetch failed:', e.message))
+    }
+    load()
+    const timer = setInterval(load, config.rainviewer.refreshIntervalMs)
+    return () => { cancelled = true; clearInterval(timer) }
+  }, [config.rainviewer.refreshIntervalMs])
 
   // Collapse PC duplicate device records (same Name + PrimaryIPAddress,
   // different GlobalIDs — happens when a re-discovered device's stale entry
@@ -432,7 +449,7 @@ export default function App() {
         <LayersControl
           position="topright"
           sortLayers
-          sortFunction={makeSortByPrefix(['Precipitation', 'Temperature', 'Wind', 'Clouds', 'Power Outages'])}
+          sortFunction={makeSortByPrefix(['Precipitation', 'Temperature', 'Wind', 'Clouds', 'Weather Radar', 'Power Outages'])}
         >
           <Overlay checked name="Precipitation">
             <TileLayer
@@ -461,6 +478,9 @@ export default function App() {
               url={`https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${owmApiKey}`}
               opacity={0.6}
             />
+          </Overlay>
+          <Overlay name="Weather Radar">
+            <RainviewerLayer host={radarFrames.host} frames={radarFrames.frames} />
           </Overlay>
           <Overlay name={`Power Outages${outages.length ? ` (${outages.length})` : ''}`}>
             <PowerOutageLayer outages={outages} />
@@ -506,7 +526,6 @@ export default function App() {
 
         <FitBoundsToDevices devices={dedupedDevices} />
 
-        <RainviewerControl />
         <LayersControlLabeler />
         <DevicesOverlayWatcher onChange={setDevicesLayerOn} />
         <TunnelOverlayWatcher onChange={setTunnelLayerOn} />

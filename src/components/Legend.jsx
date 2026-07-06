@@ -12,8 +12,8 @@ const SEVERITY_ITEMS = [
 
 /**
  * Alarm-severity legend in the map's bottom-right corner. Built as a
- * native Leaflet Control (matching RainviewerControl's pattern) so it
- * lives in the map chrome rather than the document flow.
+ * plain L.control() so it lives in the map chrome rather than the
+ * document flow.
  *
  * The × button hides the legend for the current session. To remove the
  * legend permanently, delete the <Legend /> line from App.jsx (and this

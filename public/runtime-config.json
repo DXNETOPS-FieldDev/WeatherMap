@@ -14,6 +14,9 @@
     "maxRecords": 5000,
     "refreshIntervalMs": 600000
   },
+  "rainviewer": {
+    "refreshIntervalMs": 600000
+  },
   "tunnels": {
     "apiPath": "/pc/odata4/api/sdntunnels",
     "lookbackSeconds": 3600,

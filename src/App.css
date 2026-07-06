@@ -589,62 +589,6 @@ body,
   border: 2px solid #388e3c;
 }
 
-/* Rainviewer toggle button: icon + "Radar" label. The !important overrides
-   are needed because Leaflet's .leaflet-bar a defaults to a fixed 26px
-   square — we want a wider, labeled button. Inline SVG data URI works
-   under the portal CSP (data: is whitelisted in img-src). */
-.leaflet-control-rainviewer-button {
-  display: flex !important;
-  align-items: center;
-  gap: 6px;
-  width: auto !important;
-  height: auto !important;
-  padding: 6px 10px !important;
-  line-height: 1 !important;
-  font-size: 13px;
-  font-weight: 500;
-  color: #333 !important;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-/* Lift the radar control 50px above the bottom edge of the 700px-tall App
-   View iframe (~7% of map height). The title button doubles as the drag
-   handle (L.Draggable in RainviewerControl.jsx). */
-.leaflet-control-rainviewer {
-  margin-bottom: 50px !important;
-}
-
-.leaflet-control-rainviewer-button {
-  cursor: move;
-}
-
-/* Expanded control panel: stack the controls vertically so the panel stays
-   narrow. Row 1 = the wrapped buttons row (prev / play / next inside a flex
-   div, plugin-side). Rows 2-3 = label + slider, with sliders sitting right
-   next to their labels in a 2-col grid (no empty column from the buttons). */
-.leaflet-control-rainviewer-container {
-  display: grid !important;
-  grid-template-columns: auto 1fr;
-  gap: 4px 6px;
-  align-items: center;
-  padding: 6px 8px;
-  min-width: 200px;
-  max-width: 240px;
-}
-
-.leaflet-control-rainviewer-buttons {
-  grid-column: 1 / 3;
-  display: flex;
-  gap: 4px;
-  justify-content: center;
-}
-
-.leaflet-control-rainviewer-positionslider,
-.leaflet-control-rainviewer-opacityslider {
-  width: 100%;
-}
-
 /* Two stacked LayersControl widgets at top-right: tint + corner letter
    so users can tell the otherwise-identical stack-of-papers icons apart.
    The native browser tooltip (title attribute, applied via JS) gives the
@@ -707,12 +651,3 @@ body,
   z-index: 1000;
 }
 
-.leaflet-control-rainviewer-icon {
-  display: inline-block;
-  width: 26px;
-  height: 26px;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='1.8' stroke-linecap='round'><circle cx='12' cy='12' r='3'/><circle cx='12' cy='12' r='7'/><circle cx='12' cy='12' r='11'/><line x1='12' y1='12' x2='20' y2='4'/></svg>");
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-size: contain;
-}
