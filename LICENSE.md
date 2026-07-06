@@ -92,21 +92,6 @@ requirement):
 >
 > Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: the above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 
-#### `src/lib/leaflet.rainviewer.js` — RESOLVED, removed 2026-07-06
-
-This project used to vendor a Leaflet control for the animated radar
-overlay, copied from a third party whose actual source
-(`https://github.com/mwasil/Leaflet.Rainviewer` — the file's original
-citation of `rainviewer/rainviewer-api-example` was itself incorrect)
-published no license at all. Rather than pursue permission from that
-author, the control was rewritten from scratch against RainViewer's
-public API documentation
-(https://www.rainviewer.com/api/weather-maps-api.html) and this app's
-own existing conventions for custom map overlays. The vendored file no
-longer exists in this repository. See
-`src/api/rainviewer.js` and `src/components/RainviewerLayer.jsx` for
-the current, originally-authored implementation.
-
 ---
 
 ### Standard permissive licenses
