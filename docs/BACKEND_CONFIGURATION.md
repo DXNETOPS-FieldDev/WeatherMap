@@ -76,13 +76,8 @@ recompile the JSP (typically a Tomcat / Jetty restart).
 
 NetOps Portal sets a strict Content Security Policy on App View
 responses that by default blocks the external image / fetch origins
-WeatherMap relies on. Two ways to override it — pick based on what
-access you have to the environment.
-
-### Method A — SSO Configuration Tool (SsoConfig)
-
-Configures the header directly on NetOps Portal itself — no reverse
-proxy required.
+WeatherMap relies on. Configure it via the **SSO Configuration Tool
+(SsoConfig)**, which sets the header directly on NetOps Portal itself:
 
 1. On the Performance Center host, run `./SsoConfig` from
    `<installation_directory>/PerformanceCenter`.
@@ -116,31 +111,7 @@ Notes on this value:
 - Whether saving this setting requires a NetOps Portal restart to take
   effect isn't documented — verify in your own environment.
 
-### Method B — nginx reverse proxy
-
-Use this when the portal sits behind an nginx (or equivalent) reverse
-proxy you control, and you'd rather override the CSP there than get
-access to SsoConfig — e.g. no shell access to the PC host, but you do
-manage the reverse proxy in front of it.
-
-Inside the nginx `server` block, add this location **before** the
-generic `/pc` block:
-
-```nginx
-location ~ ^/pc/apps/user/ {
-    proxy_set_header X-Forwarded-Host $host;
-    proxy_set_header X-Forwarded-For $remote_addr;
-    proxy_set_header Host    $host:$server_port;
-    proxy_pass https://<backend-host>:443;
-
-    proxy_hide_header Content-Security-Policy;
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' *.ipce.broadcom.com:* 'unsafe-inline' 'unsafe-eval'; connect-src 'self' *.ipce.broadcom.com:* ws: wss: https://api.openweathermap.org https://api.rainviewer.com https://ornl.opendatasoft.com; img-src 'self' data: https://*.tile.openstreetmap.org https://tile.openweathermap.org https://openweathermap.org https://tilecache.rainviewer.com; style-src 'self' 'unsafe-inline'; base-uri 'self'; frame-ancestors 'self'; font-src 'self'; frame-src 'self'" always;
-}
-```
-
-Apply with `sudo nginx -t && sudo systemctl reload nginx`.
-
-### Origins WeatherMap needs (either method)
+### Origins WeatherMap needs
 
 | Origin | CSP directive | Why |
 |---|---|---|
