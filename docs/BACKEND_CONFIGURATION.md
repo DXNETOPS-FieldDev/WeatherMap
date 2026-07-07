@@ -76,8 +76,52 @@ recompile the JSP (typically a Tomcat / Jetty restart).
 
 NetOps Portal sets a strict Content Security Policy on App View
 responses that by default blocks the external image / fetch origins
-WeatherMap relies on. The portal's reverse proxy (typically nginx)
-must override the CSP for App View paths to whitelist these origins.
+WeatherMap relies on. Two ways to override it — pick based on what
+access you have to the environment.
+
+### Method A — SSO Configuration Tool (SsoConfig)
+
+Configures the header directly on NetOps Portal itself — no reverse
+proxy required.
+
+1. On the Performance Center host, run `./SsoConfig` from
+   `<installation_directory>/PerformanceCenter`.
+2. Navigate: **DX NetOps** → **NetOps Portal** → **Local Override** →
+   option **24. Custom HTTP headers to be added to our responses**.
+3. Enter headers pipe-separated (`|`), each as `Header-Name: value`.
+
+A validated, working example:
+
+```
+Content-Security-Policy: default-src 'self'; script-src 'self' *.ipce.broadcom.com:* 'unsafe-inline' 'unsafe-eval'; connect-src 'self' *.ipce.broadcom.com:* api.rainviewer.com:* dev-spectrum.forwardinc.biz:* https://ornl.opendatasoft.com ws: wss: https://api.openweathermap.org; img-src 'self' data: https://*.tile.openstreetmap.org https://tile.openweathermap.org https://openweathermap.org https://tilecache.rainviewer.com; style-src 'self' 'unsafe-inline'; base-uri 'self'; frame-ancestors 'self'; font-src 'self'; frame-src 'self';|X-Frame-Options: SAMEORIGIN|X-Content-Type-Options: nosniff|X-XSS-Protection: 1; mode=block|Referrer-Policy: strict-origin|Feature-Policy: 'none'|Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+```
+
+Notes on this value:
+- **`dev-spectrum.forwardinc.biz:*` in `connect-src` isn't required by
+  WeatherMap** — WeatherMap always reaches Spectrum through its
+  same-origin JSP proxy, never directly from the browser. It's present
+  because this header applies portal-wide (every response NetOps
+  Portal sends), not just to WeatherMap, so it can carry entries other
+  apps/features on the same portal need. Omit it on a fresh setup
+  unless something else on your portal needs direct browser access to
+  Spectrum.
+- **`X-Frame-Options`, `X-Content-Type-Options`, `X-XSS-Protection`,
+  `Referrer-Policy`, `Feature-Policy`, `Strict-Transport-Security`**
+  are general portal security hardening, unrelated to WeatherMap.
+  Include or drop them based on your own security posture.
+- **`Feature-Policy: 'none'`** is deprecated syntax (superseded by
+  `Permissions-Policy`) and isn't valid as a bare `'none'` value on its
+  own — likely inert as written. Reproduced here because it's what's
+  actually deployed, not because it's a recommended pattern.
+- Whether saving this setting requires a NetOps Portal restart to take
+  effect isn't documented — verify in your own environment.
+
+### Method B — nginx reverse proxy
+
+Use this when the portal sits behind an nginx (or equivalent) reverse
+proxy you control, and you'd rather override the CSP there than get
+access to SsoConfig — e.g. no shell access to the PC host, but you do
+manage the reverse proxy in front of it.
 
 Inside the nginx `server` block, add this location **before** the
 generic `/pc` block:
@@ -94,7 +138,9 @@ location ~ ^/pc/apps/user/ {
 }
 ```
 
-The whitelisted origins:
+Apply with `sudo nginx -t && sudo systemctl reload nginx`.
+
+### Origins WeatherMap needs (either method)
 
 | Origin | CSP directive | Why |
 |---|---|---|
@@ -102,14 +148,12 @@ The whitelisted origins:
 | `https://tile.openweathermap.org` | img-src | Weather overlay tiles |
 | `https://openweathermap.org` | img-src | Weather condition icons in the popup |
 | `https://api.openweathermap.org` | connect-src | Current-conditions API |
-| `https://api.rainviewer.com` | connect-src | Rainviewer available-timestamps API |
-| `https://tilecache.rainviewer.com` | img-src | Rainviewer radar tile images |
+| `api.rainviewer.com` | connect-src | RainViewer available-timestamps API |
+| `https://tilecache.rainviewer.com` | img-src | RainViewer radar tile images |
 | `https://ornl.opendatasoft.com` | connect-src | ODIN power-outage API |
 
 The Spectrum, AppNeta, and Data Aggregator APIs don't need CSP entries
 — they're proxied same-origin through the shipped JSPs.
-
-Apply with `sudo nginx -t && sudo systemctl reload nginx`.
 
 ---
 
