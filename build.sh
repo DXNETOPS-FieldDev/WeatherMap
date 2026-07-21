@@ -34,6 +34,14 @@ rm -rf WeatherMap WeatherMap.zip
 echo "→ Renaming dist/ to WeatherMap/..."
 mv dist WeatherMap
 
+# vite copies public/ verbatim into dist/, including any real
+# .properties files a developer has locally for their own testing
+# (gitignored from git, but not excluded from the build). Strip them
+# so a release build never ships real credentials — only the
+# .example templates a customer is meant to copy and fill in.
+echo "→ Removing local dev credentials from the package (keeping .example templates)..."
+rm -f WeatherMap/spectrum-proxy.properties WeatherMap/appneta-proxy.properties WeatherMap/da-proxy.properties
+
 echo "→ Zipping WeatherMap/..."
 zip -rq WeatherMap.zip WeatherMap
 

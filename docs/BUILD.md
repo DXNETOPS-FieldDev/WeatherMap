@@ -55,8 +55,16 @@ npm install
 npm run build
 rm -rf WeatherMap WeatherMap.zip
 mv dist WeatherMap
+rm -f WeatherMap/spectrum-proxy.properties WeatherMap/appneta-proxy.properties WeatherMap/da-proxy.properties
 zip -r WeatherMap.zip WeatherMap
 ```
+
+**Don't skip the `rm -f` step.** Vite copies `public/` verbatim into
+`dist/`, including any real `.properties` files you have locally for
+your own testing — they're gitignored from git, but that doesn't stop
+the build from bundling them. Without this step, a release build ships
+real credentials (Spectrum host, DA username, etc.) to whoever
+downloads it. Only the `.properties.example` templates should ship.
 
 Either way produces `WeatherMap.zip` in the project root, ready to
 install via either method in the main README's
