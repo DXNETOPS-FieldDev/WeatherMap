@@ -81,26 +81,16 @@ WeatherMap relies on. Configure it via the **SSO Configuration Tool
 
 1. On the Performance Center host, run `./SsoConfig` from
    `<installation_directory>/PerformanceCenter`.
-2. Navigate: **DX NetOps** → **NetOps Portal** → **Local Override** →
+2. Navigate: **DX NetOps** → **NetOps Portal** → **Remote Value** →
    option **24. Custom HTTP headers to be added to our responses**.
-3. Enter headers pipe-separated (`|`), each as `Header-Name: value`.
-
-A validated, working example:
+3. Paste the value below into that field, substituting your own
+   Spectrum / AppNeta / Data Aggregator hostnames where applicable.
 
 ```
 Content-Security-Policy: default-src 'self'; script-src 'self' *.ipce.broadcom.com:* 'unsafe-inline' 'unsafe-eval'; connect-src 'self' *.ipce.broadcom.com:* api.rainviewer.com:* https://ornl.opendatasoft.com ws: wss: https://api.openweathermap.org; img-src 'self' data: https://*.tile.openstreetmap.org https://tile.openweathermap.org https://openweathermap.org https://tilecache.rainviewer.com; style-src 'self' 'unsafe-inline'; base-uri 'self'; frame-ancestors 'self'; font-src 'self'; frame-src 'self';|X-Frame-Options: SAMEORIGIN|X-Content-Type-Options: nosniff|X-XSS-Protection: 1; mode=block|Referrer-Policy: strict-origin|Feature-Policy: 'none'|Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
 ```
 
 Notes on this value:
-- **No Spectrum entry is needed in `connect-src`.** WeatherMap always
-  reaches Spectrum through its same-origin JSP proxy, never directly
-  from the browser — same for AppNeta and the Data Aggregator. This is
-  confirmed, not just inferred from code: a Spectrum hostname was
-  removed from this header on a live deployment, and both device
-  alarms and AppNeta Monitoring Point alarms continued to render
-  correctly afterward. If an existing portal-wide CSP header has a
-  Spectrum entry in it, it's most likely left over from an earlier
-  setup or unrelated to WeatherMap, and can be removed.
 - **`X-Frame-Options`, `X-Content-Type-Options`, `X-XSS-Protection`,
   `Referrer-Policy`, `Feature-Policy`, `Strict-Transport-Security`**
   are general portal security hardening, unrelated to WeatherMap.
@@ -135,26 +125,51 @@ The Spectrum, AppNeta, and Data Aggregator APIs don't need CSP entries
 haven't set up `da-proxy.properties`.)*
 
 The Data Aggregator typically sits behind a separate nginx server
-block (`dev-netopsda.example.com` in the canonical dev landscape),
-which by default only forwards `/odataquery` and `/sso`. Add a
-`location /rest/` block so the path-inventory endpoint is reachable:
+block that, by default, only forwards `/odataquery` and `/sso`. Add a
+`location /rest/` block alongside those so the path-inventory endpoint
+is reachable. A full example server block:
 
 ```nginx
-# In the DA-facing nginx server { ... } block:
-location /rest/ {
-    proxy_set_header X-Forwarded-Host $host;
-    proxy_set_header X-Forwarded-For  $remote_addr;
-    proxy_set_header Host             $host:$server_port;
-    proxy_pass https://<DA-internal-host>:8582/rest/;
+server {
+    listen       443 ssl http2;
+    listen       [::]:443 ssl http2;
+    server_name  <DA-frontend-host>;
+    root         /usr/share/nginx/html;
+    ssl_certificate "/etc/nginx/certs/fullchain.pem";
+    ssl_certificate_key "/etc/nginx/certs/privkey.pem";
+
+    location /odataquery {
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header Host    $host:$server_port;
+        proxy_pass https://<DA-internal-host>:8582/odataquery;
+    }
+    location /sso {
+        proxy_set_header X-Forwarded-host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header Host    $host:$server_port;
+        proxy_pass  https://<PC-internal-host>:8382/sso;
+    }
+    # In order to reach /rest/sdn/networkpath in DA
+    location /rest/ {
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header Host    $host:$server_port;
+        proxy_pass https://<DA-internal-host>:8582/rest/;
+    }
 }
 ```
 
 Notes:
-- Port **8582** is correct in the verified landscape (Broadcom techdocs
-  say 8581 — *they're wrong for this PC version*; verify before
-  assuming).
+- **Only the `/rest/` block is new** — `/odataquery` and `/sso`
+  typically already exist on this server block for other DA functions;
+  shown together here so you can see where the new block fits.
+- Port **8582** is the Data Aggregator's port in a verified working
+  deployment (Broadcom techdocs say 8581 for this endpoint — *that's
+  wrong for this PC version*; verify against your own environment
+  before assuming).
 - Once added, the URL set in `da.target.url` becomes
-  `https://<your-DA-frontend-host>/rest/sdn/networkpath/filtered/`.
+  `https://<DA-frontend-host>/rest/sdn/networkpath/filtered/`.
 - Apply with `sudo nginx -t && sudo systemctl reload nginx`.
 
 ---
