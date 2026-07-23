@@ -41,3 +41,6 @@ probe_iface_alarms.py
 
 # Internal-only doc variants with content we don't want in the public repo
 docs/*.internal.md
+
+# Playwright MCP scratch output (screenshots, snapshots, console logs)
+.playwright-mcp/
