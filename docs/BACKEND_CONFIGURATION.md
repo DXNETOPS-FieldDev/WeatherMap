@@ -196,6 +196,16 @@ not 8581 as some docs say). A 500 means `da-proxy.properties` is
 missing or unreadable. A 200 with an empty `<NetworkPathList/>` means
 the DA found no matching paths for the AppNeta path IDs sent.
 
+If nginx and the DA backend both check out but `da-proxy.jsp` still
+502s, verify name resolution **from the Performance Center host
+itself** — not from your reverse proxy, not from your own machine.
+`da.target.url`'s hostname has to resolve and be reachable from
+wherever the JSP actually executes; a host being reachable from
+elsewhere on the network doesn't guarantee the PC server can reach it
+too (DNS zone visibility, `/etc/hosts` entries, and firewall rules can
+all differ per host). A quick `curl` of `da.target.url` run directly
+on the PC host is the fastest way to confirm.
+
 **Weather overlay tiles don't display** — `https://tile.openweathermap.org`
 isn't in CSP `img-src`.
 
