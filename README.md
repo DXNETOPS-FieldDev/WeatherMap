@@ -217,16 +217,32 @@ View's display name/height in the portal picker.
 Fetched by the App View at startup. Change a value, save, hard-refresh
 the iframe — no build needed.
 
+**Must change before going live:**
+- **`triageViewPageId`** — ships set to a specific dev environment's
+  Triage View page id, not a placeholder. Your Performance Center
+  instance almost certainly uses a different page id. Until this is
+  corrected, "Investigate in Triage View" links point to the wrong
+  page (or nowhere). Set it to your own environment's Triage View page
+  id, or `null` to hide the deep-links entirely.
+
+**Worth checking before going live:**
+- **`owmApiKey`** — ships with a shared testing key. Get your own free
+  key at https://openweathermap.org/api so weather features aren't
+  subject to someone else's rate limit.
+- **`odata.topLimit`** — ships at `500`. If your target group has more
+  devices than this, they'll be silently truncated. Check your device
+  count and raise this if needed.
+
 | Key | Purpose |
 |---|---|
-| `owmApiKey` | OpenWeatherMap API key for weather overlays and the popup's Weather tab. Get a free key at https://openweathermap.org/api. |
+| `owmApiKey` | OpenWeatherMap API key for weather overlays and the popup's Weather tab. *Worth checking before going live — see above.* |
 | `mapDefaults.center` / `.zoom` | Initial map view before devices load. Defaults to the continental US. |
 | `clusterRadius` | Pixel radius for marker clustering. Lower = clusters break apart sooner as you zoom in. |
-| `odata.topLimit` | Maximum devices returned per OData query. |
+| `odata.topLimit` | Maximum devices returned per OData query. *Worth checking before going live — see above.* |
 | `odata.resolution` | OData metric aggregation resolution (e.g. `RATE`, `HOUR`). |
 | `powerOutages.apiUrl` | ODIN dataset endpoint for power-outage polygons. Defaults to the public ORNL mirror. |
 | `powerOutages.maxRecords` | Pagination cap for ODIN. 5000 covers nationwide storms comfortably. |
-| `triageViewPageId` | The Performance Center page id for Triage View in **your** environment. Required for the "Investigate in Triage View" deep-links to appear — set it to whichever page id your portal uses for the Triage View context page. Leave `null` to hide the deep-links. |
+| `triageViewPageId` | The Performance Center page id for Triage View in **your** environment. **Must change before going live — see above.** Leave `null` to hide the deep-links. |
 
 ### Backend connections and Portal CSP
 
