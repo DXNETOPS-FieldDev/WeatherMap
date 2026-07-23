@@ -88,18 +88,19 @@ WeatherMap relies on. Configure it via the **SSO Configuration Tool
 A validated, working example:
 
 ```
-Content-Security-Policy: default-src 'self'; script-src 'self' *.ipce.broadcom.com:* 'unsafe-inline' 'unsafe-eval'; connect-src 'self' *.ipce.broadcom.com:* api.rainviewer.com:* dev-spectrum.forwardinc.biz:* https://ornl.opendatasoft.com ws: wss: https://api.openweathermap.org; img-src 'self' data: https://*.tile.openstreetmap.org https://tile.openweathermap.org https://openweathermap.org https://tilecache.rainviewer.com; style-src 'self' 'unsafe-inline'; base-uri 'self'; frame-ancestors 'self'; font-src 'self'; frame-src 'self';|X-Frame-Options: SAMEORIGIN|X-Content-Type-Options: nosniff|X-XSS-Protection: 1; mode=block|Referrer-Policy: strict-origin|Feature-Policy: 'none'|Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+Content-Security-Policy: default-src 'self'; script-src 'self' *.ipce.broadcom.com:* 'unsafe-inline' 'unsafe-eval'; connect-src 'self' *.ipce.broadcom.com:* api.rainviewer.com:* https://ornl.opendatasoft.com ws: wss: https://api.openweathermap.org; img-src 'self' data: https://*.tile.openstreetmap.org https://tile.openweathermap.org https://openweathermap.org https://tilecache.rainviewer.com; style-src 'self' 'unsafe-inline'; base-uri 'self'; frame-ancestors 'self'; font-src 'self'; frame-src 'self';|X-Frame-Options: SAMEORIGIN|X-Content-Type-Options: nosniff|X-XSS-Protection: 1; mode=block|Referrer-Policy: strict-origin|Feature-Policy: 'none'|Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
 ```
 
 Notes on this value:
-- **`dev-spectrum.forwardinc.biz:*` in `connect-src` isn't required by
-  WeatherMap** — WeatherMap always reaches Spectrum through its
-  same-origin JSP proxy, never directly from the browser. It's present
-  because this header applies portal-wide (every response NetOps
-  Portal sends), not just to WeatherMap, so it can carry entries other
-  apps/features on the same portal need. Omit it on a fresh setup
-  unless something else on your portal needs direct browser access to
-  Spectrum.
+- **No Spectrum entry is needed in `connect-src`.** WeatherMap always
+  reaches Spectrum through its same-origin JSP proxy, never directly
+  from the browser — same for AppNeta and the Data Aggregator. This is
+  confirmed, not just inferred from code: a Spectrum hostname was
+  removed from this header on a live deployment, and both device
+  alarms and AppNeta Monitoring Point alarms continued to render
+  correctly afterward. If an existing portal-wide CSP header has a
+  Spectrum entry in it, it's most likely left over from an earlier
+  setup or unrelated to WeatherMap, and can be removed.
 - **`X-Frame-Options`, `X-Content-Type-Options`, `X-XSS-Protection`,
   `Referrer-Policy`, `Feature-Policy`, `Strict-Transport-Security`**
   are general portal security hardening, unrelated to WeatherMap.
