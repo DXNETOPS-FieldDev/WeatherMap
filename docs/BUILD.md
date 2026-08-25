@@ -129,6 +129,7 @@ WeatherMap/
 ├── public/                             ← copied verbatim into the zip
 │   ├── appConfig.properties
 │   ├── runtime-config.json
+│   ├── setup.sh                        ← interactive backend config prompt (no Node/npm needed)
 │   ├── spectrum-proxy.jsp              ← Spectrum same-origin proxy
 │   ├── spectrum-proxy.properties.example
 │   ├── appneta-proxy.jsp               ← AppNeta same-origin proxy

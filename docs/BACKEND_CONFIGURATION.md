@@ -6,6 +6,24 @@ change your NetOps Portal needs for the weather/radar/power-outage
 overlays. See the main [README](../README.md) for download, install,
 top-level configuration, and running the app.
 
+## Recommended: run `setup.sh` instead of editing files by hand
+
+The deployed App View folder includes `setup.sh` — an interactive
+script (plain bash, no Node/npm needed) that prompts for each backend's
+connection details and writes the `.properties` files for you:
+
+```bash
+cd <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap
+./setup.sh
+```
+
+It covers everything below (Spectrum, AppNeta, the Data Aggregator, and
+the Triage View page id) in one guided pass, and is safe to re-run —
+it asks before overwriting a file that's already configured. The
+sections below describe what the script does under the hood, and are
+still the reference if you'd rather edit a file directly (e.g. to
+change one value later without re-running the whole flow).
+
 ---
 
 ## `spectrum-proxy.properties` — Spectrum backend

@@ -7,9 +7,17 @@ wrong, *where*, in the first second of looking.
 
 ![NetOps WeatherMap](docs/weathermap-screenshot.png)
 
+> ⚠️ **Do not deploy this repository directly.** Cloning this repo or
+> using GitHub's **Code → Download ZIP** gives you *source code* that
+> has never been built — it will not run, and NetOps Portal won't even
+> list it as an App View. Download the pre-built **`WeatherMap.zip`**
+> from this repository's [**Releases**](../../releases) page instead,
+> and start at [Install](#install) below.
+>
 > This guide covers downloading, installing, configuring, and running
-> WeatherMap from a pre-built release. Building it from source is
-> covered in the [Build Guide](docs/BUILD.md).
+> WeatherMap from that pre-built release. Building it from source
+> yourself (only needed if you're modifying the app) is covered in the
+> [Build Guide](docs/BUILD.md).
 
 ---
 
@@ -198,6 +206,12 @@ All environment-specific values live in files that ship inside
 `WeatherMap.zip`. Edit these directly in the deployed folder —
 **no rebuild required**; just save and hard-refresh the dashboard.
 
+For Spectrum/AppNeta/Data Aggregator and the Triage View page id, you
+can skip the manual file editing below and instead run **`setup.sh`**
+(included in the deployed folder) — an interactive prompt-driven script
+that writes these files for you. See
+[Backend Configuration](docs/BACKEND_CONFIGURATION.md#recommended-run-setupsh-instead-of-editing-files-by-hand).
+
 ### `appConfig.properties` — portal-facing metadata
 
 ```properties
@@ -223,7 +237,9 @@ the iframe — no build needed.
   instance almost certainly uses a different page id. Until this is
   corrected, "Investigate in Triage View" links point to the wrong
   page (or nowhere). Set it to your own environment's Triage View page
-  id, or `null` to hide the deep-links entirely.
+  id, or `null` to hide the deep-links entirely. `setup.sh` (see
+  [Backend Configuration](docs/BACKEND_CONFIGURATION.md)) prompts for
+  this along with the backend proxy settings.
 
 **Worth checking before going live:**
 - **`owmApiKey`** — ships with a shared testing key. Get your own free
