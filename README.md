@@ -119,9 +119,7 @@ up another tool."*
 
 ## Prerequisites
 
-- **One of:**
-  - Administrator role on your NetOps Portal account (for [Method A](#method-a--upload-via-portal-ui)), or
-  - SSH + sudo access to the portal server (for [Method B](#method-b--direct-deploy-via-ssh))
+- SSH + sudo access to the NetOps Portal server
 - Ability to get your portal's reverse-proxy CSP updated (typically nginx)
   — see [Backend Configuration](docs/BACKEND_CONFIGURATION.md)
 - *(Optional)* An AppNeta tenant + API token, if you want the AppNeta
@@ -131,34 +129,22 @@ up another tool."*
 
 ## Download
 
-Download the latest `WeatherMap.zip` from this repository's Releases
-page. (To build it from source instead, see the [Build Guide](docs/BUILD.md).)
+Go to **[this repository's latest release](https://github.com/DXNETOPS-FieldDev/WeatherMap/releases/latest)**
+and download the `WeatherMap.zip` file attached to it — that link
+always points at the newest release, so it's safe to bookmark.
+
+Do **not** use GitHub's green **Code → Download ZIP** button on the
+repository's main page — that downloads the source code, which is not
+the same thing and will not run (see the warning at the top of this
+README). If you need to build from source yourself, see the
+[Build Guide](docs/BUILD.md) instead.
 
 ---
 
 ## Install
 
-Two ways to deploy the zip. Use whichever access you have.
-
-### Method A — Upload via Portal UI
-
-Requires the Administrator role on the portal.
-
-1. Log in to DX NetOps Portal as a user with the **Administrator** role.
-2. **Administration → Configuration Settings → App Deployment.**
-3. In the **App** field, browse and select `WeatherMap.zip`, then click
-   **Add**. The portal unzips into `/pc/apps/user/WeatherMap/` — no
-   restart needed.
-
-**If this menu is missing or returns a permissions error**, your
-account lacks the Administrator role — use Method B, or ask your
-portal admin to grant it.
-
-### Method B — Direct deploy via SSH
-
-Use this when you have server access but not the portal Administrator
-role. This unzips the app directly into the portal's user-apps
-directory, bypassing the web UI.
+Deploy directly to the portal server over SSH — this unzips the app
+into the portal's user-apps directory.
 
 1. **Find the apps directory** (the exact path varies by installation —
    `<PC_HOME>` below is your Performance Center installation root):
@@ -194,9 +180,8 @@ access to them (rare), fix with:
 sudo chown -R capc:capc <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap
 ```
 
-Both methods deploy live — no portal restart needed either way. Once
-deployed, continue to [Configure](#configure) before adding it to a
-dashboard.
+Deploys live — no portal restart needed. Once deployed, continue to
+[Configure](#configure) before adding it to a dashboard.
 
 ---
 
@@ -206,11 +191,44 @@ All environment-specific values live in files that ship inside
 `WeatherMap.zip`. Edit these directly in the deployed folder —
 **no rebuild required**; just save and hard-refresh the dashboard.
 
-For Spectrum/AppNeta/Data Aggregator and the Triage View page id, you
-can skip the manual file editing below and instead run **`setup.sh`**
-(included in the deployed folder) — an interactive prompt-driven script
-that writes these files for you. See
-[Backend Configuration](docs/BACKEND_CONFIGURATION.md#recommended-run-setupsh-instead-of-editing-files-by-hand).
+### Run `setup.sh` — the fastest way to configure Spectrum, AppNeta, and the Data Aggregator
+
+No Node/npm needed — this is a plain script included in the deployed
+folder. It's the recommended way to fill in
+`spectrum-proxy.properties`, `appneta-proxy.properties`,
+`da-proxy.properties`, and the Triage View page id; the sections below
+describe what it writes, in case you'd rather edit a file directly
+later.
+
+1. **SSH into the portal server and go to the deployed folder:**
+   ```bash
+   ssh <user>@<portal-host>
+   cd <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap
+   ```
+2. **Run the script:**
+   ```bash
+   ./setup.sh
+   ```
+3. **Answer the prompts.** It walks through, in order:
+   - **Spectrum** (required) — REST base URL, username, password, and
+     whether to verify Spectrum's TLS certificate.
+   - **AppNeta** (optional — say no if you're not using Monitoring
+     Points) — REST base URL, organization id, API token, TLS
+     verification.
+   - **Data Aggregator** (optional, only asked if you configured
+     AppNeta — say no if you don't need AppNeta path titles to link
+     into PC) — REST URL, your NetOps Portal username/password, TLS
+     verification.
+   - **Triage View page id** (required for the "Investigate in Triage
+     View" links to work) — find this by opening Triage View in your
+     Portal and reading the page id out of the URL. Leave it blank to
+     hide those links instead.
+4. **Restart the servlet container** (Tomcat/Jetty) so the `.properties`
+   changes take effect. The Triage View page id applies immediately —
+   no restart needed for that one.
+
+Safe to re-run later — it asks before overwriting a file you've
+already configured, so answering "no" leaves that file untouched.
 
 ### `appConfig.properties` — portal-facing metadata
 
