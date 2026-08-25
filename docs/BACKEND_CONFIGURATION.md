@@ -181,13 +181,19 @@ The Spectrum, AppNeta, and Data Aggregator APIs don't need CSP entries
 
 ## Data Aggregator REST endpoint
 
-*(Skip this section if you're not using the AppNeta path deep-link — i.e. you
-haven't set up `da-proxy.properties`.)*
+*(Skip this section if you haven't configured `da-proxy.properties`
+— used for the AppNeta path deep-link.)*
 
-The Data Aggregator typically sits behind a separate nginx server
-block that, by default, only forwards `/odataquery` and `/sso`. Add a
-`location /rest/` block alongside those so the path-inventory endpoint
-is reachable. A full example server block:
+If NetOps Portal already runs behind a reverse proxy, the Data
+Aggregator typically sits behind a separate nginx server block that,
+by default, already forwards `/odataquery` and `/sso` — pre-existing
+DA/Portal plumbing, unrelated to WeatherMap or AppNeta. (If there's no
+reverse proxy in the picture at all, neither of those applies either —
+skip this whole section.) The only thing WeatherMap needs is one new
+`location /rest/` block added alongside them, so the path-inventory
+endpoint is reachable. Shown below as a full server block so you can
+see where the new block fits — `/odataquery` and `/sso` are included
+for context only, not because WeatherMap needs them:
 
 ```nginx
 server {
@@ -221,9 +227,10 @@ server {
 ```
 
 Notes:
-- **Only the `/rest/` block is new** — `/odataquery` and `/sso`
-  typically already exist on this server block for other DA functions;
-  shown together here so you can see where the new block fits.
+- **Only the `/rest/` block is new.** `/odataquery` and `/sso` are
+  already there (assuming Portal already runs behind a reverse proxy)
+  for other DA/Portal functions that have nothing to do with
+  WeatherMap or AppNeta.
 - Port **8582** is the Data Aggregator's port in a verified working
   deployment (Broadcom techdocs say 8581 for this endpoint — *that's
   wrong for this PC version*; verify against your own environment

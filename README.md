@@ -135,8 +135,8 @@ up another tool."*
     needs no reverse proxy at all.
   - [Data Aggregator REST endpoint](docs/BACKEND_CONFIGURATION.md#data-aggregator-rest-endpoint) —
     one new location block on your existing Data Aggregator reverse
-    proxy, needed only if you're using the AppNeta path deep-link
-    feature.
+    proxy, needed only if you configure `da-proxy.properties` (used
+    for the AppNeta path deep-link).
 
 ---
 
