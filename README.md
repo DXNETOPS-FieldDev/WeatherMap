@@ -208,22 +208,24 @@ later.
    ./setup.sh
    ```
 3. **Answer the prompts.** It walks through, in order:
-   - **Spectrum** (required) — REST base URL, username, password, and
-     whether to verify Spectrum's TLS certificate.
+   - **Spectrum** (optional — say no if you don't have Spectrum) —
+     REST base URL, username, password, and whether to verify
+     Spectrum's TLS certificate.
    - **AppNeta** (optional — say no if you're not using Monitoring
      Points) — REST base URL, organization id, API token, TLS
      verification.
-   - **Data Aggregator** (optional, only asked if you configured
-     AppNeta — say no if you don't need AppNeta path titles to link
-     into PC) — REST URL, your NetOps Portal username/password, TLS
-     verification.
+   - **Data Aggregator** (asked whenever you configure AppNeta — the
+     Data Aggregator is always deployed alongside NetOps Portal, so
+     there's no reason to skip it) — REST URL, your NetOps Portal
+     username/password, TLS verification, for AppNeta path titles to
+     link into PC.
    - **Triage View page id** (required for the "Investigate in Triage
      View" links to work) — find this by opening Triage View in your
      Portal and reading the page id out of the URL. Leave it blank to
      hide those links instead.
-4. **Restart the servlet container** (Tomcat/Jetty) so the `.properties`
-   changes take effect. The Triage View page id applies immediately —
-   no restart needed for that one.
+4. **No servlet-container restart needed.** Both the `.properties`
+   files and `runtime-config.json` are read fresh on the next
+   request/page load.
 
 Safe to re-run later — it asks before overwriting a file you've
 already configured, so answering "no" leaves that file untouched.

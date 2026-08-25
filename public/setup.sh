@@ -7,9 +7,11 @@
 #   cd <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap
 #   ./setup.sh
 #
-# Prompts for Spectrum (required), AppNeta + the Data Aggregator
-# (optional), and the Triage View page id, then writes the real
-# .properties files and updates runtime-config.json. No Node/npm needed —
+# Prompts for Spectrum (optional), AppNeta (optional), the Data
+# Aggregator (asked whenever AppNeta is configured — it's always
+# deployed alongside NetOps Portal, so there's no reason to skip it),
+# and the Triage View page id, then writes the real .properties files
+# and updates runtime-config.json. No Node/npm needed —
 # this is plain bash, since most customer environments won't have a
 # JS build toolchain installed.
 #
@@ -83,22 +85,24 @@ write_properties() {
 echo "=== WeatherMap backend setup ==="
 echo ""
 
-# --- Spectrum (required) ------------------------------------------------
+# --- Spectrum (optional) ------------------------------------------------
 
-echo "--- Spectrum (required — device/alarm data) ---"
-spectrum_url=$(ask "Spectrum REST base URL (e.g. https://spectrum.example.com:8443/spectrum/)")
-spectrum_user=$(ask "Spectrum username")
-spectrum_password=$(ask_secret "Spectrum password")
-spectrum_verify="false"
-if ask_yn "Verify Spectrum's TLS certificate? (say no for self-signed dev certs)" "N"; then
-  spectrum_verify="true"
+if ask_yn "Configure Spectrum (device/alarm severity coloring)?" "Y"; then
+  echo "--- Spectrum ---"
+  spectrum_url=$(ask "Spectrum REST base URL (e.g. https://spectrum.example.com:8443/spectrum/)")
+  spectrum_user=$(ask "Spectrum username")
+  spectrum_password=$(ask_secret "Spectrum password")
+  spectrum_verify="false"
+  if ask_yn "Verify Spectrum's TLS certificate? (say no for self-signed dev certs)" "N"; then
+    spectrum_verify="true"
+  fi
+  write_properties spectrum-proxy.properties.example spectrum-proxy.properties \
+    "spectrum.base.url=$spectrum_url" \
+    "spectrum.user=$spectrum_user" \
+    "spectrum.password=$spectrum_password" \
+    "spectrum.ssl.verify=$spectrum_verify"
+  echo ""
 fi
-write_properties spectrum-proxy.properties.example spectrum-proxy.properties \
-  "spectrum.base.url=$spectrum_url" \
-  "spectrum.user=$spectrum_user" \
-  "spectrum.password=$spectrum_password" \
-  "spectrum.ssl.verify=$spectrum_verify"
-echo ""
 
 # --- AppNeta (optional) --------------------------------------------------
 
@@ -123,25 +127,23 @@ if ask_yn "Configure AppNeta Monitoring Points?" "N"; then
   echo ""
 fi
 
-# --- Data Aggregator (optional, pairs with AppNeta) ----------------------
+# --- Data Aggregator (required if AppNeta is configured) ----------------
 
 if [[ "$configured_appneta" == true ]]; then
-  if ask_yn "Configure the Data Aggregator too, for AppNeta path -> PC deep-links?" "N"; then
-    echo "--- Data Aggregator ---"
-    da_url=$(ask "DA REST URL (e.g. https://your-da-host/rest/sdn/networkpath/filtered/)")
-    da_user=$(ask "NetOps Portal username (DA uses the same login)")
-    da_password=$(ask_secret "NetOps Portal password")
-    da_verify="false"
-    if ask_yn "Verify the DA's TLS certificate? (say no for self-signed dev certs)" "N"; then
-      da_verify="true"
-    fi
-    write_properties da-proxy.properties.example da-proxy.properties \
-      "da.target.url=$da_url" \
-      "da.user=$da_user" \
-      "da.password=$da_password" \
-      "da.ssl.verify=$da_verify"
-    echo ""
+  echo "--- Data Aggregator (for AppNeta path -> PC deep-links) ---"
+  da_url=$(ask "DA REST URL (e.g. https://your-da-host/rest/sdn/networkpath/filtered/)")
+  da_user=$(ask "NetOps Portal username (DA uses the same login)")
+  da_password=$(ask_secret "NetOps Portal password")
+  da_verify="false"
+  if ask_yn "Verify the DA's TLS certificate? (say no for self-signed dev certs)" "N"; then
+    da_verify="true"
   fi
+  write_properties da-proxy.properties.example da-proxy.properties \
+    "da.target.url=$da_url" \
+    "da.user=$da_user" \
+    "da.password=$da_password" \
+    "da.ssl.verify=$da_verify"
+  echo ""
 fi
 
 # --- runtime-config.json: Triage View page id (required) ----------------
@@ -163,6 +165,5 @@ fi
 echo ""
 
 echo "=== Done ==="
-echo "Restart the servlet container (Tomcat/Jetty) for the .properties changes"
-echo "to take effect. runtime-config.json changes apply on the next page load"
-echo "— no restart needed for that one."
+echo "No servlet-container restart needed — both the .properties files and"
+echo "runtime-config.json are read fresh on the next request/page load."

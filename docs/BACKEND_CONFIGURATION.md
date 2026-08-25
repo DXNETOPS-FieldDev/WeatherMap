@@ -26,11 +26,13 @@ change one value later without re-running the whole flow).
 
 ---
 
-## `spectrum-proxy.properties` — Spectrum backend
+## `spectrum-proxy.properties` — Spectrum backend *(optional)*
 
-Required. The Spectrum proxy needs to know where your Spectrum server
-is and how to authenticate. **Copy the shipped template and fill it
-in:**
+Only needed if you have a Spectrum instance and want device/alarm
+severity coloring. Without it, WeatherMap still renders devices from
+Performance Center — they just show as normal/green. The Spectrum
+proxy needs to know where your Spectrum server is and how to
+authenticate. **Copy the shipped template and fill it in:**
 
 ```bash
 cp spectrum-proxy.properties.example spectrum-proxy.properties
@@ -99,7 +101,7 @@ cp appneta-proxy.properties.example appneta-proxy.properties
 
 ---
 
-## `da-proxy.properties` — Data Aggregator WebServices *(optional, paired with AppNeta)*
+## `da-proxy.properties` — Data Aggregator WebServices *(required if you configure AppNeta)*
 
 Despite the name, this is WeatherMap's own same-origin JSP proxy
 (same pattern as `spectrum-proxy.properties` and
@@ -108,10 +110,12 @@ run in front of the Data Aggregator itself. If you're looking for
 that instead, see [Data Aggregator REST endpoint](#data-aggregator-rest-endpoint)
 below.
 
-Only needed if you want the **Network Path → PC deep-link** in the
-AppNeta path popup. PC OData doesn't expose AppNeta path inventory,
-so we look it up via the Data Aggregator's REST WebServices. Same
-template pattern:
+Needed for the **Network Path → PC deep-link** in the AppNeta path
+popup. PC OData doesn't expose AppNeta path inventory, so we look it
+up via the Data Aggregator's REST WebServices. The Data Aggregator is
+always deployed alongside NetOps Portal, so if you're already
+configuring AppNeta there's no reason to skip this. Same template
+pattern:
 
 ```bash
 cp da-proxy.properties.example da-proxy.properties
@@ -127,8 +131,8 @@ cp da-proxy.properties.example da-proxy.properties
 If this file is missing the path popup just falls back to a plain-text
 title — paths still render, links don't.
 
-Changes to any `.properties` file require the servlet container to
-recompile the JSP (typically a Tomcat / Jetty restart).
+No servlet-container restart needed — each JSP proxy reads its
+`.properties` file fresh on every request.
 
 ---
 
