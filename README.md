@@ -128,15 +128,6 @@ up another tool."*
   normal/green instead of colored by alarm severity.
 - *(Optional)* An AppNeta tenant + API token, if you want the AppNeta
   Monitoring Points feature
-- *(Only if you run a reverse proxy somewhere in your NetOps stack)*
-  — most customers don't need to touch either of these:
-  - [Spectrum via reverse proxy](docs/BACKEND_CONFIGURATION.md#spectrum-via-reverse-proxy-optional-alternative) —
-    an optional alternative to the default Spectrum connection, which
-    needs no reverse proxy at all.
-  - [Data Aggregator REST endpoint](docs/BACKEND_CONFIGURATION.md#data-aggregator-rest-endpoint) —
-    one new location block on your existing Data Aggregator reverse
-    proxy, needed only if you configure `da-proxy.properties` (used
-    for the AppNeta path deep-link).
 
 ---
 
