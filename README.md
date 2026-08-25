@@ -125,16 +125,6 @@ Go to **[this repository's latest release](https://github.com/DXNETOPS-FieldDev/
 and download the `WeatherMap.zip` file attached to it — that link
 always points at the newest release, so it's safe to bookmark.
 
-Do **not** use GitHub's green **Code → Download ZIP** button on the
-repository's main page — that downloads the source code, which is not
-the same thing and will not run (see the warning at the top of this
-README). If you need to build from source yourself, see the
-[Build Guide](docs/BUILD.md) instead.
-
----
-
-## Install
-
 > ⚠️ **Do not deploy this repository directly.** Cloning this repo or
 > using GitHub's **Code → Download ZIP** gives you *source code* that
 > has never been built — it will not run, and NetOps Portal won't even
@@ -146,6 +136,10 @@ README). If you need to build from source yourself, see the
 > WeatherMap from that pre-built release. Building it from source
 > yourself (only needed if you're modifying the app) is covered in the
 > [Build Guide](docs/BUILD.md).
+
+---
+
+## Install
 
 Deploy directly to the portal server over SSH — this unzips the app
 into the portal's user-apps directory.
