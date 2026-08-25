@@ -119,11 +119,20 @@ up another tool."*
 
 ## Prerequisites
 
-- SSH + sudo access to the NetOps Portal server
-- Ability to get your portal's reverse-proxy CSP updated (typically nginx)
-  — see [Backend Configuration](docs/BACKEND_CONFIGURATION.md)
+- SSH + sudo access to the NetOps Portal server — also used to make
+  the one-time Portal CSP change via `SsoConfig`, see
+  [Backend Configuration](docs/BACKEND_CONFIGURATION.md)
+- *(Optional)* Access to a Spectrum instance + credentials, for device
+  alarm severity coloring. If you don't have Spectrum, WeatherMap
+  still renders devices from Performance Center — they just show as
+  normal/green instead of colored by alarm severity.
 - *(Optional)* An AppNeta tenant + API token, if you want the AppNeta
   Monitoring Points feature
+- *(Only if you already run a reverse proxy in front of NetOps
+  Portal)* — WeatherMap's default Spectrum connection needs no reverse
+  proxy at all; see
+  [Special case: connecting to Spectrum through a reverse proxy you already run](docs/BACKEND_CONFIGURATION.md#special-case-connecting-to-spectrum-through-a-reverse-proxy-you-already-run)
+  if you specifically want to route through one you already have.
 
 ---
 
@@ -146,16 +155,10 @@ README). If you need to build from source yourself, see the
 Deploy directly to the portal server over SSH — this unzips the app
 into the portal's user-apps directory.
 
-1. **Find the apps directory** (the exact path varies by installation —
-   `<PC_HOME>` below is your Performance Center installation root):
-   ```bash
-   ssh <user>@<portal-host>
-   find /opt -type d -name 'user' 2>/dev/null | grep -i 'apps'
-   ```
-   Expected result on a standard install:
-   ```
-   <PC_HOME>/PC/webapps/pc/apps/user
-   ```
+1. **Know `<PC_HOME>`** — your Performance Center installation root.
+   Whoever administers your Performance Center install will already
+   know this path; ask them if you're not sure. The apps directory
+   you need is `<PC_HOME>/PC/webapps/pc/apps/user`.
 2. **Copy and extract the zip:**
    ```bash
    # From your local machine:
@@ -175,9 +178,15 @@ into the portal's user-apps directory.
    Should return `200`.
 
 If `sudo unzip` leaves files owned by root and the portal needs write
-access to them (rare), fix with:
+access to them (rare), match the ownership WeatherMap's folder to the
+`apps/user` directory it lives in — first check what that already is:
 ```bash
-sudo chown -R capc:capc <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap
+ls -ld <PC_HOME>/PC/webapps/pc/apps/user
+```
+Then apply that same user:group to WeatherMap's folder. For example,
+if the command above shows `pcuser pcuser` as the owner:
+```bash
+sudo chown -R pcuser:pcuser <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap
 ```
 
 Deploys live — no portal restart needed. Once deployed, continue to

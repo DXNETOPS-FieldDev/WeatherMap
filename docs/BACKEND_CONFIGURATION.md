@@ -43,6 +43,41 @@ cp spectrum-proxy.properties.example spectrum-proxy.properties
 | `spectrum.user` / `spectrum.password` | Spectrum credentials. Browser never sees them. Auto-obfuscated on disk after the first request (see template comments). |
 | `spectrum.ssl.verify` | `true` for production with valid certs, `false` for self-signed dev certs |
 
+### Special case: connecting to Spectrum through a reverse proxy you already run
+
+The default above (`spectrum-proxy.properties` + the shipped
+`spectrum-proxy.jsp`) needs **no reverse proxy at all** — most
+customers should just use it as-is. This alternative is only for the
+minority who already run their own nginx (or equivalent) in front of
+NetOps Portal and would rather route the Spectrum connection through
+that instead of the shipped JSP.
+
+If that's you: add a location block like this to your existing
+reverse proxy:
+
+```nginx
+location /spectrum/ {
+    proxy_pass https://<spectrum-host>:8443/spectrum/;
+    proxy_set_header Authorization "Basic <base64 user:pass>";
+    proxy_ssl_verify off;
+}
+```
+
+Then in `appConfig.properties`, comment out the default `url=` line
+and uncomment the `&proxy=nginx` one (both are already present in the
+file, with matching comments):
+
+```properties
+# Option A — JSP Proxy (default)
+#url=index.html?id={ItemIdDA}&startTime={TimeStartUTC}&endTime={TimeEndUTC}
+
+# Option B — nginx reverse proxy
+url=index.html?id={ItemIdDA}&startTime={TimeStartUTC}&endTime={TimeEndUTC}&proxy=nginx
+```
+
+With this option, `spectrum-proxy.properties` isn't used at all — the
+credentials live in your reverse proxy's own config instead.
+
 ---
 
 ## `appneta-proxy.properties` — AppNeta backend *(optional)*
