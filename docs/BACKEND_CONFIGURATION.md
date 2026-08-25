@@ -43,7 +43,7 @@ cp spectrum-proxy.properties.example spectrum-proxy.properties
 | `spectrum.user` / `spectrum.password` | Spectrum credentials. Browser never sees them. Auto-obfuscated on disk after the first request (see template comments). |
 | `spectrum.ssl.verify` | `true` for production with valid certs, `false` for self-signed dev certs |
 
-### Special case: connecting to Spectrum through a reverse proxy you already run
+### Spectrum via reverse proxy (optional alternative)
 
 The default above (`spectrum-proxy.properties` + the shipped
 `spectrum-proxy.jsp`) needs **no reverse proxy at all** — most
@@ -100,6 +100,13 @@ cp appneta-proxy.properties.example appneta-proxy.properties
 ---
 
 ## `da-proxy.properties` — Data Aggregator WebServices *(optional, paired with AppNeta)*
+
+Despite the name, this is WeatherMap's own same-origin JSP proxy
+(same pattern as `spectrum-proxy.properties` and
+`appneta-proxy.properties`) — it's unrelated to any reverse proxy you
+run in front of the Data Aggregator itself. If you're looking for
+that instead, see [Data Aggregator REST endpoint](#data-aggregator-rest-endpoint)
+below.
 
 Only needed if you want the **Network Path → PC deep-link** in the
 AppNeta path popup. PC OData doesn't expose AppNeta path inventory,

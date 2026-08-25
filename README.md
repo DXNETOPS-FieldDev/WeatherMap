@@ -131,7 +131,7 @@ up another tool."*
 - *(Only if you already run a reverse proxy in front of NetOps
   Portal)* — WeatherMap's default Spectrum connection needs no reverse
   proxy at all; see
-  [Special case: connecting to Spectrum through a reverse proxy you already run](docs/BACKEND_CONFIGURATION.md#special-case-connecting-to-spectrum-through-a-reverse-proxy-you-already-run)
+  [Spectrum via reverse proxy](docs/BACKEND_CONFIGURATION.md#spectrum-via-reverse-proxy-optional-alternative)
   if you specifically want to route through one you already have.
 
 ---
