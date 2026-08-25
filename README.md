@@ -7,18 +7,6 @@ wrong, *where*, in the first second of looking.
 
 ![NetOps WeatherMap](docs/weathermap-screenshot.png)
 
-> ⚠️ **Do not deploy this repository directly.** Cloning this repo or
-> using GitHub's **Code → Download ZIP** gives you *source code* that
-> has never been built — it will not run, and NetOps Portal won't even
-> list it as an App View. Download the pre-built **`WeatherMap.zip`**
-> from this repository's [**Releases**](../../releases) page instead,
-> and start at [Install](#install) below.
->
-> This guide covers downloading, installing, configuring, and running
-> WeatherMap from that pre-built release. Building it from source
-> yourself (only needed if you're modifying the app) is covered in the
-> [Build Guide](docs/BUILD.md).
-
 ---
 
 ## Why operators love it
@@ -146,6 +134,18 @@ README). If you need to build from source yourself, see the
 ---
 
 ## Install
+
+> ⚠️ **Do not deploy this repository directly.** Cloning this repo or
+> using GitHub's **Code → Download ZIP** gives you *source code* that
+> has never been built — it will not run, and NetOps Portal won't even
+> list it as an App View. Make sure what you're about to deploy is the
+> pre-built **`WeatherMap.zip`** from the [Download](#download) section
+> above, not a raw clone or source download.
+>
+> This guide covers downloading, installing, configuring, and running
+> WeatherMap from that pre-built release. Building it from source
+> yourself (only needed if you're modifying the app) is covered in the
+> [Build Guide](docs/BUILD.md).
 
 Deploy directly to the portal server over SSH — this unzips the app
 into the portal's user-apps directory.
