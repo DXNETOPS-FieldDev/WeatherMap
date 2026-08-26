@@ -234,57 +234,10 @@ value to paste are in
 
 That's it — continue to [Run](#run).
 
----
-
-### Reference: other files you can tweak
-
-#### `appConfig.properties` — portal-facing metadata
-
-```properties
-appName=NetOps WeatherMap
-description=...
-url=index.html?id={ItemIdDA}&startTime={TimeStartUTC}&endTime={TimeEndUTC}
-height=700
-supportedContext=nc
-```
-
-Controls the iframe URL the portal navigates to (`{ItemIdDA}`,
-`{TimeStartUTC}`, `{TimeEndUTC}` are substituted at runtime) and the App
-View's display name/height in the portal picker.
-
-#### `runtime-config.json` — runtime values
-
-Fetched by the App View at startup. Change a value, save, hard-refresh
-the iframe — no build needed.
-
-**Must change before going live:**
-- **`triageViewPageId`** — ships set to a specific dev environment's
-  Triage View page id, not a placeholder. Your Performance Center
-  instance almost certainly uses a different page id. Until this is
-  corrected, "Investigate in Triage View" links point to the wrong
-  page (or nowhere). Set it to your own environment's Triage View page
-  id, or `null` to hide the deep-links entirely. `setup.sh` (see
-  [Backend Configuration](docs/BACKEND_CONFIGURATION.md)) prompts for
-  this along with the backend proxy settings.
-
-**Worth checking before going live:**
-- **`owmApiKey`** — ships with a shared testing key. Get your own free
-  key at https://openweathermap.org/api so weather features aren't
-  subject to someone else's rate limit.
-- **`odata.topLimit`** — ships at `500`. If your target group has more
-  devices than this, they'll be silently truncated. Check your device
-  count and raise this if needed.
-
-| Key | Purpose |
-|---|---|
-| `owmApiKey` | OpenWeatherMap API key for weather overlays and the popup's Weather tab. *Worth checking before going live — see above.* |
-| `mapDefaults.center` / `.zoom` | Initial map view before devices load. Defaults to the continental US. |
-| `clusterRadius` | Pixel radius for marker clustering. Lower = clusters break apart sooner as you zoom in. |
-| `odata.topLimit` | Maximum devices returned per OData query. *Worth checking before going live — see above.* |
-| `odata.resolution` | OData metric aggregation resolution (e.g. `RATE`, `HOUR`). |
-| `powerOutages.apiUrl` | ODIN dataset endpoint for power-outage polygons. Defaults to the public ORNL mirror. |
-| `powerOutages.maxRecords` | Pagination cap for ODIN. 5000 covers nationwide storms comfortably. |
-| `triageViewPageId` | The Performance Center page id for Triage View in **your** environment. **Must change before going live — see above.** Leave `null` to hide the deep-links. |
+See [Reference: other files you can tweak](docs/BACKEND_CONFIGURATION.md#reference-other-files-you-can-tweak)
+in Backend Configuration for `appConfig.properties` and
+`runtime-config.json` details — including the `triageViewPageId`
+value you must change before going live.
 
 ---
 
@@ -306,39 +259,8 @@ is fine and the issue is in your backend configuration — see
 
 ## Troubleshooting
 
-Issues with Spectrum, AppNeta, or Data Aggregator proxies, or with the
-portal's Content-Security-Policy, are covered in
-[Backend Configuration](docs/BACKEND_CONFIGURATION.md#troubleshooting)
-instead of here.
-
-**Status banner: "Failed to load runtime-config.json"** — the file is
-missing, malformed JSON, or blocked by CSP. Check the browser console.
-
-**Status banner: "No geo-located devices found"** — the group either has
-no devices, or none of them have `Latitude` / `Longitude` set in NetOps.
-
-**No SD-WAN tunnels showing** — the PC OData query returned no tunnels
-for the group, or the proxied call failed. Check DevTools → Network for
-`/pc/odata4/api/tunnels` and verify the response.
-
-**"Investigate in Triage View" link doesn't appear** —
-`triageViewPageId` in `runtime-config.json` is null. Set it to the
-Triage View page id for your environment.
-
-**Weather tab says "Couldn't load weather"** — either the OWM API key is
-bad (rotate it in `runtime-config.json`), or your portal's CSP isn't
-whitelisting OpenWeatherMap — see
-[Backend Configuration](docs/BACKEND_CONFIGURATION.md).
-
-**Power Outages overlay shows no count or stays empty** — first check
-whether your portal's CSP allows the ODIN API (see
-[Backend Configuration](docs/BACKEND_CONFIGURATION.md)). If CSP is fine,
-note that ODIN coverage is voluntary — some utilities (notably FPL in
-Florida, PG&E in Northern California) don't participate, so absence of
-polygons in those areas may be real, not a bug.
-
-**Old version showing after redeploy** — the browser caches the iframe's
-JS bundle. Hard refresh (Ctrl+Shift+R) or use an incognito window.
+See [Troubleshooting](docs/BACKEND_CONFIGURATION.md#troubleshooting)
+in Backend Configuration.
 
 ---
 

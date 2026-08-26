@@ -255,7 +255,69 @@ Notes:
 
 ---
 
+## Reference: other files you can tweak
+
+### `appConfig.properties` — portal-facing metadata
+
+```properties
+appName=NetOps WeatherMap
+description=...
+url=index.html?id={ItemIdDA}&startTime={TimeStartUTC}&endTime={TimeEndUTC}
+height=700
+supportedContext=nc
+```
+
+Controls the iframe URL the portal navigates to (`{ItemIdDA}`,
+`{TimeStartUTC}`, `{TimeEndUTC}` are substituted at runtime) and the
+App View's display name/height in the portal picker.
+
+### `runtime-config.json` — runtime values
+
+Fetched by the App View at startup. Change a value, save, hard-refresh
+the iframe — no build needed.
+
+**Must change before going live:**
+- **`triageViewPageId`** — ships set to a specific dev environment's
+  Triage View page id, not a placeholder. Your Performance Center
+  instance almost certainly uses a different page id. Until this is
+  corrected, "Investigate in Triage View" links point to the wrong
+  page (or nowhere). Set it to your own environment's Triage View page
+  id, or `null` to hide the deep-links entirely. `setup.sh` prompts
+  for this along with the backend proxy settings.
+
+**Worth checking before going live:**
+- **`owmApiKey`** — ships with a shared testing key. Get your own free
+  key at https://openweathermap.org/api so weather features aren't
+  subject to someone else's rate limit.
+- **`odata.topLimit`** — ships at `500`. If your target group has more
+  devices than this, they'll be silently truncated. Check your device
+  count and raise this if needed.
+
+| Key | Purpose |
+|---|---|
+| `owmApiKey` | OpenWeatherMap API key for weather overlays and the popup's Weather tab. *Worth checking before going live — see above.* |
+| `mapDefaults.center` / `.zoom` | Initial map view before devices load. Defaults to the continental US. |
+| `clusterRadius` | Pixel radius for marker clustering. Lower = clusters break apart sooner as you zoom in. |
+| `odata.topLimit` | Maximum devices returned per OData query. *Worth checking before going live — see above.* |
+| `odata.resolution` | OData metric aggregation resolution (e.g. `RATE`, `HOUR`). |
+| `powerOutages.apiUrl` | ODIN dataset endpoint for power-outage polygons. Defaults to the public ORNL mirror. |
+| `powerOutages.maxRecords` | Pagination cap for ODIN. 5000 covers nationwide storms comfortably. |
+| `triageViewPageId` | The Performance Center page id for Triage View in **your** environment. **Must change before going live — see above.** Leave `null` to hide the deep-links. |
+
+---
+
 ## Troubleshooting
+
+**Status banner: "Failed to load runtime-config.json"** — the file is
+missing, malformed JSON, or blocked by CSP. Check the browser console.
+
+**Status banner: "No geo-located devices found"** — the group either
+has no devices, or none of them have `Latitude` / `Longitude` set in
+NetOps.
+
+**No SD-WAN tunnels showing** — the PC OData query returned no tunnels
+for the group, or the proxied call failed. Check DevTools → Network
+for `/pc/odata4/api/tunnels` and verify the response.
 
 **All markers green / no alarms in popup** — the Spectrum proxy failed.
 Open DevTools → Network, look for `spectrum-proxy.jsp`, check the
@@ -287,16 +349,28 @@ too (DNS zone visibility, `/etc/hosts` entries, and firewall rules can
 all differ per host). A quick `curl` of `da.target.url` run directly
 on the PC host is the fastest way to confirm.
 
+**"Investigate in Triage View" link doesn't appear** —
+`triageViewPageId` in `runtime-config.json` is null. Set it to the
+Triage View page id for your environment.
+
 **Weather overlay tiles don't display** — `https://tile.openweathermap.org`
 isn't in CSP `img-src`.
 
-**Weather tab says "Couldn't load weather" (CSP cause)** — if the OWM
-API key in `runtime-config.json` is confirmed good, check that
-`https://api.openweathermap.org` is in CSP `connect-src`.
+**Weather tab says "Couldn't load weather"** — either the OWM API key
+in `runtime-config.json` is bad (rotate it), or the portal's CSP isn't
+whitelisting OpenWeatherMap. Check the browser console for a CSP
+`connect-src` violation on `https://api.openweathermap.org`.
 
-**Power Outages overlay empty (CSP cause)** — if the browser console
-shows a CSP `connect-src` violation for `ornl.opendatasoft.com`, the
-CSP whitelist hasn't been updated for ODIN.
+**Power Outages overlay shows no count or stays empty** — first check
+the browser console for a CSP `connect-src` violation on
+`ornl.opendatasoft.com`. If CSP is fine, note that ODIN coverage is
+voluntary — some utilities (notably FPL in Florida, PG&E in Northern
+California) don't participate, so absence of polygons in those areas
+may be real, not a bug.
 
 **Gray box instead of a map** — CSP is blocking OSM tiles. Confirm
 `https://*.tile.openstreetmap.org` is in the portal's `img-src`.
+
+**Old version showing after redeploy** — the browser caches the
+iframe's JS bundle. Hard refresh (Ctrl+Shift+R) or use an incognito
+window.
