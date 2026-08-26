@@ -32,6 +32,17 @@ body,
 .status-empty   { background: #fff4d4; color: #806000; }
 .status-ok      { background: rgba(255, 255, 255, 0.92); color: #333; }
 
+/* Stacks directly beneath the device-count status banner (top-center).
+   Every other corner is occupied: layer controls top-right, the three
+   legends bottom-right, the radar control bottom-left, zoom top-left. */
+.tunnel-metrics-note {
+  top: 44px;
+  max-width: 30rem;
+  text-align: center;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
 /* Device markers (Leaflet divIcons) */
 .device-marker {
   background: transparent !important;

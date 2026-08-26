@@ -11,9 +11,15 @@
          browser, this is unbuilt source code deployed as-is — download
          the pre-built WeatherMap.zip from this repo's Releases page and
          deploy that instead; see the README. -->
-    <div id="root" style="font-family: sans-serif; max-width: 32rem; margin: 3rem auto; padding: 1rem;">
-      <strong>This is unbuilt WeatherMap source code, not the deployable app.</strong>
-      <p>Download the pre-built <code>WeatherMap.zip</code> from this repository's Releases page and deploy that instead — see the README's Install section.</p>
+    <div id="root">
+      <!-- Styling lives on this inner div, NOT on #root itself: React
+           replaces #root's children on mount but never its own attributes,
+           so any inline style here would permanently constrain the live
+           app's layout. -->
+      <div style="font-family: sans-serif; max-width: 32rem; margin: 3rem auto; padding: 1rem;">
+        <strong>This is unbuilt WeatherMap source code, not the deployable app.</strong>
+        <p>Download the pre-built <code>WeatherMap.zip</code> from this repository's Releases page and deploy that instead — see the README's Install section.</p>
+      </div>
     </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

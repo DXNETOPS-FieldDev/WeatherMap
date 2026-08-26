@@ -95,13 +95,18 @@ function curvedPath(src, dst, controlMag, segments = 20) {
 }
 
 export default function TunnelLayer({ tunnels, devicesById }) {
-  if (!tunnels || tunnels.length === 0) return null
+  // Never early-return — keep the LayerGroup mounted even when there are no
+  // tunnels. Returning null creates no Leaflet layer, so react-leaflet's
+  // Overlay never registers its "SD-WAN Tunnels" entry in the LayersControl
+  // (same problem AppNetaLayer documents). That also strands the
+  // metrics-unavailable banner, which keys off the overlay's on/off state.
+  const safeTunnels = tunnels || []
 
   const cfg = getConfig().tunnels
   const thresholds = cfg.thresholds
   const curveMagnitude = cfg.curveMagnitude ?? 0.9
   const groups = new Map()
-  for (const t of tunnels) {
+  for (const t of safeTunnels) {
     const key = pairKey(t)
     let g = groups.get(key)
     if (!g) {

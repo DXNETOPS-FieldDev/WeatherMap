@@ -1,5 +1,17 @@
 import { getConfig } from '../lib/config.js'
 
+// Set once, the first time the OData schema turns out not to expose tunnel
+// metrics (older/other PC versions don't have this navigation property) —
+// remembered for the rest of the session so we stop retrying a query we
+// already know will fail, and so the UI can tell the user why tunnels are
+// rendering without jitter/latency/loss coloring.
+let metricsUnavailable = false
+let missingMetricsProperty = null
+
+export function getTunnelMetricsStatus() {
+  return { unavailable: metricsUnavailable, missingProperty: missingMetricsProperty }
+}
+
 /**
  * Fetch SD-WAN tunnels whose source AND destination devices are both in our
  * visible device set, with the latest 10-minute metric sample inline.
@@ -18,18 +30,34 @@ export async function fetchTunnels(deviceIds, { debug } = {}) {
 
   const srcFilter = deviceIds.map((id) => `SourceDeviceID eq ${id}`).join(' or ')
   const dstFilter = deviceIds.map((id) => `DestinationDeviceID eq ${id}`).join(' or ')
-
-  const url =
+  const buildUrl = (withMetrics) =>
     cfg.apiPath +
     `?$filter=(${srcFilter}) and (${dstFilter})` +
-    '&$expand=sdntunnelmfs($orderby=Timestamp desc;$top=1)' +
+    (withMetrics ? '&$expand=sdntunnelmfs($orderby=Timestamp desc;$top=1)' : '') +
     `&starttime=${startTime}` +
     `&endtime=${now}` +
     '&resolution=RATE' +
     `&$top=${cfg.maxRecords}` +
     '&$format=application/json'
 
-  const response = await fetch(url, { headers: { Accept: 'application/json' } })
+  let response = await fetch(buildUrl(!metricsUnavailable), { headers: { Accept: 'application/json' } })
+
+  // The OData4 parser rejects an unsupported $expand outright (400, before
+  // any rows come back) rather than just omitting the expansion — so on a
+  // schema without this navigation property we have to drop $expand and
+  // retry, not just tolerate missing data in the response.
+  if (!response.ok && !metricsUnavailable) {
+    // Olingo's error page HTML-encodes apostrophes as &#39; rather than
+    // using a literal ' — decode that before matching.
+    const body = (await response.text()).replace(/&#39;/g, "'")
+    const match = body.match(/Navigation Property '([^']+)'\s*not found/)
+    if (match) {
+      metricsUnavailable = true
+      missingMetricsProperty = match[1].trim()
+      response = await fetch(buildUrl(false), { headers: { Accept: 'application/json' } })
+    }
+  }
+
   if (!response.ok) {
     throw new Error(`Tunnels query failed: HTTP ${response.status}`)
   }

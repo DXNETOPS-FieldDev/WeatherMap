@@ -7,7 +7,7 @@ import { useUrlParams } from './hooks/useUrlParams.js'
 import { fetchDevices } from './api/odata.js'
 import { fetchSpectrumAlarmsForDevices } from './api/spectrum.js'
 import { fetchActiveOutages, correlateOutagesToDevices } from './api/odin.js'
-import { fetchTunnels } from './api/tunnels.js'
+import { fetchTunnels, getTunnelMetricsStatus } from './api/tunnels.js'
 import { fetchAppNetaPaths, fetchAppNetaMpDevices } from './api/appneta.js'
 import { fetchNetworkPathDetails } from './api/networkpath.js'
 import { fetchRadarFrames } from './api/rainviewer.js'
@@ -82,6 +82,8 @@ export default function App() {
   const [error, setError] = useState(null)
   const [outages, setOutages] = useState([])
   const [tunnels, setTunnels] = useState([])
+  const [tunnelMetricsUnavailable, setTunnelMetricsUnavailable] = useState(false)
+  const [missingTunnelMetric, setMissingTunnelMetric] = useState(null)
   const [appnetaPaths, setAppnetaPaths] = useState([])
   const [appnetaMps, setAppnetaMps] = useState([])
   const [radarFrames, setRadarFrames] = useState({ host: '', frames: [] })
@@ -212,7 +214,13 @@ export default function App() {
     const ids = devices.map((d) => d.id).filter(Boolean)
     const load = () => {
       fetchTunnels(ids, { debug: params.debug })
-        .then((data) => { if (!cancelled) setTunnels(data) })
+        .then((data) => {
+          if (cancelled) return
+          setTunnels(data)
+          const status = getTunnelMetricsStatus()
+          setTunnelMetricsUnavailable(status.unavailable)
+          setMissingTunnelMetric(status.missingProperty)
+        })
         .catch((e) => console.warn('Tunnel fetch failed:', e.message))
     }
     load()
@@ -427,6 +435,13 @@ export default function App() {
   return (
     <div className="app">
       <StatusBanner loading={loading} error={error} count={dedupedDevices.length} debug={params.debug} />
+      {tunnelLayerOn && tunnelMetricsUnavailable && (
+        <div className="status-banner status-empty tunnel-metrics-note">
+          SD-WAN tunnel metrics unavailable — this Performance Center doesn't
+          expose <code>{missingTunnelMetric}</code>. Tunnels render without
+          jitter/latency/loss coloring.
+        </div>
+      )}
       <MapContainer
         center={defaultCenter}
         zoom={defaultZoom}
