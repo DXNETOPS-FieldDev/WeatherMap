@@ -89,7 +89,7 @@ echo ""
 
 if ask_yn "Configure Spectrum (device/alarm severity coloring)?" "Y"; then
   echo "--- Spectrum ---"
-  spectrum_url=$(ask "Spectrum REST base URL (e.g. https://spectrum.example.com:8443/spectrum/)")
+  spectrum_url=$(ask "Spectrum REST base URL (e.g. http://spectrum.example.com:8080/spectrum/ — 8080 is the default, use https + 8443 if SSL)")
   spectrum_user=$(ask "Spectrum username")
   spectrum_password=$(ask_secret "Spectrum password")
   spectrum_verify="false"
@@ -165,5 +165,13 @@ fi
 echo ""
 
 echo "=== Done ==="
-echo "No servlet-container restart needed — both the .properties files and"
-echo "runtime-config.json are read fresh on the next request/page load."
+echo "If this was a first-time setup on a fresh deployment, you're ready —"
+echo "load the App View in your dashboard."
+echo ""
+echo "If you were CORRECTING a value the app had already used, restart"
+echo "Performance Center — each proxy JSP caches its .properties in memory"
+echo "on first request, so edits are otherwise ignored:"
+echo "    sudo systemctl restart caperfcenter_console"
+echo ""
+echo "runtime-config.json needs no restart — the browser refetches it on"
+echo "every page load."

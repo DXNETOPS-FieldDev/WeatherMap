@@ -157,14 +157,21 @@ into the portal's user-apps directory.
    cd <PC_HOME>/PC/webapps/pc/apps/user
    sudo unzip -o /tmp/WeatherMap.zip
    ```
-   The `-o` flag overwrites existing files — safe for redeploying an
-   update.
-3. **Verify:**
+   The `-o` flag overwrites existing files, and **leaves any
+   `.properties` files you've already configured in place** — so
+   redeploying an update doesn't wipe your backend configuration.
+   (Deleting the folder first *does* wipe it, and you'd need to re-run
+   `setup.sh`.)
+3. **Verify** the files landed:
    ```bash
-   curl -sk -o /dev/null -w "%{http_code}" \
-     https://<portal-host>/pc/apps/user/WeatherMap/index.html
+   ls -l <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap/index.html
    ```
-   Should return `200`.
+   Don't bother `curl`-ing the deployed URL as a health check: many
+   Portals gate everything under `/pc/apps/` behind an authenticated
+   session, so an unauthenticated `curl` returns `404` even when the
+   deployment is perfectly fine (it does this for Portal's own bundled
+   apps too). The real check is loading the App View in the browser —
+   see [Run](#run).
 
 If `sudo unzip` leaves files owned by root and the portal needs write
 access to them (rare), match the ownership WeatherMap's folder to the
@@ -187,7 +194,9 @@ Deploys live — no portal restart needed. Once deployed, continue to
 
 All environment-specific values live in files that ship inside
 `WeatherMap.zip`. Edit these directly in the deployed folder —
-**no rebuild required**; just save and hard-refresh the dashboard.
+**no rebuild required**. (Editing a `.properties` file after the app
+has already run does require a Performance Center restart; see the
+note under step 1.)
 
 WeatherMap always pulls device inventory and metrics from Performance
 Center's own OData API, with nothing to configure. Spectrum (alarm
@@ -220,9 +229,23 @@ It walks through, in order:
   Portal and reading the page id out of the URL. Leave it blank to
   hide those links instead.
 
-No servlet-container restart needed — changes take effect on the next
-request/page load. Safe to re-run later — it asks before overwriting
-a file you've already configured.
+Safe to re-run later — it asks before overwriting a file you've
+already configured.
+
+> **If you change a `.properties` file after the app has already served
+> one request, restart Performance Center.** Each proxy JSP reads its
+> `.properties` file once per JVM lifetime and caches the values in
+> memory, so later edits are ignored until the process restarts:
+> ```bash
+> sudo systemctl restart caperfcenter_console
+> ```
+> (Service name on a stock install; confirm with
+> `systemctl list-units --type=service | grep -i caperfcenter`.) A
+> first-time `setup.sh` run on a fresh deployment needs no restart —
+> nothing has been cached yet.
+>
+> `runtime-config.json` is different: it's fetched by the browser on
+> every page load, so those changes apply on a plain refresh.
 
 ### 2. Configure Portal CSP *(required)*
 

@@ -9,8 +9,10 @@
 # ============================================================================
 
 # Spectrum REST base URL. Must end with a trailing slash.
-# Example: https://your-spectrum.example.com:8443/spectrum/
-spectrum.base.url=https://CHANGE-ME-spectrum-host:8443/spectrum/
+# 8080 is Spectrum's default OneClick port; use https + 8443 if yours
+# is configured for SSL.
+# Example: http://your-spectrum.example.com:8080/spectrum/
+spectrum.base.url=http://CHANGE-ME-spectrum-host:8080/spectrum/
 
 # Spectrum credentials. The proxy never sends these to the browser — it
 # uses them server-side to build a Basic auth header for upstream requests.

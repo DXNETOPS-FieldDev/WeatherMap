@@ -45,7 +45,7 @@ cp spectrum-proxy.properties.example spectrum-proxy.properties
 
 | Key | What to set |
 |---|---|
-| `spectrum.base.url` | Your Spectrum REST URL, e.g. `https://spectrum.example.com:8443/spectrum/` (trailing slash required) |
+| `spectrum.base.url` | Your Spectrum REST URL, e.g. `http://spectrum.example.com:8080/spectrum/` (trailing slash required). `8080` is Spectrum's default OneClick port; use `8443` if yours is configured for SSL. |
 | `spectrum.user` / `spectrum.password` | Spectrum credentials. Browser never sees them. Auto-obfuscated on disk after the first request (see template comments). |
 | `spectrum.ssl.verify` | `true` for production with valid certs, `false` for self-signed dev certs |
 
@@ -107,8 +107,32 @@ cp da-proxy.properties.example da-proxy.properties
 If this file is missing the path popup just falls back to a plain-text
 title — paths still render, links don't.
 
-No servlet-container restart needed — each JSP proxy reads its
-`.properties` file fresh on every request.
+---
+
+## Changing a `.properties` file later needs a restart
+
+Each proxy JSP (`spectrum-proxy.jsp`, `appneta-proxy.jsp`,
+`da-proxy.jsp`) loads its `.properties` file **once per JVM lifetime**
+— on the first request it serves — and caches the values in a static
+field. Editing the file afterward has no effect until Performance
+Center restarts:
+
+```bash
+sudo systemctl restart caperfcenter_console
+```
+
+(Service name on a stock install; confirm yours with
+`systemctl list-units --type=service | grep -i caperfcenter`.)
+
+Configuring a fresh deployment for the first time needs no restart —
+nothing has been cached yet. The restart only matters when you're
+*correcting* a value that the app has already read. Symptom if you
+skip it: the proxy keeps failing against the **old** value, e.g. a
+`502 Proxy error: Connection refused` pointing at a host/port you
+already fixed on disk.
+
+`runtime-config.json` behaves differently — the browser fetches it on
+every page load, so those edits apply on a plain refresh.
 
 ---
 
@@ -245,13 +269,54 @@ server {
 ```
 
 Notes:
-- Port **8582** is the Data Aggregator's port in a verified working
-  deployment (Broadcom techdocs say 8581 for this endpoint — *that's
-  wrong for this PC version*; verify against your own environment
-  before assuming).
+- **Port depends on whether your Data Aggregator uses SSL:** `8582`
+  when it does, `8581` when it doesn't. Both have been observed in
+  working deployments — check yours rather than assuming. A quick way
+  to tell, run from the Performance Center host: `curl -sk -o /dev/null
+  -w '%{http_code}\n' https://<DA-host>:8582/rest/sdn/networkpath/filtered/`
+  and the same against `http://<DA-host>:8581/...`. A `401` is the
+  healthy answer (reachable, wants credentials); `000` means wrong
+  scheme or port.
 - Once `/rest/` is added, the URL set in `da.target.url` becomes
   `https://<DA-frontend-host>/rest/sdn/networkpath/filtered/`.
 - Apply with `sudo nginx -t && sudo systemctl reload nginx`.
+
+---
+
+## Known limitations by Performance Center version
+
+**SD-WAN tunnel metrics need the `sdntunnelmfs` navigation property.**
+WeatherMap colors tunnel lines by jitter / latency / packet loss,
+which it reads by expanding `sdntunnelmfs` on the `sdntunnel` entity.
+Not every Performance Center version exposes that property — on one
+verified install, `sdntunnel` offered only `groups`, `sdndevice`,
+`sdnvirtualinterface`, and `sdnslapaths`.
+
+WeatherMap detects this automatically and degrades instead of failing:
+it retries the query without the metrics expansion, so tunnels still
+render (uncolored), and shows a banner naming the missing property.
+The Sites legend shows the tunnel list with `—` for each metric.
+
+To check your own environment, open this in a browser tab while logged
+into the Portal and search for `sdntunnel`:
+
+```
+http://<portal-host>:<port>/pc/odata4/api/$metadata
+```
+
+If the `<EntityType Name="sdntunnel">` block has no
+`NavigationProperty` whose name ends in `mfs`, tunnel metric coloring
+won't be available on that version.
+
+**Device CPU / memory / disk depend on those metrics being polled.**
+These come from the `cpuandmemorymfs` expansion on the devices query.
+Devices that aren't polled for the `im_CPUUtilization`,
+`im_MemoryUtilization`, and `im_DiskPercentUsed` families — AppNeta
+Monitoring Points and general-purpose endpoints, for example — return
+empty values there, and the popup's Metrics tab shows nothing. This is
+an inventory/polling condition in Performance Center, not a WeatherMap
+setting. Devices still render on the map regardless (position comes
+from lat/long, color from alarm severity).
 
 ---
 
@@ -263,13 +328,25 @@ Notes:
 appName=NetOps WeatherMap
 description=...
 url=index.html?id={ItemIdDA}&startTime={TimeStartUTC}&endTime={TimeEndUTC}
-height=700
+height=500
 supportedContext=nc
 ```
 
 Controls the iframe URL the portal navigates to (`{ItemIdDA}`,
 `{TimeStartUTC}`, `{TimeEndUTC}` are substituted at runtime) and the
 App View's display name/height in the portal picker.
+
+**Sizing the App View panel:**
+- **Height** — set `height` here (pixels). NetOps Portal reads it when
+  the widget is *added* to a dashboard and stores it in that
+  dashboard's own config, so editing this file later doesn't resize
+  widgets that already exist. Remove and re-add the widget to apply a
+  new value.
+- **Width** — not controllable from here. There's no `width` key (the
+  Portal's own bundled App Views don't use one either); the panel
+  simply fills whatever dashboard column it sits in. To make it
+  narrower, change the dashboard **page layout** to multi-column in
+  the Portal UI and place the App View in one of the columns.
 
 ### `runtime-config.json` — runtime values
 
@@ -317,7 +394,18 @@ NetOps.
 
 **No SD-WAN tunnels showing** — the PC OData query returned no tunnels
 for the group, or the proxied call failed. Check DevTools → Network
-for `/pc/odata4/api/tunnels` and verify the response.
+for `/pc/odata4/api/tunnels` and verify the response. If the Sites
+legend says "No tunnel data yet", the query succeeded but this group
+genuinely has no tunnels between its devices.
+
+**Tunnels render but all gray, no jitter/latency/loss coloring** —
+this Performance Center version doesn't expose the tunnel metrics
+navigation property. Expected behavior, with a banner explaining it;
+see [Known limitations by Performance Center version](#known-limitations-by-performance-center-version).
+
+**Popup Metrics tab empty (no CPU / memory / disk)** — those metrics
+aren't being polled for that device. See
+[Known limitations by Performance Center version](#known-limitations-by-performance-center-version).
 
 **All markers green / no alarms in popup** — the Spectrum proxy failed.
 Open DevTools → Network, look for `spectrum-proxy.jsp`, check the
@@ -334,8 +422,9 @@ configured org id has no MPs visible to the token's user.
 DevTools → Network, look for `da-proxy.jsp`. A 502 usually means the
 DA-facing nginx hasn't been configured with a `location /rest/` block
 (see [Reverse proxy configuration](#reverse-proxy-configuration)),
-or the upstream port in that block is wrong (verified port is **8582**,
-not 8581 as some docs say). A 500 means `da-proxy.properties` is
+or the upstream scheme/port in that block is wrong (**8582** for an
+SSL Data Aggregator, **8581** for non-SSL). A 500 means
+`da-proxy.properties` is
 missing or unreadable. A 200 with an empty `<NetworkPathList/>` means
 the DA found no matching paths for the AppNeta path IDs sent.
 
