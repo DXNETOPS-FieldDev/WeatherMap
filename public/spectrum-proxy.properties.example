@@ -8,9 +8,8 @@
 # Tomcat must be restarted (or the JSP recompiled) for changes to take effect.
 # ============================================================================
 
-# Spectrum REST base URL. Must end with a trailing slash.
-# 8080 is Spectrum's default OneClick port; use https + 8443 if yours
-# is configured for SSL.
+# Spectrum REST base URL. Must end with a trailing slash. Use whatever
+# scheme and port your Spectrum is actually configured for.
 # Example: http://your-spectrum.example.com:8080/spectrum/
 spectrum.base.url=http://CHANGE-ME-spectrum-host:8080/spectrum/
 

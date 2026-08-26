@@ -89,7 +89,7 @@ echo ""
 
 if ask_yn "Configure Spectrum (device/alarm severity coloring)?" "Y"; then
   echo "--- Spectrum ---"
-  spectrum_url=$(ask "Spectrum REST base URL (e.g. http://spectrum.example.com:8080/spectrum/ — 8080 is the default, use https + 8443 if SSL)")
+  spectrum_url=$(ask "Spectrum REST base URL (e.g. http://spectrum.example.com:8080/spectrum/)")
   spectrum_user=$(ask "Spectrum username")
   spectrum_password=$(ask_secret "Spectrum password")
   spectrum_verify="false"

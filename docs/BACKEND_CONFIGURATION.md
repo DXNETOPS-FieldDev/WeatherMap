@@ -45,7 +45,7 @@ cp spectrum-proxy.properties.example spectrum-proxy.properties
 
 | Key | What to set |
 |---|---|
-| `spectrum.base.url` | Your Spectrum REST URL, e.g. `http://spectrum.example.com:8080/spectrum/` (trailing slash required). `8080` is Spectrum's default OneClick port; use `8443` if yours is configured for SSL. |
+| `spectrum.base.url` | Your Spectrum REST URL, e.g. `http://spectrum.example.com:8080/spectrum/` (trailing slash required). Use whatever scheme and port your Spectrum is actually configured for. |
 | `spectrum.user` / `spectrum.password` | Spectrum credentials. Browser never sees them. Auto-obfuscated on disk after the first request (see template comments). |
 | `spectrum.ssl.verify` | `true` for production with valid certs, `false` for self-signed dev certs |
 
@@ -328,7 +328,7 @@ from lat/long, color from alarm severity).
 appName=NetOps WeatherMap
 description=...
 url=index.html?id={ItemIdDA}&startTime={TimeStartUTC}&endTime={TimeEndUTC}
-height=500
+height=700
 supportedContext=nc
 ```
 
