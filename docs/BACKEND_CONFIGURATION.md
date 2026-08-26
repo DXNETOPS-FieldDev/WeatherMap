@@ -150,6 +150,36 @@ WeatherMap relies on. Configure it via the **SSO Configuration Tool
 3. Paste the value below into that field, substituting your own
    Spectrum / AppNeta / Data Aggregator hostnames where applicable.
 
+> ⚠️ **Paste the value only — never the option's label.** The value
+> must begin with `Content-Security-Policy:`. Option 24's own title,
+> *"Custom HTTP headers to be added to our responses"*, is menu text,
+> and it is easy to capture by accident when copying the current
+> setting off the screen (or out of a document) to edit it.
+>
+> If it ends up saved as part of the value, Performance Center emits
+> an HTTP header whose **name** is that phrase. Spaces are illegal in
+> a header field-name (RFC 7230), so strict clients reject every
+> response: `/sso/sign-in.jsp` returns **500**, Portal login fails,
+> and SsoConfig itself reports *"Cannot connect to the DX NetOps SSO
+> Web Service. Check if DX NetOps is running and retry"* — even
+> though SSO is healthy and listening. That error is misleading:
+> the service is fine, its own responses are simply unparseable.
+>
+> **This locks you out of the tool you would fix it with**, since
+> SsoConfig talks to that same web service. `SsoProperty.sh` is no
+> help either — it needs a REST token from the UI you can no longer
+> reach. Recovery then means editing the `Custom.Headers` rows of
+> `performance_center_properties` directly (in **both** the
+> `netqosportal` and `em` databases), which needs the MySQL
+> credential or a `--skip-grant-tables` restart.
+>
+> To confirm a save went in cleanly, check the response headers:
+> ```bash
+> curl -sk -D - -o /dev/null http://<portal-host>:8181/pc/ | grep -i 'custom http'
+> ```
+> Any output at all means the label was captured — expected result is
+> nothing.
+
 ```
 Content-Security-Policy: default-src 'self'; script-src 'self' *.ipce.broadcom.com:* 'unsafe-inline' 'unsafe-eval'; connect-src 'self' *.ipce.broadcom.com:* api.rainviewer.com:* https://ornl.opendatasoft.com ws: wss: https://api.openweathermap.org; img-src 'self' data: https://*.tile.openstreetmap.org https://tile.openweathermap.org https://openweathermap.org https://tilecache.rainviewer.com; style-src 'self' 'unsafe-inline'; base-uri 'self'; frame-ancestors 'self'; font-src 'self'; frame-src 'self';|X-Frame-Options: SAMEORIGIN|X-Content-Type-Options: nosniff|X-XSS-Protection: 1; mode=block|Referrer-Policy: strict-origin|Feature-Policy: 'none'|Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
 ```
@@ -384,6 +414,23 @@ the iframe — no build needed.
 ---
 
 ## Troubleshooting
+
+**Portal login fails and SsoConfig says "Cannot connect to the DX
+NetOps SSO Web Service" — but the service is running** — the CSP value
+was saved with option 24's label prefixed to it, so every response
+carries an illegal header name. Confirm with:
+
+```bash
+curl -sk -D - -o /dev/null http://<portal-host>:8181/pc/ | grep -i 'custom http'
+curl -sk -o /dev/null -w '%{http_code}\n' http://<portal-host>:8381/sso/sign-in.jsp
+```
+
+A `Custom HTTP headers to be added to our responses:` line, plus a
+**500** from `sign-in.jsp`, confirms it. Note `systemctl status
+caperfcenter_sso` shows *active* throughout and `SSOService.log` stays
+clean — the service really is fine, so don't chase it. Recovery and
+prevention are under
+[Portal CSP requirements](#portal-csp-requirements).
 
 **Status banner: "Failed to load runtime-config.json"** — the file is
 missing, malformed JSON, or blocked by CSP. Check the browser console.
