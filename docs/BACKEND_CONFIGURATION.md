@@ -1,9 +1,13 @@
 # WeatherMap — Backend Configuration
 
 This doc covers connecting WeatherMap to your Spectrum, AppNeta, and
-Data Aggregator backends, and the one-time Content-Security-Policy
-change your NetOps Portal needs for the weather/radar/power-outage
-overlays. See the main [README](../README.md) for download, install,
+Data Aggregator REST WebServices backends, and the one-time
+Content-Security-Policy change your NetOps Portal needs for the
+weather/radar/power-outage overlays. (Device inventory and metrics
+come from the Data Aggregator automatically, via Performance Center's
+own OData API — nothing to configure there; that's a separate,
+always-on path from the Data Aggregator REST WebServices covered
+below.) See the main [README](../README.md) for download, install,
 top-level configuration, and running the app.
 
 ## Recommended: run `setup.sh` instead of editing files by hand
@@ -45,40 +49,9 @@ cp spectrum-proxy.properties.example spectrum-proxy.properties
 | `spectrum.user` / `spectrum.password` | Spectrum credentials. Browser never sees them. Auto-obfuscated on disk after the first request (see template comments). |
 | `spectrum.ssl.verify` | `true` for production with valid certs, `false` for self-signed dev certs |
 
-### Spectrum via reverse proxy (optional alternative)
-
-The default above (`spectrum-proxy.properties` + the shipped
-`spectrum-proxy.jsp`) needs **no reverse proxy at all** — most
-customers should just use it as-is. This alternative is only for the
-minority who already run their own nginx (or equivalent) in front of
-NetOps Portal and would rather route the Spectrum connection through
-that instead of the shipped JSP.
-
-If that's you: add a location block like this to your existing
-reverse proxy:
-
-```nginx
-location /spectrum/ {
-    proxy_pass https://<spectrum-host>:8443/spectrum/;
-    proxy_set_header Authorization "Basic <base64 user:pass>";
-    proxy_ssl_verify off;
-}
-```
-
-Then in `appConfig.properties`, comment out the default `url=` line
-and uncomment the `&proxy=nginx` one (both are already present in the
-file, with matching comments):
-
-```properties
-# Option A — JSP Proxy (default)
-#url=index.html?id={ItemIdDA}&startTime={TimeStartUTC}&endTime={TimeEndUTC}
-
-# Option B — nginx reverse proxy
-url=index.html?id={ItemIdDA}&startTime={TimeStartUTC}&endTime={TimeEndUTC}&proxy=nginx
-```
-
-With this option, `spectrum-proxy.properties` isn't used at all — the
-credentials live in your reverse proxy's own config instead.
+The default above needs **no reverse proxy at all** — most customers
+should just use it as-is. If Performance Center can't reach Spectrum
+directly, see [Reverse proxy configuration](#reverse-proxy-configuration).
 
 ---
 
@@ -107,15 +80,18 @@ Despite the name, this is WeatherMap's own same-origin JSP proxy
 (same pattern as `spectrum-proxy.properties` and
 `appneta-proxy.properties`) — it's unrelated to any reverse proxy you
 run in front of the Data Aggregator itself. If you're looking for
-that instead, see [Data Aggregator REST endpoint](#data-aggregator-rest-endpoint)
+that instead, see [Reverse proxy configuration](#reverse-proxy-configuration)
 below.
 
-Needed for the **Network Path → PC deep-link** in the AppNeta path
-popup. PC OData doesn't expose AppNeta path inventory, so we look it
-up via the Data Aggregator's REST WebServices. The Data Aggregator is
-always deployed alongside NetOps Portal, so if you're already
-configuring AppNeta there's no reason to skip this. Same template
-pattern:
+This is specifically the Data Aggregator's `/rest/` WebServices path —
+needed for the **Network Path → PC deep-link** in the AppNeta path
+popup, since PC OData doesn't expose AppNeta path inventory. Device
+inventory and metrics are a separate, always-on path (the Data
+Aggregator via PC's OData API) that needs no configuration at all —
+this file is only about the `/rest/` path deep-link. The Data
+Aggregator itself is always deployed alongside NetOps Portal, so if
+you're already configuring AppNeta there's no reason to skip this.
+Same template pattern:
 
 ```bash
 cp da-proxy.properties.example da-proxy.properties
@@ -124,7 +100,7 @@ cp da-proxy.properties.example da-proxy.properties
 
 | Key | What to set |
 |---|---|
-| `da.target.url` | Full URL of the DA's `/rest/sdn/networkpath/filtered/` endpoint, reached through your DA-facing nginx (e.g. `https://dev-netopsda.example.com/rest/sdn/networkpath/filtered/`). Direct calls to the internal DA host are typically unreachable from PC's servlet container — go through the public nginx. **Requires an `/rest/` `location` block on the DA-facing nginx** — see [Data Aggregator REST endpoint](#data-aggregator-rest-endpoint) below. |
+| `da.target.url` | Full URL of the DA's `/rest/sdn/networkpath/filtered/` endpoint. If Performance Center can reach the Data Aggregator directly, point this straight at it. If not, this goes through a reverse proxy instead — see [Reverse proxy configuration](#reverse-proxy-configuration) below. |
 | `da.user` / `da.password` | Same credentials you use to log into NetOps Portal. Browser never sees them. Auto-obfuscated on disk after the first request. |
 | `da.ssl.verify` | `true` for production with a valid cert, `false` for self-signed dev certs. |
 
@@ -183,21 +159,59 @@ The Spectrum, AppNeta, and Data Aggregator APIs don't need CSP entries
 
 ---
 
-## Data Aggregator REST endpoint
+## Reverse proxy configuration
 
-*(Skip this section if you haven't configured `da-proxy.properties`
-— used for the AppNeta path deep-link.)*
+*Most customers don't need this section.* Everything above assumes
+Performance Center can reach Spectrum and the Data Aggregator
+directly. Skip this unless that's not true in your environment — e.g.
+a firewall only allows a shared reverse proxy to reach those hosts.
 
-If NetOps Portal already runs behind a reverse proxy, the Data
-Aggregator typically sits behind a separate nginx server block that,
-by default, already forwards `/odataquery` and `/sso` — pre-existing
-DA/Portal plumbing, unrelated to WeatherMap or AppNeta. (If there's no
-reverse proxy in the picture at all, neither of those applies either —
-skip this whole section.) The only thing WeatherMap needs is one new
-`location /rest/` block added alongside them, so the path-inventory
-endpoint is reachable. Shown below as a full server block so you can
-see where the new block fits — `/odataquery` and `/sso` are included
-for context only, not because WeatherMap needs them:
+### Spectrum
+
+If Performance Center can't reach Spectrum directly, add this to your
+existing reverse proxy:
+
+```nginx
+location /spectrum/ {
+    proxy_pass https://<spectrum-host>:8443/spectrum/;
+    proxy_set_header Authorization "Basic <base64 user:pass>";
+    proxy_ssl_verify off;
+}
+```
+
+Then in `appConfig.properties`, comment out the default `url=` line
+and uncomment the `&proxy=nginx` one (both are already present in the
+file, with matching comments):
+
+```properties
+# Option A — JSP Proxy (default)
+#url=index.html?id={ItemIdDA}&startTime={TimeStartUTC}&endTime={TimeEndUTC}
+
+# Option B — nginx reverse proxy
+url=index.html?id={ItemIdDA}&startTime={TimeStartUTC}&endTime={TimeEndUTC}&proxy=nginx
+```
+
+With this option, `spectrum-proxy.properties` isn't used at all — the
+credentials live in your reverse proxy's own config instead.
+
+### Data Aggregator
+
+The Data Aggregator typically sits behind its own nginx server block.
+Three `location` blocks matter here, each needed for a different
+reason:
+
+- **`/sso`** — the Data Aggregator's own auth handshake back to
+  NetOps Portal. Pre-existing DA/Portal plumbing, unrelated to
+  WeatherMap.
+- **`/odataquery`** — what lets Portal's own OData4 service reach the
+  Data Aggregator to serve device/metric data. Also pre-existing,
+  unrelated to WeatherMap — but without it, WeatherMap's map is blank
+  regardless of anything else being configured correctly.
+- **`/rest/`** — the one WeatherMap-specific addition. Needed only if
+  you configured `da-proxy.properties` (AppNeta path deep-links).
+
+A full example server block, showing where `/rest/` fits alongside the
+other two:
 
 ```nginx
 server {
@@ -231,15 +245,11 @@ server {
 ```
 
 Notes:
-- **Only the `/rest/` block is new.** `/odataquery` and `/sso` are
-  already there (assuming Portal already runs behind a reverse proxy)
-  for other DA/Portal functions that have nothing to do with
-  WeatherMap or AppNeta.
 - Port **8582** is the Data Aggregator's port in a verified working
   deployment (Broadcom techdocs say 8581 for this endpoint — *that's
   wrong for this PC version*; verify against your own environment
   before assuming).
-- Once added, the URL set in `da.target.url` becomes
+- Once `/rest/` is added, the URL set in `da.target.url` becomes
   `https://<DA-frontend-host>/rest/sdn/networkpath/filtered/`.
 - Apply with `sudo nginx -t && sudo systemctl reload nginx`.
 
@@ -261,7 +271,7 @@ configured org id has no MPs visible to the token's user.
 **Path titles don't link to PC** — the DA proxy isn't responding.
 DevTools → Network, look for `da-proxy.jsp`. A 502 usually means the
 DA-facing nginx hasn't been configured with a `location /rest/` block
-(see [Data Aggregator REST endpoint](#data-aggregator-rest-endpoint)),
+(see [Reverse proxy configuration](#reverse-proxy-configuration)),
 or the upstream port in that block is wrong (verified port is **8582**,
 not 8581 as some docs say). A 500 means `da-proxy.properties` is
 missing or unreadable. A 200 with an empty `<NetworkPathList/>` means

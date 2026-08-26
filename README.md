@@ -189,48 +189,56 @@ All environment-specific values live in files that ship inside
 `WeatherMap.zip`. Edit these directly in the deployed folder —
 **no rebuild required**; just save and hard-refresh the dashboard.
 
-### Run `setup.sh` — the fastest way to configure Spectrum, AppNeta, and the Data Aggregator
+WeatherMap always pulls device inventory and metrics from Performance
+Center's own OData API, with nothing to configure. Spectrum (alarm
+severity), AppNeta (Monitoring Points), and the AppNeta path → PC
+deep-link are optional add-ons, configured below — WeatherMap runs
+fine with none of them, just with fewer features.
+
+The two steps below assume NetOps Portal does **not** sit behind a
+reverse proxy — the common case. If it does, finish these steps
+first, then see
+[Reverse proxy configuration](docs/BACKEND_CONFIGURATION.md#reverse-proxy-configuration).
+
+### 1. Run `setup.sh`
 
 No Node/npm needed — this is a plain script included in the deployed
-folder. It's the recommended way to fill in
-`spectrum-proxy.properties`, `appneta-proxy.properties`,
-`da-proxy.properties`, and the Triage View page id; the sections below
-describe what it writes, in case you'd rather edit a file directly
-later.
+folder.
 
-1. **SSH into the portal server and go to the deployed folder:**
-   ```bash
-   ssh <user>@<portal-host>
-   cd <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap
-   ```
-2. **Run the script:**
-   ```bash
-   ./setup.sh
-   ```
-3. **Answer the prompts.** It walks through, in order:
-   - **Spectrum** (optional — say no if you don't have Spectrum) —
-     REST base URL, username, password, and whether to verify
-     Spectrum's TLS certificate.
-   - **AppNeta** (optional — say no if you're not using Monitoring
-     Points) — REST base URL, organization id, API token, TLS
-     verification.
-   - **Data Aggregator** (asked whenever you configure AppNeta — the
-     Data Aggregator is always deployed alongside NetOps Portal, so
-     there's no reason to skip it) — REST URL, your NetOps Portal
-     username/password, TLS verification, for AppNeta path titles to
-     link into PC.
-   - **Triage View page id** (required for the "Investigate in Triage
-     View" links to work) — find this by opening Triage View in your
-     Portal and reading the page id out of the URL. Leave it blank to
-     hide those links instead.
-4. **No servlet-container restart needed.** Both the `.properties`
-   files and `runtime-config.json` are read fresh on the next
-   request/page load.
+```bash
+ssh <user>@<portal-host>
+cd <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap
+./setup.sh
+```
 
-Safe to re-run later — it asks before overwriting a file you've
-already configured, so answering "no" leaves that file untouched.
+It walks through, in order:
+- **Spectrum** (optional — say no if you don't have Spectrum)
+- **AppNeta** (optional — say no if you're not using Monitoring Points)
+- **Data Aggregator** (asked whenever you configure AppNeta — needed
+  for AppNeta path titles to link into PC)
+- **Triage View page id** — find this by opening Triage View in your
+  Portal and reading the page id out of the URL. Leave it blank to
+  hide those links instead.
 
-### `appConfig.properties` — portal-facing metadata
+No servlet-container restart needed — changes take effect on the next
+request/page load. Safe to re-run later — it asks before overwriting
+a file you've already configured.
+
+### 2. Configure Portal CSP *(required)*
+
+NetOps Portal's default Content-Security-Policy blocks the external
+origins WeatherMap's weather, radar, and power-outage overlays need —
+without this step, those features silently fail. Steps and the exact
+value to paste are in
+[Portal CSP requirements](docs/BACKEND_CONFIGURATION.md#portal-csp-requirements).
+
+That's it — continue to [Run](#run).
+
+---
+
+### Reference: other files you can tweak
+
+#### `appConfig.properties` — portal-facing metadata
 
 ```properties
 appName=NetOps WeatherMap
@@ -244,7 +252,7 @@ Controls the iframe URL the portal navigates to (`{ItemIdDA}`,
 `{TimeStartUTC}`, `{TimeEndUTC}` are substituted at runtime) and the App
 View's display name/height in the portal picker.
 
-### `runtime-config.json` — runtime values
+#### `runtime-config.json` — runtime values
 
 Fetched by the App View at startup. Change a value, save, hard-refresh
 the iframe — no build needed.
@@ -277,17 +285,6 @@ the iframe — no build needed.
 | `powerOutages.apiUrl` | ODIN dataset endpoint for power-outage polygons. Defaults to the public ORNL mirror. |
 | `powerOutages.maxRecords` | Pagination cap for ODIN. 5000 covers nationwide storms comfortably. |
 | `triageViewPageId` | The Performance Center page id for Triage View in **your** environment. **Must change before going live — see above.** Leave `null` to hide the deep-links. |
-
-### Backend connections and Portal CSP
-
-WeatherMap reaches Spectrum (required), and optionally AppNeta and the
-Data Aggregator, through same-origin JSP proxies shipped inside the
-zip. Wiring those up — and the one-time nginx CSP change your portal
-needs for the weather, radar, and power-outage overlays to load — is
-covered in **[Backend Configuration](docs/BACKEND_CONFIGURATION.md)**.
-
-At minimum, configure the Spectrum proxy before going live. AppNeta and
-the Data Aggregator deep-link are optional.
 
 ---
 
