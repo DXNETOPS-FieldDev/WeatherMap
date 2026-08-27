@@ -205,8 +205,16 @@ upload leaves your install untouched).
 > restore them after the upload (or just re-run `setup.sh`):
 > ```bash
 > cd <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap
-> mkdir -p ~/weathermap-config-backup
-> cp *-proxy.properties ~/weathermap-config-backup/
+> mkdir -p ~/weathermap-config-backup && chmod 700 ~/weathermap-config-backup
+> sudo cp -p *-proxy.properties ~/weathermap-config-backup/
+> ```
+> `sudo` is needed because these files are mode `600` and owned by the
+> account that runs Performance Center — you can't read them as
+> yourself unless you *are* that account. `-p` keeps them `600` in the
+> backup. To restore after the upload:
+> ```bash
+> sudo cp -p ~/weathermap-config-backup/*-proxy.properties \
+>   <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap/
 > ```
 
 The app is live as soon as the upload finishes — no restart needed for
