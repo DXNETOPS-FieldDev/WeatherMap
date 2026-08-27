@@ -107,8 +107,12 @@ up another tool."*
 
 ## Prerequisites
 
-- SSH + sudo access to the NetOps Portal server — also used to make
-  the one-time Portal CSP change via `SsoConfig`, see
+- A NetOps Portal admin account, to reach **Administration →
+  Configuration Settings → App Deployment**
+- SSH + sudo access to the NetOps Portal server — needed to allow
+  WeatherMap's file types ([Install](#install)), run `setup.sh`
+  ([Configure](#configure)), and make the one-time Portal CSP change
+  via `SsoConfig`, see
   [Backend Configuration](docs/BACKEND_CONFIGURATION.md)
 - *(Optional)* Access to a Spectrum instance + credentials, for device
   alarm severity coloring. If you don't have Spectrum, WeatherMap
@@ -141,52 +145,73 @@ always points at the newest release, so it's safe to bookmark.
 
 ## Install
 
-Deploy directly to the portal server over SSH — this unzips the app
-into the portal's user-apps directory.
+WeatherMap installs through the Portal's **App Deployment** page. Two
+steps: allow its file types once, then upload the zip.
 
-1. **Know `<PC_HOME>`** — your Performance Center installation root.
-   Whoever administers your Performance Center install will already
-   know this path; ask them if you're not sure. The apps directory
-   you need is `<PC_HOME>/PC/webapps/pc/apps/user`.
-2. **Copy and extract the zip:**
-   ```bash
-   # From your local machine:
-   scp WeatherMap.zip <user>@<portal-host>:/tmp/WeatherMap.zip
+You'll still need shell access to the Portal server — for Step 1, and
+again in [Configure](#configure).
 
-   # On the portal server:
-   cd <PC_HOME>/PC/webapps/pc/apps/user
-   sudo unzip -o /tmp/WeatherMap.zip
-   ```
-   The `-o` flag overwrites existing files, and **leaves any
-   `.properties` files you've already configured in place** — so
-   redeploying an update doesn't wipe your backend configuration.
-   (Deleting the folder first *does* wipe it, and you'd need to re-run
-   `setup.sh`.)
-3. **Verify** the files landed:
-   ```bash
-   ls -l <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap/index.html
-   ```
-   Don't bother `curl`-ing the deployed URL as a health check: many
-   Portals gate everything under `/pc/apps/` behind an authenticated
-   session, so an unauthenticated `curl` returns `404` even when the
-   deployment is perfectly fine (it does this for Portal's own bundled
-   apps too). The real check is loading the App View in the browser —
-   see [Run](#run).
+### Step 1 — Allow WeatherMap's file types *(one-time, per Portal)*
 
-If `sudo unzip` leaves files owned by root and the portal needs write
-access to them (rare), match the ownership WeatherMap's folder to the
-`apps/user` directory it lives in — first check what that already is:
-```bash
-ls -ld <PC_HOME>/PC/webapps/pc/apps/user
+The upload page checks every file in the zip against an allowlist, and
+rejects the whole archive — *"Apps that contain invalid files are not
+allowed"* — without saying which file tripped it. WeatherMap ships
+`.sh`, `.csv`, `.jsp`, and `.properties.example` files, so the
+allowlist needs to cover them.
+
+On the Portal server, open:
+
 ```
-Then apply that same user:group to WeatherMap's folder. For example,
-if the command above shows `pcuser pcuser` as the owner:
-```bash
-sudo chown -R pcuser:pcuser <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap
+<PC_HOME>/PC/webapps/pc/WEB-INF/cfg/portal.console.properties
 ```
 
-Deploys live — no portal restart needed. Once deployed, continue to
-[Configure](#configure) before adding it to a dashboard.
+Find `appDeploymentExtensionWhitelist` and **append** `,sh,csv,example`
+to the end of the existing line. If the property isn't there at all,
+add this line as-is:
+
+```properties
+appDeploymentExtensionWhitelist=jpg,png,gif,svg,css,js,html,xhtml,properties,md,txt,xml,json,gitignore,jsp,zip,sh,csv,example
+```
+
+> **Append — don't replace.** This setting *is* the allowlist, so
+> whatever you write becomes the complete list. Drop an extension
+> that's already there and other apps stop uploading.
+>
+> **`.jsp` must be on the list.** WeatherMap's Spectrum, AppNeta, and
+> Data Aggregator proxies are JSPs. Some Portal versions leave `.jsp`
+> off by default as a security control, because JSPs execute on the
+> server — so this is worth a conscious nod from whoever owns the
+> Portal, not just a paste.
+
+Restart the console service so the new list is read:
+
+```bash
+sudo systemctl restart caperfcenter_console
+```
+
+### Step 2 — Upload the zip
+
+In the Portal: **Administration** → **Configuration Settings** →
+**App Deployment** → select `WeatherMap.zip` → **Add**.
+
+If WeatherMap is already deployed, tick **Replace existing apps** —
+without it the upload is refused (nothing is written, so a refused
+upload leaves your install untouched).
+
+> ⚠️ **Upgrading? "Replace" deletes the folder and re-extracts it.**
+> Every file not in the zip is removed — including the `.properties`
+> files holding your Spectrum, AppNeta, and Data Aggregator
+> credentials, which releases never ship. Back them up first, then
+> restore them after the upload (or just re-run `setup.sh`):
+> ```bash
+> cd <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap
+> mkdir -p ~/weathermap-config-backup
+> cp *-proxy.properties ~/weathermap-config-backup/
+> ```
+
+The app is live as soon as the upload finishes — no restart needed for
+this step (the one in Step 1 is one-time). It won't do anything useful
+yet, though: continue to [Configure](#configure).
 
 ---
 
@@ -217,8 +242,19 @@ folder.
 ```bash
 ssh <user>@<portal-host>
 cd <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap
-./setup.sh
+bash setup.sh
 ```
+
+> **Use `bash setup.sh`, not `./setup.sh`.** The App Deployment upload
+> strips the executable bit, so `./setup.sh` fails with `Permission
+> denied`.
+>
+> **Run it as the OS user that runs Performance Center** — the owner of
+> the deployed folder, which the upload created. That user needs write
+> access there, and the `.properties` files the script writes have to
+> stay readable by the Portal's JVM. The script sets them to mode `600`
+> and matches them to the folder's owner, since they hold your
+> passwords and API tokens.
 
 It walks through, in order:
 - **Spectrum** (optional — say no if you don't have Spectrum)

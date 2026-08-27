@@ -5,7 +5,15 @@
 # appConfig.properties live), after unzipping WeatherMap.zip:
 #
 #   cd <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap
-#   ./setup.sh
+#   bash setup.sh
+#
+# Invoke it with `bash`, not `./setup.sh` — when the App View is deployed
+# through the Portal's App Deployment page, the upload strips the
+# executable bit and `./setup.sh` fails with "Permission denied".
+#
+# Run it as the OS user that runs Performance Center — the owner of this
+# folder. That user needs write access here, and the .properties files
+# this script writes have to stay readable by the Portal's JVM.
 #
 # Prompts for Spectrum (optional), AppNeta (optional), the Data
 # Aggregator (asked whenever AppNeta is configured — it's always
@@ -72,6 +80,16 @@ write_properties() {
     fi
   fi
   cp "$example" "$real"
+  # This file holds a password or API token, so narrow it before any
+  # secret is written into it — that also covers the sed -i.bak copies
+  # below, which would otherwise inherit the template's world-readable
+  # mode and strand credentials if the script is interrupted.
+  chmod 600 "$real"
+  # Performance Center often runs as a dedicated service account rather
+  # than root. If setup.sh was run with sudo, a root-owned 0600 file
+  # would be unreadable by the proxy JSPs, so hand it to whoever owns the
+  # deployed folder. No-op when they are already the same user.
+  chown --reference=. "$real" 2>/dev/null || true
   local pair key value
   for pair in "$@"; do
     key="${pair%%=*}"

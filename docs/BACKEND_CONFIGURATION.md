@@ -18,8 +18,17 @@ connection details and writes the `.properties` files for you:
 
 ```bash
 cd <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap
-./setup.sh
+bash setup.sh
 ```
+
+Run it as the OS user that runs Performance Center — the owner of the
+deployed folder. Use `bash setup.sh` rather than `./setup.sh`: deploying
+through the Portal's **App Deployment** page strips the executable bit,
+so `./setup.sh` fails with `Permission denied`.
+
+The `.properties` files it writes hold passwords and API tokens, so the
+script sets them to mode `600` and gives them the deployed folder's
+owner.
 
 It covers everything below (Spectrum, AppNeta, the Data Aggregator, and
 the Triage View page id) in one guided pass, and is safe to re-run —
@@ -383,14 +392,15 @@ App View's display name/height in the portal picker.
 Fetched by the App View at startup. Change a value, save, hard-refresh
 the iframe — no build needed.
 
-**Must change before going live:**
-- **`triageViewPageId`** — ships set to a specific dev environment's
-  Triage View page id, not a placeholder. Your Performance Center
-  instance almost certainly uses a different page id. Until this is
-  corrected, "Investigate in Triage View" links point to the wrong
-  page (or nowhere). Set it to your own environment's Triage View page
-  id, or `null` to hide the deep-links entirely. `setup.sh` prompts
-  for this along with the backend proxy settings.
+**Set this to switch a feature on:**
+- **`triageViewPageId`** — ships as `null`, which hides the
+  "Investigate in Triage View" links. Set it to your own Performance
+  Center's Triage View page id to enable them; find it by opening
+  Triage View in your Portal and reading the page id out of the URL.
+  `setup.sh` prompts for this along with the backend proxy settings.
+  (Releases before v1.0.4 shipped a specific dev environment's page id
+  here rather than `null`, so the links pointed at a page that doesn't
+  exist on your Portal. If you're upgrading, check this value.)
 
 **Worth checking before going live:**
 - **`owmApiKey`** — ships with a shared testing key. Get your own free
@@ -414,6 +424,36 @@ the iframe — no build needed.
 ---
 
 ## Troubleshooting
+
+**App Deployment: "Apps that contain invalid files are not allowed"** —
+the upload page checks every file in the zip against an extension
+allowlist and rejects the whole archive if any file misses, without
+naming it. WeatherMap ships `.sh`, `.csv`, `.jsp`, and
+`.properties.example` files. Add the missing extensions to
+`appDeploymentExtensionWhitelist` in
+`<PC_HOME>/PC/webapps/pc/WEB-INF/cfg/portal.console.properties`, then
+restart `caperfcenter_console`. The value is a **complete replacement
+list** — append to the existing line rather than replacing it. Full
+steps are in the README under
+[Install](../README.md#install).
+
+**App Deployment: "App with … exists in {2}. To upgrade, select
+'Replace existing apps'"** — expected when the app is already
+deployed. Nothing is written until you tick the box, so a rejected
+upload leaves your install untouched. The literal `{2}` and the
+truncated path are a cosmetic Portal display bug, not a sign of
+anything wrong with your zip.
+
+**Backend config disappeared after re-deploying through App
+Deployment** — "Replace existing apps" **deletes the folder and
+re-extracts it**, removing every file that isn't in the zip. That
+includes `spectrum-proxy.properties`, `appneta-proxy.properties`, and
+`da-proxy.properties`, since releases never ship real credentials.
+Re-run `setup.sh` or restore your backup — back them up *before* the
+upload, since the delete happens as soon as you click **Add**.
+
+**`./setup.sh` fails with `Permission denied`** — deploying through
+App Deployment strips the executable bit. Run `bash setup.sh` instead.
 
 **Portal login fails and SsoConfig says "Cannot connect to the DX
 NetOps SSO Web Service" — but the service is running** — the CSP value
