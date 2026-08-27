@@ -145,8 +145,8 @@ always points at the newest release, so it's safe to bookmark.
 
 ## Install
 
-WeatherMap installs through the Portal's **App Deployment** page. Two
-steps: allow its file types once, then upload the zip.
+WeatherMap installs through the Portal's **App Deployment** page:
+allow its file types once, upload the zip, check it landed.
 
 You'll still need shell access to the Portal server — for Step 1, and
 again in [Configure](#configure).
@@ -194,41 +194,102 @@ sudo systemctl restart caperfcenter_console
 In the Portal: **Administration** → **Configuration Settings** →
 **App Deployment** → select `WeatherMap.zip` → **Add**.
 
-If WeatherMap is already deployed, tick **Replace existing apps** —
-without it the upload is refused (nothing is written, so a refused
-upload leaves your install untouched).
+The app is live as soon as the upload finishes — no restart needed
+here (the one in Step 1 is one-time).
 
-> ⚠️ **Upgrading? "Replace" deletes the folder and re-extracts it.**
-> Every file not in the zip is removed — including the `.properties`
-> files holding your Spectrum, AppNeta, and Data Aggregator
-> credentials, which releases never ship. Back them up first, then
-> restore them after the upload (or just re-run `setup.sh`):
-> ```bash
-> cd <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap
-> mkdir -p ~/weathermap-config-backup && chmod 700 ~/weathermap-config-backup
-> sudo cp -p *-proxy.properties ~/weathermap-config-backup/
-> ```
-> `sudo` is needed because these files are mode `600` and owned by the
-> account that runs Performance Center — you can't read them as
-> yourself unless you *are* that account. `-p` keeps them `600` in the
-> backup. To restore after the upload:
-> ```bash
-> sudo cp -p ~/weathermap-config-backup/*-proxy.properties \
->   <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap/
-> ```
-> **`runtime-config.json` is also reset**, because it *is* in the zip.
-> Any value you changed there — `triageViewPageId` especially — goes
-> back to the shipped default. Note your changes before upgrading and
-> re-apply them after. Don't restore an old copy of the file wholesale:
-> a new release may add settings, and you'd silently drop them.
->
-> Re-running `bash setup.sh` after the upload handles both the
-> `.properties` files and `triageViewPageId` in one pass, which is
-> usually easier than restoring by hand.
+> **Already running WeatherMap?** Stop and read
+> [Upgrading an existing install](#upgrading-an-existing-install)
+> before you upload — replacing an app deletes its backend
+> configuration.
 
-The app is live as soon as the upload finishes — no restart needed for
-this step (the one in Step 1 is one-time). It won't do anything useful
-yet, though: continue to [Configure](#configure).
+### Step 3 — Check it landed
+
+On the Portal server:
+
+```bash
+ls <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap/
+```
+
+Expect `index.html`, `appConfig.properties`, `setup.sh`, three
+`*-proxy.jsp` files, three `*.properties.example` templates, and an
+`assets/` folder.
+
+> Don't `curl` the deployed URL as a health check. The Portal gates
+> everything under `/pc/apps/` behind an authenticated session, so an
+> unauthenticated `curl` returns **404** even when the deployment is
+> perfectly fine — it does the same for the Portal's own bundled apps.
+> The real check is loading the App View in a browser, which comes
+> after [Configure](#configure).
+
+WeatherMap can't reach any backend yet — continue to
+[Configure](#configure).
+
+### Upgrading an existing install
+
+Uploading over an existing app **deletes its folder and re-extracts
+it**. Everything not in the zip is removed, and everything that *is*
+in the zip is overwritten. Two kinds of loss:
+
+- **Deleted:** `spectrum-proxy.properties`, `appneta-proxy.properties`,
+  `da-proxy.properties` — your backend credentials. Releases never
+  ship these, so the upload can't put them back.
+- **Overwritten:** `runtime-config.json` — it ships in the zip, so any
+  value you changed there reverts to the release default.
+  `triageViewPageId` is the one people notice, because the
+  "Investigate in Triage View" links quietly stop appearing.
+
+**1. Back up your credentials.**
+
+```bash
+cd <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap
+mkdir -p ~/weathermap-config-backup && chmod 700 ~/weathermap-config-backup
+sudo cp -p *-proxy.properties ~/weathermap-config-backup/
+```
+
+`sudo` is required: these files are mode `600` and owned by the
+account that runs Performance Center, so you can't read them as
+yourself unless you *are* that account. `-p` keeps them `600` in the
+backup rather than widening them.
+
+**2. Note anything you changed in `runtime-config.json`** — most
+often `triageViewPageId`:
+
+```bash
+grep triageViewPageId runtime-config.json
+```
+
+**3. Upload with "Replace existing apps" ticked.** Without the tick
+the upload is refused — which is harmless, since nothing is written
+until the box is checked.
+
+**4. Put your configuration back.** Simplest is to re-run the setup
+script, which restores the credentials *and* re-prompts for the Triage
+View page id in one pass:
+
+```bash
+cd <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap
+bash setup.sh
+```
+
+Or restore the credential files by hand and re-apply your
+`runtime-config.json` values:
+
+```bash
+sudo cp -p ~/weathermap-config-backup/*-proxy.properties \
+  <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap/
+```
+
+> Re-apply `runtime-config.json` values individually — don't copy an
+> old version of the whole file back. A newer release may add settings,
+> and restoring the old file would silently drop them.
+
+**5. Restart Performance Center** if the app had already served a
+request before the upgrade — each proxy JSP caches its `.properties`
+in memory for the life of the JVM:
+
+```bash
+sudo systemctl restart caperfcenter_console
+```
 
 ---
 
