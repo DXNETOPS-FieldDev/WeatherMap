@@ -216,6 +216,15 @@ upload leaves your install untouched).
 > sudo cp -p ~/weathermap-config-backup/*-proxy.properties \
 >   <PC_HOME>/PC/webapps/pc/apps/user/WeatherMap/
 > ```
+> **`runtime-config.json` is also reset**, because it *is* in the zip.
+> Any value you changed there — `triageViewPageId` especially — goes
+> back to the shipped default. Note your changes before upgrading and
+> re-apply them after. Don't restore an old copy of the file wholesale:
+> a new release may add settings, and you'd silently drop them.
+>
+> Re-running `bash setup.sh` after the upload handles both the
+> `.properties` files and `triageViewPageId` in one pass, which is
+> usually easier than restoring by hand.
 
 The app is live as soon as the upload finishes — no restart needed for
 this step (the one in Step 1 is one-time). It won't do anything useful

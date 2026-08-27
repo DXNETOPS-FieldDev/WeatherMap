@@ -452,6 +452,13 @@ includes `spectrum-proxy.properties`, `appneta-proxy.properties`, and
 Re-run `setup.sh` or restore your backup — back them up *before* the
 upload, since the delete happens as soon as you click **Add**.
 
+`runtime-config.json` is reset too, but for a different reason: it
+ships *in* the zip, so the upload overwrites it with the release
+default. `triageViewPageId` is the value people notice — Triage View
+deep-links stop appearing. Re-apply your changes rather than restoring
+an old copy of the file, which would drop any settings a new release
+added.
+
 **`./setup.sh` fails with `Permission denied`** — deploying through
 App Deployment strips the executable bit. Run `bash setup.sh` instead.
 
