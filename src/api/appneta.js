@@ -80,7 +80,13 @@ export async function fetchAppNetaPaths(devicesByName, { debug } = {}) {
   if (debug || devicesByName.size === 0) return []
 
   const cfg = getConfig().appnetaPaths
-  const now = Math.floor(Date.now() / 1000)
+  // The window comes from the *browser's* clock, and AppNeta rejects any
+  // `to` later than its own ("'To' time must be in the past.", HTTP 400) —
+  // so a viewer whose clock runs even a few seconds fast gets no path data
+  // at all. Ending the window a minute early tolerates that; AppNeta's data
+  // lags real time anyway, so the last minute is rarely populated.
+  const CLOCK_SKEW_MARGIN_S = 60
+  const now = Math.floor(Date.now() / 1000) - CLOCK_SKEW_MARGIN_S
   const from = now - cfg.lookbackSeconds
 
   const headers = { Accept: 'application/json' }
