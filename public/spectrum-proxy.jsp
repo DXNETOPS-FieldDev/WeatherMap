@@ -141,6 +141,18 @@
      */
     private static void rewritePasswordLine(File propsFile, String newValue) throws IOException {
         File tmp = new File(propsFile.getParentFile(), propsFile.getName() + ".tmp");
+        // Give the temp file the original's permissions before writing any
+        // content: a plain new file gets the default umask (typically 644),
+        // and renaming it over a 600 file would leave the credentials
+        // world-readable.
+        java.nio.file.Files.deleteIfExists(tmp.toPath());
+        java.nio.file.Files.createFile(tmp.toPath());
+        try {
+            java.nio.file.Files.setPosixFilePermissions(tmp.toPath(),
+                java.nio.file.Files.getPosixFilePermissions(propsFile.toPath()));
+        } catch (UnsupportedOperationException e) {
+            // Non-POSIX filesystem (Windows): permissions are inherited from the folder's ACL.
+        }
         List<String> lines = new ArrayList<>();
         try (BufferedReader r = new BufferedReader(
                 new InputStreamReader(new FileInputStream(propsFile), "UTF-8"))) {
