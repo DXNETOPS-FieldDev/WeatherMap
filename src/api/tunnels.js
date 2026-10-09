@@ -8,13 +8,28 @@ import { getConfig } from '../lib/config.js'
 let metricsUnavailable = false
 let missingMetricsProperty = null
 
+// Device ids per tunnel request. Performance Center rejects a long query
+// string with HTTP 400 (a 7,099-character URL for 89 devices failed), so the
+// device list is split; 40 ids keep each URL around 1.5 KB.
+const SOURCE_IDS_PER_REQUEST = 40
+
+/** `$filter` values selecting tunnels by source device, `perRequest` ids each. */
+export function tunnelSourceFilters(deviceIds, perRequest = SOURCE_IDS_PER_REQUEST) {
+  const filters = []
+  for (let i = 0; i < deviceIds.length; i += perRequest) {
+    filters.push(deviceIds.slice(i, i + perRequest).map((id) => `SourceDeviceID eq ${id}`).join(' or '))
+  }
+  return filters
+}
+
 export function getTunnelMetricsStatus() {
   return { unavailable: metricsUnavailable, missingProperty: missingMetricsProperty }
 }
 
 /**
  * Fetch SD-WAN tunnels whose source AND destination devices are both in our
- * visible device set, with the latest 10-minute metric sample inline.
+ * visible device set, with the latest 10-minute metric sample inline. Large
+ * device sets are fetched in several requests (see SOURCE_IDS_PER_REQUEST).
  *
  * Returns normalized tunnels: { id, name, sourceId, destId, transport, latency,
  * jitter, packetLoss, uptimePct }.
@@ -24,15 +39,25 @@ export function getTunnelMetricsStatus() {
 export async function fetchTunnels(deviceIds, { debug } = {}) {
   if (debug || deviceIds.length === 0) return []
 
+  const onMap = new Set(deviceIds)
+  const pages = await Promise.all(tunnelSourceFilters(deviceIds).map(fetchTunnelRows))
+  // Each request selects by source only; a tunnel counts when its
+  // destination is on the map too. Keyed by ID in case one comes back twice.
+  const byId = new Map()
+  for (const r of pages.flat()) {
+    if (onMap.has(r.DestinationDeviceID)) byId.set(r.ID, r)
+  }
+  return [...byId.values()].map(normalize)
+}
+
+async function fetchTunnelRows(filter) {
   const cfg = getConfig().tunnels
   const now = Math.floor(Date.now() / 1000)
   const startTime = now - cfg.lookbackSeconds
 
-  const srcFilter = deviceIds.map((id) => `SourceDeviceID eq ${id}`).join(' or ')
-  const dstFilter = deviceIds.map((id) => `DestinationDeviceID eq ${id}`).join(' or ')
   const buildUrl = (withMetrics) =>
     cfg.apiPath +
-    `?$filter=(${srcFilter}) and (${dstFilter})` +
+    `?$filter=${filter}` +
     (withMetrics ? '&$expand=sdntunnelmfs($orderby=Timestamp desc;$top=1)' : '') +
     `&starttime=${startTime}` +
     `&endtime=${now}` +
@@ -62,7 +87,7 @@ export async function fetchTunnels(deviceIds, { debug } = {}) {
     throw new Error(`Tunnels query failed: HTTP ${response.status}`)
   }
   const data = await response.json()
-  return (data.value || []).map(normalize)
+  return data.value || []
 }
 
 function normalize(row) {
