@@ -89,6 +89,27 @@ up another tool."*
   first saw the path, and the live latency / loss / jitter / MOS — both
   the AppNeta-measured metrics and PC's own path inventory in one place.
 
+### Configuration compliance with NCM
+
+- **Compliance tab in every device popup** — the device's current
+  status from DX NetOps Network Configuration Manager (NCM): Compliant,
+  Non-Compliant, Not Audited, Audit Error, Did Not Qualify, or Not in
+  NCM. For a non-compliant device it lists the **failed policies** and
+  when the device was audited.
+- **Non-compliant devices stand out** — a red ring on the map marker,
+  and a warning on the popup's Site Info tab that opens the Compliance
+  tab.
+- **"Non-Compliant Devices" filter** in the Network menu — narrows the
+  device markers to the ones failing a policy. SD-WAN tunnels and
+  AppNeta paths stay visible.
+- **View in NCM** — each matched device links to its audit trail in
+  the NCM web UI.
+
+Read-only: WeatherMap never triggers audits or changes anything in NCM.
+Devices are matched to NCM by host name, then IP address; when two NCM
+devices share a name or IP, the device shows as Not in NCM rather than
+guessing.
+
 ### Operator-friendly controls
 
 - **Env / Network split layer control** — environmental overlays
@@ -120,6 +141,10 @@ up another tool."*
   normal/green instead of colored by alarm severity.
 - *(Optional)* An AppNeta tenant + API token, if you want the AppNeta
   Monitoring Points feature
+- *(Optional)* DX NetOps Network Configuration Manager (NCM) 25.4 and an
+  NCM account, if you want device configuration compliance. The NetOps
+  Portal server must be able to reach NCM's web application (usually
+  port 8880)
 
 ---
 
@@ -231,12 +256,14 @@ it**. Everything not in the zip is removed, and everything that *is*
 in the zip is overwritten. Two kinds of loss:
 
 - **Deleted:** `spectrum-proxy.properties`, `appneta-proxy.properties`,
-  `da-proxy.properties` — your backend credentials. Releases never
-  ship these, so the upload can't put them back.
+  `da-proxy.properties`, `ncm-proxy.properties` — your backend
+  credentials. Releases never ship these, so the upload can't put them
+  back.
 - **Overwritten:** `runtime-config.json` — it ships in the zip, so any
   value you changed there reverts to the release default.
   `triageViewPageId` is the one people notice, because the
-  "Investigate in Triage View" links quietly stop appearing.
+  "Investigate in Triage View" links quietly stop appearing. The NCM
+  link URL (`ncm.uiBaseUrl`) resets the same way.
 
 **1. Back up your credentials.**
 
@@ -252,10 +279,10 @@ yourself unless you *are* that account. `-p` keeps them `600` in the
 backup rather than widening them.
 
 **2. Note anything you changed in `runtime-config.json`** — most
-often `triageViewPageId`:
+often `triageViewPageId` and the NCM link URL:
 
 ```bash
-grep triageViewPageId runtime-config.json
+grep -E 'triageViewPageId|uiBaseUrl' runtime-config.json
 ```
 
 **3. Upload with "Replace existing apps" ticked.** Without the tick
@@ -303,8 +330,9 @@ note under step 1.)
 
 WeatherMap always pulls device inventory and metrics from Performance
 Center's own OData API, with nothing to configure. Spectrum (alarm
-severity), AppNeta (Monitoring Points), and the AppNeta path → PC
-deep-link are optional add-ons, configured below — WeatherMap runs
+severity), AppNeta (Monitoring Points), the AppNeta path → PC
+deep-link, and NCM (configuration compliance) are optional add-ons,
+configured below — WeatherMap runs
 fine with none of them, just with fewer features.
 
 The two steps below assume NetOps Portal does **not** sit behind a
@@ -339,6 +367,12 @@ It walks through, in order:
 - **AppNeta** (optional — say no if you're not using Monitoring Points)
 - **Data Aggregator** (asked whenever you configure AppNeta — needed
   for AppNeta path titles to link into PC)
+- **NCM** (optional — say no if you don't use Network Configuration
+  Manager). It asks for two URLs, because they're often different:
+  the NCM web app as reached **from the Portal server** (for example
+  `https://ncm-host:8880/ncm-webapp/`), and the NCM web UI as reached
+  **from users' browsers**, for the "View in NCM" links. Leave the
+  second blank to hide those links.
 - **Triage View page id** — find this by opening Triage View in your
   Portal and reading the page id out of the URL. Leave it blank to
   hide those links instead.

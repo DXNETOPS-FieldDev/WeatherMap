@@ -1,7 +1,7 @@
 # WeatherMap — Backend Configuration
 
-This doc covers connecting WeatherMap to your Spectrum, AppNeta, and
-Data Aggregator REST WebServices backends, and the one-time
+This doc covers connecting WeatherMap to your Spectrum, AppNeta,
+Data Aggregator REST WebServices, and NCM backends, and the one-time
 Content-Security-Policy change your NetOps Portal needs for the
 weather/radar/power-outage overlays. (Device inventory and metrics
 come from the Data Aggregator automatically, via Performance Center's
@@ -30,8 +30,8 @@ The `.properties` files it writes hold passwords and API tokens, so the
 script sets them to mode `600` and gives them the deployed folder's
 owner.
 
-It covers everything below (Spectrum, AppNeta, the Data Aggregator, and
-the Triage View page id) in one guided pass, and is safe to re-run —
+It covers everything below (Spectrum, AppNeta, the Data Aggregator, NCM,
+and the Triage View page id) in one guided pass, and is safe to re-run —
 it asks before overwriting a file that's already configured. The
 sections below describe what the script does under the hood, and are
 still the reference if you'd rather edit a file directly (e.g. to
@@ -118,10 +118,48 @@ title — paths still render, links don't.
 
 ---
 
+## `ncm-proxy.properties` — NCM configuration compliance *(optional)*
+
+Only needed if you use DX NetOps Network Configuration Manager (NCM)
+and want each device's configuration-compliance status on the map.
+**Without this file, WeatherMap shows nothing about compliance** — no
+Compliance tab, no warnings, no Non-Compliant Devices filter. Tested
+with NCM 25.4.
+
+```bash
+cp ncm-proxy.properties.example ncm-proxy.properties
+# then edit ncm-proxy.properties — fill in your values
+```
+
+| Key | What to set |
+|---|---|
+| `ncm.base.url` | NCM's web application URL **as reached from the Portal server**, including the `/ncm-webapp/` path, e.g. `https://ncm-host.example.com:8880/ncm-webapp/`. A public or load-balanced NCM address often doesn't serve the REST API; use the address the Portal server can reach directly. |
+| `ncm.user` / `ncm.password` | An NCM account that can read devices and audit events. Browser never sees them. Auto-obfuscated on disk after the first request. |
+| `ncm.ssl.verify` | `true` to verify NCM's certificate (production, with NCM's cert in the container's truststore), `false` for a self-signed lab cert. |
+
+The proxy only reads from NCM: the device list (each device's current
+compliance status) and the "Device Compliant" / "Device NonCompliant"
+audit events (which policies failed). It accepts a fixed set of
+requests from the browser and builds every NCM query itself, so a
+Portal user can't use it to read anything else from NCM.
+
+**The "View in NCM" link** uses a separate setting, `ncm.uiBaseUrl` in
+`runtime-config.json` — the NCM web UI address as reached **from users'
+browsers**, e.g. `https://ncm.example.com`. It's often not the same as
+`ncm.base.url`. Leave it `null` to hide the links. `setup.sh` asks for
+both.
+
+**How map devices are matched to NCM:** by host name (full name, then
+the part before the first dot), then by management IP address. If two
+NCM devices share a name or IP, that device shows **Not in NCM**
+rather than risk showing another device's status.
+
+---
+
 ## Changing a `.properties` file later needs a restart
 
 Each proxy JSP (`spectrum-proxy.jsp`, `appneta-proxy.jsp`,
-`da-proxy.jsp`) loads its `.properties` file **once per JVM lifetime**
+`da-proxy.jsp`, `ncm-proxy.jsp`) loads its `.properties` file **once per JVM lifetime**
 — on the first request it serves — and caches the values in a static
 field. Editing the file afterward has no effect until Performance
 Center restarts:
@@ -420,6 +458,9 @@ the iframe — no build needed.
 | `powerOutages.apiUrl` | ODIN dataset endpoint for power-outage polygons. Defaults to the public ORNL mirror. |
 | `powerOutages.maxRecords` | Pagination cap for ODIN. 5000 covers nationwide storms comfortably. |
 | `triageViewPageId` | The Performance Center page id for Triage View in **your** environment. **Must change before going live — see above.** Leave `null` to hide the deep-links. |
+| `ncm.uiBaseUrl` | NCM web UI address as users' browsers reach it, for the "View in NCM" links. `null` hides them. Only used when `ncm-proxy.properties` is configured. |
+| `ncm.refreshIntervalMs` | How often compliance is reloaded. Default 15 minutes; compliance changes when NCM audits, not minute to minute. |
+| `ncm.lookbackDays` | How far back to look for the audit event that lists a device's failed policies. Default 365. |
 
 ---
 
@@ -447,15 +488,17 @@ anything wrong with your zip.
 **Backend config disappeared after re-deploying through App
 Deployment** — "Replace existing apps" **deletes the folder and
 re-extracts it**, removing every file that isn't in the zip. That
-includes `spectrum-proxy.properties`, `appneta-proxy.properties`, and
-`da-proxy.properties`, since releases never ship real credentials.
+includes `spectrum-proxy.properties`, `appneta-proxy.properties`,
+`da-proxy.properties`, and `ncm-proxy.properties`, since releases never
+ship real credentials.
 Re-run `setup.sh` or restore your backup — back them up *before* the
 upload, since the delete happens as soon as you click **Add**.
 
 `runtime-config.json` is reset too, but for a different reason: it
 ships *in* the zip, so the upload overwrites it with the release
 default. `triageViewPageId` is the value people notice — Triage View
-deep-links stop appearing. Re-apply your changes rather than restoring
+deep-links stop appearing. `ncm.uiBaseUrl` resets too, so the "View in
+NCM" links disappear. Re-apply your changes rather than restoring
 an old copy of the file, which would drop any settings a new release
 added.
 
@@ -487,8 +530,10 @@ has no devices, or none of them have `Latitude` / `Longitude` set in
 NetOps.
 
 **No SD-WAN tunnels showing** — the PC OData query returned no tunnels
-for the group, or the proxied call failed. Check DevTools → Network
-for `/pc/odata4/api/tunnels` and verify the response. If the Sites
+for the group, or the call failed. Check DevTools → Network for
+`/pc/odata4/api/sdntunnels` and verify the response. (Before v1.1.0, a
+large group made this URL too long and Performance Center answered
+**400** — 89 devices did on our test Portal. Upgrade if you see that.) If the Sites
 legend says "No tunnel data yet", the query succeeded but this group
 genuinely has no tunnels between its devices.
 
@@ -531,6 +576,44 @@ elsewhere on the network doesn't guarantee the PC server can reach it
 too (DNS zone visibility, `/etc/hosts` entries, and firewall rules can
 all differ per host). A quick `curl` of `da.target.url` run directly
 on the PC host is the fastest way to confirm.
+
+**No Compliance tab in device popups** — NCM isn't configured:
+`ncm-proxy.properties` is missing, which is normal if you don't use NCM.
+DevTools → Network shows `ncm-proxy.jsp` answering **404 "NCM not
+configured"**; the browser console logs that 404 as a failed request,
+which is expected. Creating the file needs no restart: until the proxy
+has loaded a file, it checks for one on every request.
+
+**Compliance tab says "Unavailable"** — NCM is configured but the
+proxy couldn't load compliance. DevTools → Network, look for
+`ncm-proxy.jsp?op=devices`:
+- **502 "NCM rejected the configured credentials (HTTP 500) - check
+  ncm.user / ncm.password"** — a wrong username or password. NCM
+  answers a bad login with **HTTP 500 "Failed to authenticate user"**,
+  not 401, so the 500 in the message isn't an NCM outage. Fix the
+  credentials and restart Performance Center.
+- **502 "NCM login failed: HTTP …"** — NCM's login endpoint returned
+  some other error; the message includes the start of NCM's reply.
+- **502 "NCM unreachable: …"** — the Portal server can't reach
+  `ncm.base.url`. Run `curl -k <ncm.base.url>` **on the Portal server**;
+  check you're using the address that serves the REST API (often port
+  8880), not a public or load-balanced name.
+- **500 "Proxy misconfigured"** — `ncm-proxy.properties` is missing a
+  key or unreadable by Performance Center's account.
+
+**A device shows "Not in NCM" but NCM manages it** — its host name and
+IP address in NetOps don't match NCM's device name, host name, or
+management IP; or two NCM devices share that name or IP, and WeatherMap
+won't guess between them.
+
+**Non-compliant device but no failed policies listed** — status comes
+from NCM's device record, while the policy names come from NCM's audit
+events. If the latest matching event is older than `ncm.lookbackDays`,
+or the events request failed, the status still shows but the list is
+empty.
+
+**No "View in NCM" link** — `ncm.uiBaseUrl` in `runtime-config.json` is
+`null` or not an `http(s)` URL.
 
 **"Investigate in Triage View" link doesn't appear** —
 `triageViewPageId` in `runtime-config.json` is null. Set it to the

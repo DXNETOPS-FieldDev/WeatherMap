@@ -177,8 +177,10 @@ export default function App() {
   // NCM configuration compliance — optional and independent of devices.
   // When NCM isn't configured on this Portal the proxy answers 404 and the
   // feature stays invisible. Compliance changes on audit cadence, so this
-  // refreshes slowly (default 15 min).
+  // refreshes slowly (default 15 min). Debug mode uses sample devices and
+  // calls no backend, so NCM stays off there too.
   useEffect(() => {
+    if (params.debug) { setNcm({ enabled: false }); return }
     let cancelled = false
     const load = () => {
       fetchNcmCompliance()
@@ -188,7 +190,7 @@ export default function App() {
     load()
     const timer = setInterval(load, ncmConfig().refreshIntervalMs)
     return () => { cancelled = true; clearInterval(timer) }
-  }, [])
+  }, [params.debug])
 
   // RainViewer radar frames — independent of devices/alarms. Non-fatal on
   // failure: the overlay just shows nothing rather than blocking the map.

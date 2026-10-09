@@ -18,7 +18,8 @@
 # Prompts for Spectrum (optional), AppNeta (optional), the Data
 # Aggregator (asked whenever AppNeta is configured — it's always
 # deployed alongside NetOps Portal, so there's no reason to skip it),
-# and the Triage View page id, then writes the real .properties files
+# NCM configuration compliance (optional), and the Triage View page id,
+# then writes the real .properties files
 # and updates runtime-config.json. No Node/npm needed —
 # this is plain bash, since most customer environments won't have a
 # JS build toolchain installed.
@@ -161,6 +162,37 @@ if [[ "$configured_appneta" == true ]]; then
     "da.user=$da_user" \
     "da.password=$da_password" \
     "da.ssl.verify=$da_verify"
+  echo ""
+fi
+
+# --- NCM configuration compliance (optional) ----------------------------
+
+if ask_yn "Configure NCM (device configuration compliance)?" "N"; then
+  echo "--- NCM ---"
+  ncm_url=$(ask "NCM web app URL as reached from this server (e.g. https://ncm-host:8880/ncm-webapp/)")
+  ncm_user=$(ask "NCM username")
+  ncm_password=$(ask_secret "NCM password")
+  ncm_verify="false"
+  if ask_yn "Verify NCM's TLS certificate? (say no for self-signed dev certs)" "N"; then
+    ncm_verify="true"
+  fi
+  write_properties ncm-proxy.properties.example ncm-proxy.properties \
+    "ncm.base.url=$ncm_url" \
+    "ncm.user=$ncm_user" \
+    "ncm.password=$ncm_password" \
+    "ncm.ssl.verify=$ncm_verify"
+  echo "The device popup can link to each device in the NCM web UI. That URL is"
+  echo "the one browsers use, which is often not the one above."
+  ncm_ui=$(ask "NCM web UI URL for browsers (e.g. https://ncm.example.com; blank = no link)")
+  ncm_ui_json=null
+  if [[ "$ncm_ui" =~ ^https?://[^/\"\\]+[^\"\\]*$ ]]; then
+    ncm_ui_json="\"$(sed_escape "$ncm_ui")\""
+  elif [[ -n "$ncm_ui" ]]; then
+    echo "  Not an http(s) URL — leaving the NCM link off."
+  fi
+  sed -i.bak "s|\"uiBaseUrl\":[^,}]*|\"uiBaseUrl\": ${ncm_ui_json}|" runtime-config.json
+  rm -f runtime-config.json.bak
+  echo "  Set the NCM link URL in runtime-config.json."
   echo ""
 fi
 

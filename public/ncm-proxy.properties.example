@@ -1,0 +1,41 @@
+# ============================================================================
+# NCM proxy configuration — read by ncm-proxy.jsp at startup.
+#
+# To use: copy this file to `ncm-proxy.properties` (in the same
+# directory) and fill in the values for your environment, or run
+# `bash setup.sh`. The real file is gitignored so credentials never end up
+# in source control.
+#
+# NCM (Network Configuration Manager) is optional. While this file is
+# absent, the App View shows no compliance information at all.
+#
+# The servlet container must be restarted (or the JSP recompiled) for
+# changes to take effect.
+#
+# This proxy only reads from NCM: the device list (for each device's
+# configuration-compliance status) and the "Device Compliant" / "Device
+# NonCompliant" audit events (for failed-policy names). It logs in with
+# the credentials below to get a short-lived Bearer token, server-side —
+# the browser never sees the credentials or the token.
+# ============================================================================
+
+# NCM web application URL, as reached FROM THE PORTAL SERVER. Must include
+# scheme, host, port, and the /ncm-webapp/ path.
+# Example: https://ncm-host.example.com:8880/ncm-webapp/
+ncm.base.url=https://CHANGE-ME-ncm-host:8880/ncm-webapp/
+
+# NCM credentials. The account only needs to read devices and audit events.
+#
+# On first request, the JSP rewrites the password line with an
+# {obfuscated} prefix (so it isn't sitting in plaintext on disk). The
+# prefix tells the JSP on subsequent loads to decode the value rather
+# than treat it as raw. To rotate, replace the value (with or without
+# prefix) and restart the container — the JSP re-obfuscates on the
+# next request.
+ncm.user=CHANGE-ME
+ncm.password=CHANGE-ME
+
+# Verify NCM's TLS certificate. true = verify (use this in production, with
+# the NCM certificate in the container's truststore). false = accept any
+# certificate, for a self-signed lab cert.
+ncm.ssl.verify=true
