@@ -66,6 +66,22 @@ export function correlateOutagesToDevices(devices, outages) {
   return result
 }
 
+/**
+ * How many distinct outages the given devices show in their "Possible power
+ * outage" banners — what the Power Outages layer label counts. Expects
+ * devices already decorated with `outage` from correlateOutagesToDevices
+ * (one outage per device, the most severe containing it), so the label always
+ * matches the popups. Deliberately not "every outage overlapping a device":
+ * ODIN is county-level and stacks many records on one county.
+ */
+export function bannerOutageCount(devices) {
+  const shown = new Set()
+  for (const d of Array.isArray(devices) ? devices : []) {
+    if (d?.outage) shown.add(d.outage)
+  }
+  return shown.size
+}
+
 function computeBbox(coords) {
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
   const walk = (a) => {

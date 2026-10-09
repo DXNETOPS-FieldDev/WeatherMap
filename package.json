@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --host localhost --port 8888",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --test test/"
   },
   "dependencies": {
     "d3-scale": "^4.0.2",

@@ -76,6 +76,14 @@ export default function TabbedPopup({ device, apiKey }) {
           >
             Metrics
           </button>
+          {device.ncm && (
+            <button
+              className={`tab ${activeTab === 'compliance' ? 'active' : ''}`}
+              onClick={() => setActiveTab('compliance')}
+            >
+              Compliance
+            </button>
+          )}
           <button
             className={`tab ${activeTab === 'alarms' ? 'active' : ''}`}
             onClick={() => setActiveTab('alarms')}
@@ -87,6 +95,9 @@ export default function TabbedPopup({ device, apiKey }) {
         {activeTab === 'site' && (
           <div className="tab-content">
             {device.outage && <OutageWarning outage={device.outage} />}
+            {device.ncm?.status === 'noncompliant' && (
+              <ComplianceWarning ncm={device.ncm} onOpen={() => setActiveTab('compliance')} />
+            )}
             <p>
               <strong>Name:</strong>{' '}
               {device.globalId ? (
@@ -165,6 +176,12 @@ export default function TabbedPopup({ device, apiKey }) {
           </div>
         )}
 
+        {activeTab === 'compliance' && device.ncm && (
+          <div className="tab-content">
+            <ComplianceDetails ncm={device.ncm} />
+          </div>
+        )}
+
         {activeTab === 'alarms' && (
           <div className="tab-content">
             {alarms.length === 0 && <p>No Alarms</p>}
@@ -206,6 +223,62 @@ export default function TabbedPopup({ device, apiKey }) {
         )}
       </div>
     </Popup>
+  )
+}
+
+// What each NCM compliance status means, in words a reader without NCM
+// knowledge can act on. Error and DidNotQualify say only what NCM reported.
+const COMPLIANCE_STATUS = {
+  compliant: { label: 'Compliant', note: 'Passed every policy in its last NCM audit.' },
+  noncompliant: { label: 'Non-Compliant', note: 'Failed one or more policies in its last NCM audit.' },
+  notaudited: { label: 'Not Audited', note: 'NCM manages this device but has not audited it against a policy.' },
+  error: { label: 'Audit Error', note: 'NCM reported an error for this device\u2019s last audit.' },
+  didnotqualify: { label: 'Did Not Qualify', note: 'NCM reported that this device did not qualify for its policies.' },
+  unrecognized: { label: 'Unknown', note: 'NCM reported a status this App View does not recognize.' },
+  notinncm: { label: 'Not in NCM', note: 'No NCM device matches this device\u2019s name or IP address.' },
+  unavailable: { label: 'Unavailable', note: 'Compliance could not be loaded from NCM.' },
+}
+
+function ComplianceDetails({ ncm }) {
+  const meta = COMPLIANCE_STATUS[ncm.status] || COMPLIANCE_STATUS.unrecognized
+  return (
+    <>
+      <p>
+        <strong>Status:</strong>{' '}
+        <span className={`compliance-status compliance-status-${ncm.status}`}>{meta.label}</span>
+      </p>
+      <p className="compliance-note"><small>{meta.note}</small></p>
+      {ncm.error && <p className="error"><small>{ncm.error}</small></p>}
+      {ncm.link && (
+        <p className="compliance-jump">
+          <a href={ncm.link} target="_blank" rel="noopener noreferrer">View in NCM →</a>
+        </p>
+      )}
+      {ncm.ncmName && <p><strong>NCM device:</strong> {ncm.ncmName}</p>}
+      {ncm.auditTime && <p><strong>Last audit:</strong> {ncm.auditTime.toLocaleString()}</p>}
+      {ncm.failedPolicies?.length > 0 && (
+        <>
+          <p className="compliance-list-label">Failed policies</p>
+          <ul className="compliance-policy-list">
+            {ncm.failedPolicies.map((p) => <li key={p}>{p}</li>)}
+          </ul>
+        </>
+      )}
+    </>
+  )
+}
+
+function ComplianceWarning({ ncm, onOpen }) {
+  return (
+    <div className="compliance-warning">
+      <button type="button" className="compliance-warning-title" onClick={onOpen}>
+        ⚠ Configuration non-compliant (NCM)
+      </button>
+      {ncm.auditTime && <><br /><small>Last audit: {ncm.auditTime.toLocaleString()}</small></>}
+      {ncm.failedPolicies?.length > 0 && (
+        <><br /><small>Failed: {ncm.failedPolicies.join(', ')}</small></>
+      )}
+    </div>
   )
 }
 

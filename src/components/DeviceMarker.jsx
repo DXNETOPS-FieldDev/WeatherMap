@@ -21,8 +21,8 @@ const BADGE_SEVERITIES = new Set(['Critical', 'Major', 'Minor', 'Initial'])
 
 const iconCache = new Map()
 
-function getIcon(color, severity, badgeColor, badgeSeverity) {
-  const key = `${color}|${severity}|${badgeColor || ''}|${badgeSeverity || ''}`
+function getIcon(color, severity, badgeColor, badgeSeverity, ncmNonCompliant) {
+  const key = `${color}|${severity}|${badgeColor || ''}|${badgeSeverity || ''}|${ncmNonCompliant ? 'ncm' : ''}`
   if (!iconCache.has(key)) {
     const badge = badgeColor
       ? `<div class="device-marker-badge" style="background:${badgeColor}" ` +
@@ -33,8 +33,9 @@ function getIcon(color, severity, badgeColor, badgeSeverity) {
       L.divIcon({
         className: 'device-marker',
         html:
-          `<div class="device-marker-dot" style="background:${color}" ` +
-          `data-severity="${severity}">${badge}</div>`,
+          `<div class="device-marker-dot${ncmNonCompliant ? ' ncm-noncompliant' : ''}" ` +
+          `style="background:${color}" data-severity="${severity}"` +
+          `${ncmNonCompliant ? ' title="Configuration non-compliant (NCM)"' : ''}>${badge}</div>`,
         iconSize: [18, 18],
         iconAnchor: [9, 9],
         popupAnchor: [0, -9],
@@ -55,8 +56,11 @@ export default function DeviceMarker({ device, weatherApiKey }) {
       deviceTop || 'Normal',
       showBadge ? SEVERITY_COLOR[componentTop] : null,
       showBadge ? componentTop : null,
+      // A red ring marks an NCM non-compliant configuration, independent of
+      // the alarm colour: a device can be alarm-free and still non-compliant.
+      device.ncm?.status === 'noncompliant',
     )
-  }, [device.alarms])
+  }, [device.alarms, device.ncm?.status])
 
   return (
     <Marker position={[device.latitude, device.longitude]} icon={icon}>

@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { MapContainer, TileLayer, LayersControl, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, LayersControl, LayerGroup, useMap } from 'react-leaflet'
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import L from 'leaflet'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import { useUrlParams } from './hooks/useUrlParams.js'
 import { fetchDevices } from './api/odata.js'
 import { fetchSpectrumAlarmsForDevices } from './api/spectrum.js'
-import { fetchActiveOutages, correlateOutagesToDevices } from './api/odin.js'
+import { fetchActiveOutages, correlateOutagesToDevices, bannerOutageCount } from './api/odin.js'
 import { fetchTunnels, getTunnelMetricsStatus } from './api/tunnels.js'
 import { fetchAppNetaPaths, fetchAppNetaMpDevices } from './api/appneta.js'
 import { fetchNetworkPathDetails } from './api/networkpath.js'
 import { fetchRadarFrames } from './api/rainviewer.js'
+import { fetchNcmCompliance, ncmConfig } from './api/ncm.js'
+import { ncmInfoForDevice, nonCompliantDevices } from './lib/ncm-compliance.js'
 import { getConfig } from './lib/config.js'
 import DeviceMarker from './components/DeviceMarker.jsx'
 import RainviewerLayer from './components/RainviewerLayer.jsx'
@@ -63,6 +65,36 @@ const { Overlay } = LayersControl
  * — counts changing every 60s would otherwise cause react-leaflet to
  * re-add the layer at the end of Leaflet's list, scrambling the order.
  */
+/**
+ * Keep "(count)" suffixes on LayersControl overlay labels current.
+ *
+ * react-leaflet passes an Overlay's `name` to Leaflet once, when the layer
+ * first registers, and ignores later changes — so a label rendered before
+ * its data arrived stays at "Devices" / "(0)" forever. This re-registers the
+ * layer with the control under the new label (public removeLayer +
+ * addOverlay). The layer stays on the map, so checkbox state is preserved
+ * and no overlayadd/overlayremove events fire.
+ *
+ * `labels` maps a stable label prefix to the full label. Finding the
+ * registered layer reads the control's `_layers` list; if a future Leaflet
+ * renames it, labels simply stop updating rather than breaking the map.
+ */
+function useOverlayLabels(controlRef, labels) {
+  useEffect(() => {
+    const control = controlRef.current
+    if (!control || !Array.isArray(control._layers)) return
+    for (const [prefix, label] of Object.entries(labels)) {
+      const entry = control._layers.find(
+        (e) => e.overlay && typeof e.name === 'string' && e.name.startsWith(prefix),
+      )
+      if (entry && entry.name !== label) {
+        control.removeLayer(entry.layer)
+        control.addOverlay(entry.layer, label)
+      }
+    }
+  })
+}
+
 function makeSortByPrefix(order) {
   return (layerA, layerB, nameA, nameB) => {
     const a = order.findIndex((p) => nameA.startsWith(p))
@@ -87,6 +119,8 @@ export default function App() {
   const [appnetaPaths, setAppnetaPaths] = useState([])
   const [appnetaMps, setAppnetaMps] = useState([])
   const [radarFrames, setRadarFrames] = useState({ host: '', frames: [] })
+  // null until the first NCM load completes; then a fetchNcmCompliance() result.
+  const [ncm, setNcm] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -139,6 +173,22 @@ export default function App() {
     const timer = setInterval(load, config.powerOutages.refreshIntervalMs)
     return () => { cancelled = true; clearInterval(timer) }
   }, [config.powerOutages.refreshIntervalMs])
+
+  // NCM configuration compliance — optional and independent of devices.
+  // When NCM isn't configured on this Portal the proxy answers 404 and the
+  // feature stays invisible. Compliance changes on audit cadence, so this
+  // refreshes slowly (default 15 min).
+  useEffect(() => {
+    let cancelled = false
+    const load = () => {
+      fetchNcmCompliance()
+        .then((result) => { if (!cancelled) setNcm(result) })
+        .catch((e) => { if (!cancelled) setNcm({ enabled: true, error: e.message }) })
+    }
+    load()
+    const timer = setInterval(load, ncmConfig().refreshIntervalMs)
+    return () => { cancelled = true; clearInterval(timer) }
+  }, [])
 
   // RainViewer radar frames — independent of devices/alarms. Non-fatal on
   // failure: the overlay just shows nothing rather than blocking the map.
@@ -203,6 +253,20 @@ export default function App() {
     const map = correlateOutagesToDevices(dedupedDevices, outages)
     return dedupedDevices.map((d) => ({ ...d, outage: map.get(d.id) || null }))
   }, [dedupedDevices, outages])
+
+  // Attach NCM compliance to each device for the marker ring and the popup's
+  // Compliance tab. Absent entirely (no `ncm` field) when NCM isn't configured.
+  const devicesWithNcm = useMemo(() => {
+    if (!ncm || !ncm.enabled) return devicesWithOutages
+    if (ncm.error) {
+      return devicesWithOutages.map((d) => ({ ...d, ncm: { status: 'unavailable', error: ncm.error } }))
+    }
+    const { uiBaseUrl } = ncmConfig()
+    return devicesWithOutages.map((d) => ({
+      ...d,
+      ncm: ncmInfoForDevice(ncm.index, ncm.latestEvents, d, uiBaseUrl),
+    }))
+  }, [devicesWithOutages, ncm])
 
   // SD-WAN tunnels — fetched after devices land so we can constrain the
   // query to tunnels whose endpoints are both on the map. Refreshes on an
@@ -357,6 +421,24 @@ export default function App() {
     if (!devicesLayerOn) setTunnelLayerOn(false)
   }, [devicesLayerOn])
 
+  // "Non-Compliant Devices" filter in the Network menu. It narrows the
+  // Devices layer rather than drawing its own markers, so it's coupled to
+  // Devices the same way Tunnels is: turning the filter on turns Devices on,
+  // and turning Devices off clears the filter.
+  const [ncmFilterOn, setNcmFilterOn] = useState(false)
+  useEffect(() => {
+    if (ncmFilterOn) setDevicesLayerOn(true)
+  }, [ncmFilterOn])
+  useEffect(() => {
+    if (!devicesLayerOn) setNcmFilterOn(false)
+  }, [devicesLayerOn])
+  // Only offered when NCM is configured and answering — and only applied
+  // then, so an NCM outage can't leave the map silently filtered.
+  const ncmAvailable = Boolean(ncm && ncm.enabled && !ncm.error)
+
+  const envControlRef = useRef(null)
+  const networkControlRef = useRef(null)
+
   // Per-MP visibility for the AppNeta path layer. Same negative-set pattern
   // as `hiddenDeviceIds` above (empty = all checked, no need to repopulate
   // when MPs first load). A path renders only when its source MP is checked.
@@ -427,14 +509,42 @@ export default function App() {
   )
   const clusterDevices = useMemo(
     () => (appnetaLayerOn
-      ? devicesWithOutages.filter((d) => !appnetaMpIdSet.has(d.id))
-      : devicesWithOutages),
-    [devicesWithOutages, appnetaLayerOn, appnetaMpIdSet],
+      ? devicesWithNcm.filter((d) => !appnetaMpIdSet.has(d.id))
+      : devicesWithNcm),
+    [devicesWithNcm, appnetaLayerOn, appnetaMpIdSet],
   )
+  const nonCompliantClusterDevices = useMemo(() => nonCompliantDevices(clusterDevices), [clusterDevices])
+  const ncmFilterActive = ncmFilterOn && ncmAvailable
+  const displayedDevices = ncmFilterActive ? nonCompliantClusterDevices : clusterDevices
+
+  // Overlay labels, defined once so the initial registration and later
+  // updates (useOverlayLabels) always agree.
+  const devicesLabel = `Devices${clusterDevices.length ? ` (${clusterDevices.length})` : ''}`
+  const tunnelsLabel = `SD-WAN Tunnels${tunnels.length ? ` (${tunnels.length})` : ''}`
+  const appnetaLabel = `AppNeta MPs${appnetaPaths.length ? ` (${appnetaPaths.length})` : ''}`
+  const nonCompliantLabel = `Non-Compliant Devices (${nonCompliantClusterDevices.length})`
+  // Counts the distinct outages shown in the banners of the devices currently
+  // on the map (so it follows the Non-Compliant filter); the layer itself
+  // still draws every outage.
+  const affectedOutageCount = useMemo(() => bannerOutageCount(displayedDevices), [displayedDevices])
+  const outagesLabel = `Power Outages${affectedOutageCount ? ` (${affectedOutageCount})` : ''}`
+  useOverlayLabels(networkControlRef, {
+    'Devices': devicesLabel,
+    'SD-WAN Tunnels': tunnelsLabel,
+    'AppNeta MPs': appnetaLabel,
+    'Non-Compliant Devices': nonCompliantLabel,
+  })
+  useOverlayLabels(envControlRef, { 'Power Outages': outagesLabel })
 
   return (
     <div className="app">
-      <StatusBanner loading={loading} error={error} count={dedupedDevices.length} debug={params.debug} />
+      <StatusBanner
+        loading={loading}
+        error={error}
+        count={dedupedDevices.length}
+        shown={ncmFilterActive ? displayedDevices.length : null}
+        debug={params.debug}
+      />
       {tunnelLayerOn && tunnelMetricsUnavailable && (
         <div className="status-banner status-empty tunnel-metrics-note">
           SD-WAN tunnel metrics unavailable — this Performance Center doesn't
@@ -457,11 +567,11 @@ export default function App() {
         {/* Secondary control: environmental context (weather + outages).
             Declared first so it stacks ABOVE the network control at
             top-right. Toggled less often than network layers.
-            sortFunction keeps the panel order stable across refreshes —
-            dynamic count suffixes in overlay names ("Power Outages (3)")
-            cause react-leaflet to re-add the layer on every count change,
-            which would otherwise scramble the visual order. */}
+            sortFunction keeps the panel order stable when useOverlayLabels
+            re-registers an overlay under its updated "(count)" label —
+            react-leaflet itself never updates a label after registration. */}
         <LayersControl
+          ref={envControlRef}
           position="topright"
           sortLayers
           sortFunction={makeSortByPrefix(['Precipitation', 'Temperature', 'Wind', 'Clouds', 'Weather Radar', 'Power Outages'])}
@@ -497,7 +607,7 @@ export default function App() {
           <Overlay name="Weather Radar">
             <RainviewerLayer host={radarFrames.host} frames={radarFrames.frames} />
           </Overlay>
-          <Overlay name={`Power Outages${outages.length ? ` (${outages.length})` : ''}`}>
+          <Overlay name={outagesLabel}>
             <PowerOutageLayer outages={outages} />
           </Overlay>
         </LayersControl>
@@ -505,11 +615,12 @@ export default function App() {
         {/* Primary control: network layers (what the operator actively
             works with). Stacked below the climate control at top-right. */}
         <LayersControl
+          ref={networkControlRef}
           position="topright"
           sortLayers
-          sortFunction={makeSortByPrefix(['Devices', 'SD-WAN Tunnels', 'AppNeta MPs'])}
+          sortFunction={makeSortByPrefix(['Devices', 'SD-WAN Tunnels', 'AppNeta MPs', 'Non-Compliant Devices'])}
         >
-          <Overlay checked={devicesLayerOn} name={`Devices${clusterDevices.length ? ` (${clusterDevices.length})` : ''}`}>
+          <Overlay checked={devicesLayerOn} name={devicesLabel}>
             <MarkerClusterGroup
               iconCreateFunction={createClusterIcon}
               showCoverageOnHover={false}
@@ -520,20 +631,28 @@ export default function App() {
                 clusterclick: (e) => e.layer.spiderfy(),
               }}
             >
-              {clusterDevices.map((d) => (
+              {displayedDevices.map((d) => (
                 <DeviceMarker key={d.id} device={d} weatherApiKey={owmApiKey} />
               ))}
             </MarkerClusterGroup>
           </Overlay>
-          <Overlay checked={tunnelLayerOn} name={`SD-WAN Tunnels${tunnels.length ? ` (${tunnels.length})` : ''}`}>
+          <Overlay checked={tunnelLayerOn} name={tunnelsLabel}>
             <TunnelLayer tunnels={visibleTunnels} devicesById={devicesById} />
           </Overlay>
           {config.showAppNetaPaths && (
-            <Overlay name={`AppNeta MPs${appnetaPaths.length ? ` (${appnetaPaths.length})` : ''}`}>
+            <Overlay name={appnetaLabel}>
               <AppNetaLayer
                 paths={visibleAppnetaPaths}
                 appnetaMps={visibleAppnetaMps}
               />
+            </Overlay>
+          )}
+          {ncmAvailable && (
+            // A filter, not a layer: the empty LayerGroup only exists so the
+            // checkbox registers — an Overlay with no Leaflet layer inside
+            // never appears in the control (see TunnelLayer).
+            <Overlay checked={ncmFilterOn} name={nonCompliantLabel}>
+              <LayerGroup />
             </Overlay>
           )}
         </LayersControl>
@@ -545,6 +664,7 @@ export default function App() {
         <DevicesOverlayWatcher onChange={setDevicesLayerOn} />
         <TunnelOverlayWatcher onChange={setTunnelLayerOn} />
         {config.showAppNetaPaths && <AppNetaOverlayWatcher onChange={setAppnetaLayerOn} />}
+        {ncmAvailable && <NcmFilterOverlayWatcher onChange={setNcmFilterOn} />}
         {config.showAlarmLegend && <Legend />}
         {config.showTunnelLegend && tunnelLayerOn && (
           <TunnelLegend
@@ -672,6 +792,24 @@ function DevicesOverlayWatcher({ onChange }) {
   return null
 }
 
+/** Same pattern as TunnelOverlayWatcher but for the Non-Compliant Devices filter. */
+function NcmFilterOverlayWatcher({ onChange }) {
+  const map = useMap()
+  useEffect(() => {
+    const matches = (e) =>
+      typeof e?.name === 'string' && e.name.startsWith('Non-Compliant Devices')
+    const onAdd = (e) => { if (matches(e)) onChange(true) }
+    const onRemove = (e) => { if (matches(e)) onChange(false) }
+    map.on('overlayadd', onAdd)
+    map.on('overlayremove', onRemove)
+    return () => {
+      map.off('overlayadd', onAdd)
+      map.off('overlayremove', onRemove)
+    }
+  }, [map, onChange])
+  return null
+}
+
 /** Same pattern as TunnelOverlayWatcher but for the AppNeta MPs overlay. */
 function AppNetaOverlayWatcher({ onChange }) {
   const map = useMap()
@@ -717,7 +855,7 @@ function FitBoundsToDevices({ devices }) {
   return null
 }
 
-function StatusBanner({ loading, error, count, debug }) {
+function StatusBanner({ loading, error, count, shown, debug }) {
   if (error) {
     return (
       <div className="status-banner status-error">
@@ -732,6 +870,13 @@ function StatusBanner({ loading, error, count, debug }) {
     return (
       <div className="status-banner status-empty">
         No geo-located devices found for this group context.
+      </div>
+    )
+  }
+  if (shown != null) {
+    return (
+      <div className="status-banner status-ok">
+        {shown} of {count} device{count === 1 ? '' : 's'} · non-compliant only
       </div>
     )
   }

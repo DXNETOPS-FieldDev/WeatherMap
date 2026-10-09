@@ -46,5 +46,10 @@
   "showAppNetaPaths": true,
   "showAppNetaLegend": true,
   "showOrphanAppnetaMps": false,
-  "triageViewPageId": null
+  "triageViewPageId": null,
+  "ncm": {
+    "uiBaseUrl": null,
+    "refreshIntervalMs": 900000,
+    "lookbackDays": 365
+  }
 }
