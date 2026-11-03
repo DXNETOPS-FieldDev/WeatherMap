@@ -1,5 +1,6 @@
 import Papa from 'papaparse'
 import { getConfig } from '../lib/config.js'
+import { gatewayFilter } from '../lib/gateways.js'
 
 /**
  * Fetch device inventory + average CPU utilization for the dashboard's
@@ -29,13 +30,46 @@ export async function fetchDevices({ id, startTime, endTime, debug }) {
 }
 
 function buildDevicesQuery({ id, startTime, endTime }) {
+  return devicesUrl(`(Latitude ne null) and (groups/any(L1:L1/ID eq ${id}))`, { startTime, endTime })
+}
+
+/**
+ * Fetch the configured gateways (devices outside the dashboard's group that
+ * its devices tunnel to; see src/lib/gateways.js) by ID / exact name, with the
+ * same columns, metrics and time window as the group's devices.
+ *
+ * Unlike the group query, nothing is filtered out: a gateway without
+ * coordinates comes back so it can be reported rather than silently missing,
+ * and the controller / AppNeta exclusions don't apply to a device that was
+ * listed on purpose. Names match exactly, including case (PC compares them
+ * case-sensitively). Resolves to [] with no request when nothing is configured.
+ */
+export async function fetchGatewayDevices({ refs, startTime, endTime, debug }) {
+  const filter = gatewayFilter(refs)
+  if (debug || !filter) return []
+
+  const response = await fetch(devicesUrl(encodeURIComponent(filter), { startTime, endTime }))
+  if (!response.ok) {
+    throw new Error(`Gateways query failed: HTTP ${response.status}`)
+  }
+  // A device with several metric items can come back on several rows.
+  const byId = new Map()
+  for (const d of parseDevicesCsv(await response.text(), { explicit: true })) {
+    if (!byId.has(d.id)) byId.set(d.id, d)
+  }
+  return [...byId.values()]
+}
+
+// `filter` goes into the URL as given: the group filter has always been sent
+// unencoded, and must stay byte-for-byte the same.
+function devicesUrl(filter, { startTime, endTime }) {
   // Relative path — resolves against whatever host the App View is loaded
   // from (dev-netops, prod-netops, etc.) so no env-specific edit is needed.
   const { topLimit, resolution } = getConfig().odata
   return (
     '/pc/odata4/api/devices' +
     '?$select=GlobalID,ID,Name,PrimaryIPAddress,Location,Longitude,Latitude' +
-    `&$filter=(Latitude ne null) and (groups/any(L1:L1/ID eq ${id}))` +
+    `&$filter=${filter}` +
     '&$expand=cpuandmemorymfs($apply=groupby((DeviceItemID),' +
       'aggregate(' +
         'im_CPUUtilization with average as Value,' +
@@ -50,12 +84,15 @@ function buildDevicesQuery({ id, startTime, endTime }) {
   )
 }
 
-function parseDevicesCsv(text) {
+// `explicit`: the devices were asked for by name/ID, so keep every row.
+function parseDevicesCsv(text, { explicit = false } = {}) {
   const { data } = Papa.parse(text, {
     header: true,
     dynamicTyping: true,
     skipEmptyLines: true,
   })
+
+  if (explicit) return data.map(normalizeDevice)
 
   const { includeAppNeta, includeSdwanControllers } = getConfig()
   return data

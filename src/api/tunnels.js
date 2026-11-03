@@ -31,21 +31,26 @@ export function getTunnelMetricsStatus() {
  * visible device set, with the latest 10-minute metric sample inline. Large
  * device sets are fetched in several requests (see SOURCE_IDS_PER_REQUEST).
  *
+ * `extraEndpointIds` are devices that count as "on the map" for the
+ * destination end only — the configured gateways, which sit outside the
+ * dashboard's group. The requests select by source, so this adds none.
+ *
  * Returns normalized tunnels: { id, name, sourceId, destId, transport, latency,
  * jitter, packetLoss, uptimePct }.
  *
  * Debug mode returns []; there's no sample tunnel data.
  */
-export async function fetchTunnels(deviceIds, { debug } = {}) {
+export async function fetchTunnels(deviceIds, { debug, extraEndpointIds } = {}) {
   if (debug || deviceIds.length === 0) return []
 
   const onMap = new Set(deviceIds)
+  const gateways = new Set(Array.isArray(extraEndpointIds) ? extraEndpointIds : [])
   const pages = await Promise.all(tunnelSourceFilters(deviceIds).map(fetchTunnelRows))
   // Each request selects by source only; a tunnel counts when its
   // destination is on the map too. Keyed by ID in case one comes back twice.
   const byId = new Map()
   for (const r of pages.flat()) {
-    if (onMap.has(r.DestinationDeviceID)) byId.set(r.ID, r)
+    if (onMap.has(r.DestinationDeviceID) || gateways.has(r.DestinationDeviceID)) byId.set(r.ID, r)
   }
   return [...byId.values()].map(normalize)
 }

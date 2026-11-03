@@ -125,3 +125,54 @@ describe('fetchTunnels', () => {
     assert.equal(tunnels.length, 1)
   })
 })
+
+describe('fetchTunnels with extra endpoints (gateways)', () => {
+  // Source ids are the map's devices; the server returns tunnels BY SOURCE, so
+  // gateways can be destinations of tunnels whose source is on the map.
+  const GATEWAY = 999999
+  const OUTSIDER = 888888
+  const serve = () => stubFetch((url) => {
+    const srcs = sourcesIn(url)
+    return json(srcs.includes(7115)
+      ? [row(1, 7115, 1138095), row(2, 7115, GATEWAY), row(3, 7115, OUTSIDER)]
+      : [])
+  })
+
+  test('a tunnel to a configured gateway is kept; one to any other outside device is not', async () => {
+    serve()
+    const tunnels = await fetchTunnels(DEV_IDS, { extraEndpointIds: [GATEWAY] })
+    assert.deepEqual(tunnels.map((t) => t.id).sort(), [1, 2])
+  })
+
+  test('control: without gateways the result is exactly what it was before', async () => {
+    serve()
+    assert.deepEqual((await fetchTunnels(DEV_IDS)).map((t) => t.id), [1])
+    serve()
+    assert.deepEqual((await fetchTunnels(DEV_IDS, { extraEndpointIds: [] })).map((t) => t.id), [1])
+    serve()
+    assert.deepEqual((await fetchTunnels(DEV_IDS, { extraEndpointIds: null })).map((t) => t.id), [1])
+    serve()
+    assert.deepEqual((await fetchTunnels(DEV_IDS, { extraEndpointIds: undefined })).map((t) => t.id), [1])
+  })
+
+  test('a gateway that is also on the map does not duplicate its tunnels', async () => {
+    serve()
+    const tunnels = await fetchTunnels(DEV_IDS, { extraEndpointIds: [1138095, GATEWAY] })
+    assert.deepEqual(tunnels.map((t) => t.id).sort(), [1, 2])
+  })
+
+  test('configuring a gateway adds no requests and keeps every URL short', async () => {
+    const withGw = serve()
+    await fetchTunnels(DEV_IDS, { extraEndpointIds: [GATEWAY] })
+    const base = serve()
+    await fetchTunnels(DEV_IDS)
+    assert.equal(withGw.length, base.length)
+    for (const url of withGw) assert.ok(url.length < MAX_URL, `URL is ${url.length} chars`)
+  })
+
+  test('no devices on the map still means no requests, even with gateways', async () => {
+    const calls = serve()
+    assert.deepEqual(await fetchTunnels([], { extraEndpointIds: [GATEWAY] }), [])
+    assert.equal(calls.length, 0)
+  })
+})
