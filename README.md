@@ -330,6 +330,35 @@ in memory for the life of the JVM:
 sudo systemctl restart caperfcenter_console
 ```
 
+### Trying a beta next to your WeatherMap
+
+A beta is packaged as `WeatherMapBeta.zip`. It installs as a **separate**
+App View, **NetOps WeatherMap (Beta)**, in its own folder, so your
+installed WeatherMap and everyone's dashboards stay exactly as they are.
+
+1. Upload `WeatherMapBeta.zip` through App Deployment, the same way as
+   [Step 2](#step-2--upload-the-zip). The first time, there's nothing to
+   replace.
+2. Give it its own configuration. Its folder is
+   `<PC_HOME>/PC/webapps/pc/apps/user/WeatherMapBeta`, with its own
+   `runtime-config.json` and credential files. Either run `bash setup.sh`
+   there, or copy the stable app's credential files:
+   ```bash
+   cd <PC_HOME>/PC/webapps/pc/apps/user/WeatherMapBeta
+   sudo cp -p ../WeatherMap/*-proxy.properties .
+   ```
+   Then re-apply any `runtime-config.json` values you use (see
+   [Upgrading](#upgrading-an-existing-install), step 2).
+3. Add it to a dashboard: pick **NetOps WeatherMap (Beta)** in the App View
+   settings. Its status banner shows a purple **BETA** tag.
+
+The beta appears in the App View list for everyone who can edit
+dashboards, and anyone signed in can open its URL. To keep it to
+yourself, add it only to a dashboard you don't share.
+
+Upgrading the beta works like upgrading WeatherMap, in the `WeatherMapBeta`
+folder. To build a beta from source: `CHANNEL=beta SCP_TARGET=none ./build.sh`.
+
 ---
 
 ## Configure

@@ -677,6 +677,7 @@ export default function App() {
         shown={ncmFilterActive ? displayedDevices.length : null}
         debug={params.debug}
         gateways={gatewayReport}
+        beta={config.releaseChannel === 'beta'}
       />
       {tunnelLayerOn && tunnelMetricsUnavailable && (
         <div className="status-banner status-empty tunnel-metrics-note">
@@ -1039,21 +1040,29 @@ function GatewaySuffix({ gateways }) {
   )
 }
 
-function StatusBanner({ loading, error, count, shown, debug, gateways }) {
+// The beta App View (built with CHANNEL=beta) says so on every banner, so it
+// can't be mistaken for the stable WeatherMap installed next to it.
+function BetaTag({ beta }) {
+  return beta ? <span className="beta-tag">BETA</span> : null
+}
+
+function StatusBanner({ loading, error, count, shown, debug, gateways, beta }) {
   const title = gateways?.lines?.length ? gateways.lines.join('\n') : undefined
   if (error) {
     return (
       <div className="status-banner status-error">
+        <BetaTag beta={beta} />
         Failed to load devices: {error}
       </div>
     )
   }
   if (loading) {
-    return <div className="status-banner status-loading">Loading devices…</div>
+    return <div className="status-banner status-loading"><BetaTag beta={beta} />Loading devices…</div>
   }
   if (count === 0) {
     return (
       <div className="status-banner status-empty">
+        <BetaTag beta={beta} />
         No geo-located devices found for this group context.
       </div>
     )
@@ -1061,6 +1070,7 @@ function StatusBanner({ loading, error, count, shown, debug, gateways }) {
   if (shown != null) {
     return (
       <div className="status-banner status-ok" title={title}>
+        <BetaTag beta={beta} />
         {shown} of {count} device{count === 1 ? '' : 's'} · non-compliant only
         <GatewaySuffix gateways={gateways} />
       </div>
@@ -1068,6 +1078,7 @@ function StatusBanner({ loading, error, count, shown, debug, gateways }) {
   }
   return (
     <div className="status-banner status-ok" title={title}>
+      <BetaTag beta={beta} />
       {count} device{count === 1 ? '' : 's'}
       <GatewaySuffix gateways={gateways} />
       {debug && ' (debug mode — using sample data)'}

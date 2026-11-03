@@ -816,3 +816,17 @@ body,
   font-size: 12px;
   color: #666;
 }
+
+/* Marks the beta App View (runtime-config "releaseChannel": "beta"). */
+.beta-tag {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 5px;
+  border-radius: 3px;
+  background: #6a1b9a;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  vertical-align: 1px;
+}
