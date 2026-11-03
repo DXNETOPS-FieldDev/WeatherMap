@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { Marker } from 'react-leaflet'
 import L from 'leaflet'
 import { topDeviceSeverity, topComponentSeverity } from '../api/spectrum.js'
 import TabbedPopup from './TabbedPopup.jsx'
+import { markerKey } from '../lib/device-search.js'
 
 // Marker dot color follows the device's own alarm severity. A small corner
 // badge is added when the device has *component* (interface) alarms — same
@@ -52,7 +53,10 @@ function getIcon(color, severity, badgeColor, badgeSeverity, ncmNonCompliant, ga
   return iconCache.get(key)
 }
 
-export default function DeviceMarker({ device, weatherApiKey }) {
+export default function DeviceMarker({ device, weatherApiKey, registerMarker }) {
+  // Lets the search box find this marker (see DeviceSearch).
+  const key = markerKey(device)
+  const markerRef = useCallback((m) => registerMarker?.(key, m), [registerMarker, key])
   const icon = useMemo(() => {
     const deviceTop = topDeviceSeverity(device.alarms)
     const color = SEVERITY_COLOR[deviceTop] || NORMAL_COLOR
@@ -72,7 +76,7 @@ export default function DeviceMarker({ device, weatherApiKey }) {
   }, [device.alarms, device.ncm?.status, device.gateway])
 
   return (
-    <Marker position={[device.latitude, device.longitude]} icon={icon}>
+    <Marker ref={markerRef} position={[device.latitude, device.longitude]} icon={icon}>
       <TabbedPopup device={device} apiKey={weatherApiKey} />
     </Marker>
   )

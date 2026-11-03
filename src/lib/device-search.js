@@ -25,3 +25,8 @@ export function matchDevices(devices, query, limit = MAX_HITS) {
     .slice(0, limit)
     .map((h) => h.device)
 }
+
+/** The key a drawn marker is registered under, so a search hit can find it. */
+export function markerKey(device) {
+  return `${device?.gateway ? 'gateway' : 'device'}:${device?.id}`
+}

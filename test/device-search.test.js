@@ -5,7 +5,7 @@
 // merely contains it, which outranks an IP match; ties are alphabetical.
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
-import { matchDevices } from '../src/lib/device-search.js'
+import { matchDevices, markerKey } from '../src/lib/device-search.js'
 
 const d = (id, name, ip) => ({ id, name, ip })
 const ids = (hits) => hits.map((h) => h.id)
@@ -85,5 +85,14 @@ describe('matchDevices', () => {
     const ms = performance.now() - t0
     assert.equal(hits.length, 10)
     assert.ok(ms < 250, `took ${Math.round(ms)} ms`)
+  })
+})
+
+describe('markerKey (links a search hit to its marker)', () => {
+  test('a gateway and a group device with the same id never share a key', () => {
+    assert.notEqual(markerKey({ id: 7114 }), markerKey({ id: 7114, gateway: true }))
+  })
+  test('the same device always gets the same key', () => {
+    assert.equal(markerKey({ id: 5, name: 'a' }), markerKey({ id: 5, name: 'b' }))
   })
 })

@@ -30,6 +30,7 @@ import TunnelLayer from './components/TunnelLayer.jsx'
 import TunnelLegend from './components/TunnelLegend.jsx'
 import AppNetaLayer from './components/AppNetaLayer.jsx'
 import AppNetaLegend from './components/AppNetaLegend.jsx'
+import DeviceSearch from './components/DeviceSearch.jsx'
 
 // Cluster bubble takes the color of the highest-severity device inside it.
 // data-severity is embedded in each marker's icon HTML by DeviceMarker.
@@ -535,6 +536,15 @@ export default function App() {
   const envControlRef = useRef(null)
   const networkControlRef = useRef(null)
 
+  // Markers by markerKey, filled in by DeviceMarker, so the search box can
+  // zoom to one; clusterRef lets it open the cluster a device sits in.
+  const markerRegistry = useRef(new Map())
+  const registerMarker = useCallback((key, marker) => {
+    if (marker) markerRegistry.current.set(key, marker)
+    else markerRegistry.current.delete(key)
+  }, [])
+  const clusterRef = useRef(null)
+
   // Per-MP visibility for the AppNeta path layer. Same negative-set pattern
   // as `hiddenDeviceIds` above (empty = all checked, no need to repopulate
   // when MPs first load). A path renders only when its source MP is checked.
@@ -612,6 +622,12 @@ export default function App() {
   const nonCompliantClusterDevices = useMemo(() => nonCompliantDevices(clusterDevices), [clusterDevices])
   const ncmFilterActive = ncmFilterOn && ncmAvailable
   const displayedDevices = ncmFilterActive ? nonCompliantClusterDevices : clusterDevices
+  // The search box finds what is drawn: the device markers (when that layer is
+  // on) and the gateways.
+  const searchableDevices = useMemo(
+    () => [...(devicesLayerOn ? displayedDevices : NO_DEVICES), ...drawnGateways],
+    [devicesLayerOn, displayedDevices, drawnGateways],
+  )
 
   // Overlay labels, defined once so the initial registration and later
   // updates (useOverlayLabels) always agree.
@@ -739,6 +755,7 @@ export default function App() {
         >
           <Overlay checked={devicesLayerOn} name={devicesLabel}>
             <MarkerClusterGroup
+              ref={clusterRef}
               iconCreateFunction={createClusterIcon}
               showCoverageOnHover={false}
               zoomToBoundsOnClick={false}
@@ -749,7 +766,7 @@ export default function App() {
               }}
             >
               {displayedDevices.map((d) => (
-                <DeviceMarker key={d.id} device={d} weatherApiKey={owmApiKey} />
+                <DeviceMarker key={d.id} device={d} weatherApiKey={owmApiKey} registerMarker={registerMarker} />
               ))}
             </MarkerClusterGroup>
           </Overlay>
@@ -762,7 +779,7 @@ export default function App() {
             <Overlay checked={gatewaysLayerOn} name={gatewaysLabel}>
               <LayerGroup>
                 {shownGateways.map((g) => (
-                  <DeviceMarker key={`gateway-${g.id}`} device={g} weatherApiKey={owmApiKey} />
+                  <DeviceMarker key={`gateway-${g.id}`} device={g} weatherApiKey={owmApiKey} registerMarker={registerMarker} />
                 ))}
               </LayerGroup>
             </Overlay>
@@ -793,6 +810,7 @@ export default function App() {
 
 
         <FitBoundsToDevices devices={dedupedDevices} />
+        <DeviceSearch devices={searchableDevices} markers={markerRegistry} clusterRef={clusterRef} />
 
         <LayersControlLabeler />
         <DevicesOverlayWatcher onChange={setDevicesLayerOn} />
