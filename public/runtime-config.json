@@ -51,5 +51,8 @@
     "uiBaseUrl": null,
     "refreshIntervalMs": 900000,
     "lookbackDays": 365
+  },
+  "gateways": {
+    "devices": []
   }
 }

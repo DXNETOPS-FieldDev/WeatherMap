@@ -73,6 +73,13 @@ up another tool."*
   hurting.
 - **Sites legend** with per-device visibility toggles — show only the
   branches you're triaging, hide the rest of the mesh.
+- **Gateways outside the group** — when each site's tunnels end at a
+  central hub that isn't in the site's group (an SD-WAN gateway, a
+  data-center hub), list the hubs once in `runtime-config.json`. Each
+  site's map then shows the hub its tunnels reach, and those tunnels,
+  **without adding the hub to the group**, so the group's other
+  dashboards (CPU, memory, interfaces) are unaffected. See
+  [Gateways](docs/BACKEND_CONFIGURATION.md#gateways-devices-outside-the-group-optional).
 
 ### Active synthetic measurements with AppNeta
 
@@ -116,6 +123,9 @@ guessing.
   (weather, radar, power outages) and network overlays (SD-WAN tunnels,
   AppNeta paths) toggle independently. You can stack just the layers
   relevant to the question you're asking.
+- **Find device** — a search box under the zoom buttons finds a device
+  on the map by name or IP address, zooms to it (opening its cluster)
+  and opens its popup.
 - **Filterable legends** — both the SD-WAN sites legend and the AppNeta
   MPs legend have a search box. Useful when you have hundreds of
   branches or paths and only care about a subset.
@@ -263,7 +273,8 @@ in the zip is overwritten. Two kinds of loss:
   value you changed there reverts to the release default.
   `triageViewPageId` is the one people notice, because the
   "Investigate in Triage View" links quietly stop appearing. The NCM
-  link URL (`ncm.uiBaseUrl`) resets the same way.
+  link URL (`ncm.uiBaseUrl`) and the gateway list (`gateways.devices`)
+  reset the same way.
 
 **1. Back up your credentials.**
 
@@ -279,10 +290,11 @@ yourself unless you *are* that account. `-p` keeps them `600` in the
 backup rather than widening them.
 
 **2. Note anything you changed in `runtime-config.json`** — most
-often `triageViewPageId` and the NCM link URL:
+often `triageViewPageId`, the NCM link URL and the gateway list:
 
 ```bash
 grep -E 'triageViewPageId|uiBaseUrl' runtime-config.json
+sed -n '/"gateways"/,/]/p' runtime-config.json
 ```
 
 **3. Upload with "Replace existing apps" ticked.** Without the tick

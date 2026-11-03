@@ -156,6 +156,57 @@ rather than risk showing another device's status.
 
 ---
 
+## Gateways: devices outside the group *(optional)*
+
+WeatherMap draws an SD-WAN tunnel only when **both** of its ends are on
+the map. When every site's tunnels end at a central hub that isn't in
+the site's group (an SD-WAN gateway, a data-center hub), a site's map
+shows no tunnels at all. Adding the hub to each site group fixes the map,
+but also puts the hub into every other dashboard on those groups.
+
+Instead, list the hubs in `runtime-config.json`:
+
+```json
+"gateways": {
+  "devices": ["SIN-GW-01", "MTL-GW-01", 123456]
+}
+```
+
+- Each entry is a device **name**, matched exactly **including case**, or
+  a numeric Performance Center device **ID**. A name shared by several
+  devices matches all of them.
+- A gateway appears on a map when a tunnel from one of that group's
+  devices **ends** at it (Performance Center records each tunnel with a
+  source and a destination device; the gateway must be the destination).
+  The map still fits to the group's own devices, so a distant gateway may
+  be off-screen; its tunnel line leads to it.
+- Gateways need a latitude and longitude in Performance Center, like any
+  device on the map.
+- Up to 50 entries are used. Leave the list empty (the default) to turn
+  the feature off; WeatherMap then behaves exactly as without it.
+- Takes effect on the next page load; no restart. `setup.sh` doesn't ask
+  for it: edit the file. A JSON mistake stops the whole map loading
+  ("Failed to load runtime-config.json"), so check it after editing:
+  `python3 -m json.tool runtime-config.json > /dev/null && echo valid`.
+
+To find a device's ID, open this after your Portal address in a browser
+that is signed in to the Portal (replace the name). The answer lists
+`"ID":` and `"Name":` for each match:
+
+```
+/pc/odata4/api/devices?$select=ID,Name&$filter=Name eq 'SIN-GW-01'&$format=application/json
+```
+
+**What you see:** gateways are drawn as **squares**, outside the clusters,
+and aren't counted in `Devices (n)`. The Network menu gains **Gateways
+(n)**, to hide them and their tunnels, and **Show all gateways**, which
+also draws listed gateways the group has no tunnel to. The status banner
+adds "+ n gateways"; hover over it to see, for each listed gateway,
+whether it is shown and why not (see
+[Troubleshooting](#troubleshooting)).
+
+---
+
 ## Changing a `.properties` file later needs a restart
 
 Each proxy JSP (`spectrum-proxy.jsp`, `appneta-proxy.jsp`,
@@ -461,6 +512,7 @@ the iframe — no build needed.
 | `ncm.uiBaseUrl` | NCM web UI address as users' browsers reach it, for the "View in NCM" links. `null` hides them. Only used when `ncm-proxy.properties` is configured. |
 | `ncm.refreshIntervalMs` | How often compliance is reloaded. Default 15 minutes; compliance changes when NCM audits, not minute to minute. |
 | `ncm.lookbackDays` | How far back to look for the audit event that lists a device's failed policies. Default 365. |
+| `gateways.devices` | Devices outside the dashboard's group to draw with their tunnels: names (exact, case-sensitive) or numeric device IDs. Empty by default. See [Gateways](#gateways-devices-outside-the-group-optional). |
 
 ---
 
@@ -528,6 +580,23 @@ missing, malformed JSON, or blocked by CSP. Check the browser console.
 **Status banner: "No geo-located devices found"** — the group either
 has no devices, or none of them have `Latitude` / `Longitude` set in
 NetOps.
+
+**A listed gateway doesn't appear** — hover over the status banner at
+the top of the map. A **⚠ gateways** sign means at least one listed
+gateway can't be drawn at all. Each gateway gets one line:
+- *hidden — no tunnel from this group*: the group's devices have no
+  tunnel ending at it in the last hour. Turn on **Show all gateways** to
+  draw it anyway.
+- *can't be drawn — no latitude/longitude*: set its coordinates in
+  Performance Center.
+- *not found — no device has exactly this name*: names are
+  case-sensitive and must match exactly; or use its numeric ID (see
+  [Gateways](#gateways-devices-outside-the-group-optional)).
+- *already in this group*: it is one of the group's own devices, shown
+  as a normal marker.
+- *Gateways could not be loaded*: the devices query failed; check
+  DevTools → Network for `/pc/odata4/api/devices` with `ID eq` or
+  `Name eq` in it.
 
 **No SD-WAN tunnels showing** — the PC OData query returned no tunnels
 for the group, or the call failed. Check DevTools → Network for
