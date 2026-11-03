@@ -159,3 +159,41 @@ export function gatewayStatuses(refs, fetched, tunnels, groupDeviceIds) {
     ),
   ]
 }
+
+function refLabel(ref) {
+  return typeof ref === 'number' ? `ID ${ref}` : `"${ref}"`
+}
+
+/**
+ * One line of plain text for a gatewayStatuses() entry — what the status
+ * banner's tooltip lists, so a site where a gateway doesn't appear can see why
+ * from one screenshot. `showAll` reflects the "Show all gateways" overlay.
+ */
+export function describeGatewayStatus(s, { showAll = false } = {}) {
+  const who = refLabel(s?.ref)
+  switch (s?.status) {
+    case 'ok':
+      return `${who}: shown — ${s.tunnels} tunnel${s.tunnels === 1 ? '' : 's'} from this group`
+    case 'notunnels':
+      return showAll
+        ? `${who}: shown by Show all gateways — no tunnel from this group`
+        : `${who}: hidden — no tunnel from this group (Show all gateways draws it)`
+    case 'nocoordinates':
+      return `${who}: can't be drawn — no latitude/longitude in Performance Center`
+    case 'notfound':
+      return typeof s.ref === 'number'
+        ? `${who}: not found — no device has this ID`
+        : `${who}: not found — no device has exactly this name (names are case-sensitive)`
+    case 'ingroup':
+      return `${who}: already in this group — shown as one of its devices`
+    default:
+      return `${who}: status unknown`
+  }
+}
+
+const PROBLEM_STATUSES = new Set(['notfound', 'nocoordinates'])
+
+/** True when a configured gateway can't be drawn at all, so it is worth a warning sign. */
+export function isGatewayProblem(s) {
+  return PROBLEM_STATUSES.has(s?.status)
+}

@@ -725,3 +725,28 @@ body,
   padding-left: 18px;
   color: #b71c1c;
 }
+
+/* Gateways: devices outside the group, drawn for their tunnels. A square
+   rather than a disc, so they never read as one of the group's sites. */
+.device-marker-dot.gateway {
+  border-radius: 3px;
+  border-color: #263238;
+}
+
+.gateway-note {
+  background: #eceff1;
+  border-left: 3px solid #263238;
+  padding: 6px 8px;
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.status-banner[title] {
+  cursor: help;
+}
+
+.gateway-warn {
+  color: #b26a00;
+  font-weight: 600;
+}

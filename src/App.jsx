@@ -4,7 +4,7 @@ import MarkerClusterGroup from 'react-leaflet-cluster'
 import L from 'leaflet'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import { useUrlParams } from './hooks/useUrlParams.js'
-import { fetchDevices } from './api/odata.js'
+import { fetchDevices, fetchGatewayDevices } from './api/odata.js'
 import { fetchSpectrumAlarmsForDevices } from './api/spectrum.js'
 import { fetchActiveOutages, correlateOutagesToDevices, bannerOutageCount } from './api/odin.js'
 import { fetchTunnels, getTunnelMetricsStatus } from './api/tunnels.js'
@@ -14,6 +14,14 @@ import { fetchRadarFrames } from './api/rainviewer.js'
 import { fetchNcmCompliance, ncmConfig } from './api/ncm.js'
 import { ncmInfoForDevice, nonCompliantDevices } from './lib/ncm-compliance.js'
 import { getConfig } from './lib/config.js'
+import {
+  MAX_GATEWAY_REFS,
+  parseGatewayRefs,
+  gatewaysToShow,
+  gatewayStatuses,
+  describeGatewayStatus,
+  isGatewayProblem,
+} from './lib/gateways.js'
 import DeviceMarker from './components/DeviceMarker.jsx'
 import RainviewerLayer from './components/RainviewerLayer.jsx'
 import Legend from './components/Legend.jsx'
@@ -57,6 +65,30 @@ function createClusterIcon(cluster) {
 }
 
 const { Overlay } = LayersControl
+
+const NO_DEVICES = []
+
+// Merge the most-severe containing outage onto each device, so the popup's
+// Site Info tab can warn "possible power outage in this area".
+function withOutages(list, outages) {
+  if (outages.length === 0) return list
+  const map = correlateOutagesToDevices(list, outages)
+  return list.map((d) => ({ ...d, outage: map.get(d.id) || null }))
+}
+
+// Attach NCM compliance to each device for the marker ring and the popup's
+// Compliance tab. Absent entirely (no `ncm` field) when NCM isn't configured.
+function withNcm(list, ncm) {
+  if (!ncm || !ncm.enabled) return list
+  if (ncm.error) {
+    return list.map((d) => ({ ...d, ncm: { status: 'unavailable', error: ncm.error } }))
+  }
+  const { uiBaseUrl } = ncmConfig()
+  return list.map((d) => ({
+    ...d,
+    ncm: ncmInfoForDevice(ncm.index, ncm.latestEvents, d, uiBaseUrl),
+  }))
+}
 
 /**
  * Returns a LayersControl.sortFunction that sorts overlays by a known
@@ -159,6 +191,66 @@ export default function App() {
     }
   }, [params])
 
+  // Gateways — devices outside the group that its devices tunnel to (an SD-WAN
+  // hub, say), listed in runtime-config.json `gateways.devices`. They are drawn
+  // on this map only and never added to the group, so the group's other
+  // dashboards don't see them. With nothing listed: no request, no new menu
+  // entries, and the tunnel query is exactly as before.
+  const gatewayRefs = useMemo(() => parseGatewayRefs(config.gateways?.devices), [config])
+  const gatewaysConfigured = gatewayRefs.ids.length + gatewayRefs.names.length > 0
+  const [gatewayDevices, setGatewayDevices] = useState(NO_DEVICES)
+  const [gatewayError, setGatewayError] = useState(null)
+  // The tunnel fetch waits for this, so a gateway's tunnels aren't dropped by
+  // a first fetch that ran before the gateways were known.
+  const [gatewaysReady, setGatewaysReady] = useState(!gatewaysConfigured)
+  const [gatewaysLayerOn, setGatewaysLayerOn] = useState(true)
+  const [allGatewaysOn, setAllGatewaysOn] = useState(false)
+  useEffect(() => {
+    if (allGatewaysOn) setGatewaysLayerOn(true)
+  }, [allGatewaysOn])
+  useEffect(() => {
+    if (!gatewaysLayerOn) setAllGatewaysOn(false)
+  }, [gatewaysLayerOn])
+
+  useEffect(() => {
+    if (!gatewaysConfigured) return
+    let cancelled = false
+    setGatewaysReady(false)
+    fetchGatewayDevices({ refs: gatewayRefs, startTime: params.startTime, endTime: params.endTime, debug: params.debug })
+      .then(async (data) => {
+        if (cancelled) return
+        let alarmsByName = new Map()
+        try {
+          alarmsByName = await fetchSpectrumAlarmsForDevices(data.map((d) => d.name).filter(Boolean))
+        } catch (e) {
+          console.warn('Gateway alarm fetch failed:', e.message)
+        }
+        if (cancelled) return
+        setGatewayDevices(data.map((d) => ({ ...d, alarms: alarmsByName.get(d.name) || [] })))
+        setGatewayError(null)
+      })
+      .catch((e) => {
+        if (cancelled) return
+        console.warn('Gateway fetch failed:', e.message)
+        setGatewayDevices(NO_DEVICES)
+        setGatewayError(e.message)
+      })
+      .finally(() => {
+        if (!cancelled) setGatewaysReady(true)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [params, gatewayRefs, gatewaysConfigured])
+
+  const groupDeviceIds = useMemo(() => new Set(devices.map((d) => d.id)), [devices])
+  // Gateways that can end a tunnel on this map: drawable, and not already in
+  // the group. Passed to the tunnel fetch as a stable string key.
+  const gatewayEndpointKey = useMemo(
+    () => gatewaysToShow({ gateways: gatewayDevices, groupDeviceIds, showAll: true }).map((g) => g.id).join(','),
+    [gatewayDevices, groupDeviceIds],
+  )
+
   // Power outages — independent of devices/alarms. Non-fatal on failure:
   // the layer toggle just shows nothing rather than blocking the map.
   // Refreshes on an interval since the ODIN feed updates every ~10 min.
@@ -248,38 +340,20 @@ export default function App() {
     return [...byKey.values()]
   }, [devices, tunnels])
 
-  // Merge the most-severe containing outage onto each device, so the
-  // popup's Site Info tab can warn "possible power outage in this area".
-  const devicesWithOutages = useMemo(() => {
-    if (outages.length === 0) return dedupedDevices
-    const map = correlateOutagesToDevices(dedupedDevices, outages)
-    return dedupedDevices.map((d) => ({ ...d, outage: map.get(d.id) || null }))
-  }, [dedupedDevices, outages])
-
-  // Attach NCM compliance to each device for the marker ring and the popup's
-  // Compliance tab. Absent entirely (no `ncm` field) when NCM isn't configured.
-  const devicesWithNcm = useMemo(() => {
-    if (!ncm || !ncm.enabled) return devicesWithOutages
-    if (ncm.error) {
-      return devicesWithOutages.map((d) => ({ ...d, ncm: { status: 'unavailable', error: ncm.error } }))
-    }
-    const { uiBaseUrl } = ncmConfig()
-    return devicesWithOutages.map((d) => ({
-      ...d,
-      ncm: ncmInfoForDevice(ncm.index, ncm.latestEvents, d, uiBaseUrl),
-    }))
-  }, [devicesWithOutages, ncm])
+  const devicesWithOutages = useMemo(() => withOutages(dedupedDevices, outages), [dedupedDevices, outages])
+  const devicesWithNcm = useMemo(() => withNcm(devicesWithOutages, ncm), [devicesWithOutages, ncm])
 
   // SD-WAN tunnels — fetched after devices land so we can constrain the
   // query to tunnels whose endpoints are both on the map. Refreshes on an
   // interval (lookbackSeconds is short, so we need to re-poll to keep the
   // sample window current and catch metric spikes as they happen).
   useEffect(() => {
-    if (devices.length === 0) return
+    if (devices.length === 0 || !gatewaysReady) return
     let cancelled = false
     const ids = devices.map((d) => d.id).filter(Boolean)
+    const extraEndpointIds = gatewayEndpointKey ? gatewayEndpointKey.split(',').map(Number) : []
     const load = () => {
-      fetchTunnels(ids, { debug: params.debug })
+      fetchTunnels(ids, { debug: params.debug, extraEndpointIds })
         .then((data) => {
           if (cancelled) return
           setTunnels(data)
@@ -292,7 +366,7 @@ export default function App() {
     load()
     const timer = setInterval(load, config.tunnels.refreshIntervalMs)
     return () => { cancelled = true; clearInterval(timer) }
-  }, [devices, params.debug, config.tunnels.refreshIntervalMs])
+  }, [devices, params.debug, config.tunnels.refreshIntervalMs, gatewaysReady, gatewayEndpointKey])
 
   // AppNeta MP devices — fetched once on app load, regardless of overlay
   // state. Cheap (~25 records) and the data is stable; no need to gate on
@@ -363,9 +437,29 @@ export default function App() {
     config.appnetaPaths.refreshIntervalMs,
   ])
 
+  // The gateways to draw now: automatic (a tunnel from the group ends at it) or
+  // every configured one under "Show all gateways". Decorated like the group's
+  // devices so their popups match.
+  const shownGateways = useMemo(
+    () => withNcm(
+      withOutages(
+        gatewaysToShow({ gateways: gatewayDevices, tunnels, groupDeviceIds, showAll: allGatewaysOn }),
+        outages,
+      ),
+      ncm,
+    ),
+    [gatewayDevices, tunnels, groupDeviceIds, allGatewaysOn, outages, ncm],
+  )
+  // Only drawn gateways can anchor a tunnel line: TunnelLayer skips a tunnel
+  // whose endpoint isn't here, so unchecking Gateways hides their tunnels too.
+  const drawnGateways = useMemo(
+    () => (gatewaysLayerOn ? shownGateways : NO_DEVICES),
+    [gatewaysLayerOn, shownGateways],
+  )
+
   const devicesById = useMemo(
-    () => new Map(dedupedDevices.map((d) => [d.id, d])),
-    [dedupedDevices],
+    () => new Map([...dedupedDevices, ...drawnGateways].map((d) => [d.id, d])),
+    [dedupedDevices, drawnGateways],
   )
 
   // Per-device visibility toggle for tunnel rendering. Tracked as the
@@ -525,6 +619,7 @@ export default function App() {
   const tunnelsLabel = `SD-WAN Tunnels${tunnels.length ? ` (${tunnels.length})` : ''}`
   const appnetaLabel = `AppNeta MPs${appnetaPaths.length ? ` (${appnetaPaths.length})` : ''}`
   const nonCompliantLabel = `Non-Compliant Devices (${nonCompliantClusterDevices.length})`
+  const gatewaysLabel = `Gateways${shownGateways.length ? ` (${shownGateways.length})` : ''}`
   // Counts the distinct outages shown in the banners of the devices currently
   // on the map (so it follows the Non-Compliant filter); the layer itself
   // still draws every outage.
@@ -535,7 +630,26 @@ export default function App() {
     'SD-WAN Tunnels': tunnelsLabel,
     'AppNeta MPs': appnetaLabel,
     'Non-Compliant Devices': nonCompliantLabel,
+    'Gateways': gatewaysLabel,
   })
+
+  // What the status banner says about gateways: how many are drawn, and on
+  // hover, one line per configured gateway saying why it is or isn't shown —
+  // so a site where one doesn't appear can tell why from a screenshot.
+  const gatewayReport = useMemo(() => {
+    if (!gatewaysConfigured || params.debug) return null
+    const statuses = gatewayStatuses(gatewayRefs, gatewayDevices, tunnels, groupDeviceIds)
+    const lines = gatewayError
+      ? [`Gateways could not be loaded: ${gatewayError}`]
+      : statuses.map((st) => describeGatewayStatus(st, { showAll: allGatewaysOn }))
+    if (gatewayRefs.truncated) lines.push(`Only the first ${MAX_GATEWAY_REFS} configured gateways are used.`)
+    return {
+      shown: drawnGateways.length,
+      lines,
+      warn: Boolean(gatewayError) || gatewayRefs.truncated || statuses.some(isGatewayProblem),
+    }
+  }, [gatewaysConfigured, params.debug, gatewayRefs, gatewayDevices, tunnels, groupDeviceIds,
+    gatewayError, allGatewaysOn, drawnGateways])
   useOverlayLabels(envControlRef, { 'Power Outages': outagesLabel })
 
   return (
@@ -546,6 +660,7 @@ export default function App() {
         count={dedupedDevices.length}
         shown={ncmFilterActive ? displayedDevices.length : null}
         debug={params.debug}
+        gateways={gatewayReport}
       />
       {tunnelLayerOn && tunnelMetricsUnavailable && (
         <div className="status-banner status-empty tunnel-metrics-note">
@@ -620,7 +735,7 @@ export default function App() {
           ref={networkControlRef}
           position="topright"
           sortLayers
-          sortFunction={makeSortByPrefix(['Devices', 'SD-WAN Tunnels', 'AppNeta MPs', 'Non-Compliant Devices'])}
+          sortFunction={makeSortByPrefix(['Devices', 'SD-WAN Tunnels', 'Gateways', 'Show all gateways', 'AppNeta MPs', 'Non-Compliant Devices'])}
         >
           <Overlay checked={devicesLayerOn} name={devicesLabel}>
             <MarkerClusterGroup
@@ -641,6 +756,23 @@ export default function App() {
           <Overlay checked={tunnelLayerOn} name={tunnelsLabel}>
             <TunnelLayer tunnels={visibleTunnels} devicesById={devicesById} />
           </Overlay>
+          {gatewaysConfigured && (
+            // Not clustered: a gateway is usually far from the group's sites,
+            // and should stay visible on its own.
+            <Overlay checked={gatewaysLayerOn} name={gatewaysLabel}>
+              <LayerGroup>
+                {shownGateways.map((g) => (
+                  <DeviceMarker key={`gateway-${g.id}`} device={g} weatherApiKey={owmApiKey} />
+                ))}
+              </LayerGroup>
+            </Overlay>
+          )}
+          {gatewaysConfigured && (
+            // A switch, not a layer (see the Non-Compliant filter below).
+            <Overlay checked={allGatewaysOn} name="Show all gateways">
+              <LayerGroup />
+            </Overlay>
+          )}
           {config.showAppNetaPaths && (
             <Overlay name={appnetaLabel}>
               <AppNetaLayer
@@ -667,6 +799,8 @@ export default function App() {
         <TunnelOverlayWatcher onChange={setTunnelLayerOn} />
         {config.showAppNetaPaths && <AppNetaOverlayWatcher onChange={setAppnetaLayerOn} />}
         {ncmAvailable && <NcmFilterOverlayWatcher onChange={setNcmFilterOn} />}
+        {gatewaysConfigured && <OverlayWatcher prefix="Gateways" onChange={setGatewaysLayerOn} />}
+        {gatewaysConfigured && <OverlayWatcher prefix="Show all gateways" onChange={setAllGatewaysOn} />}
         {config.showAlarmLegend && <Legend />}
         {config.showTunnelLegend && tunnelLayerOn && (
           <TunnelLegend
@@ -812,6 +946,23 @@ function NcmFilterOverlayWatcher({ onChange }) {
   return null
 }
 
+/** Reports an overlay's on/off state, matched by its label prefix. */
+function OverlayWatcher({ prefix, onChange }) {
+  const map = useMap()
+  useEffect(() => {
+    const matches = (e) => typeof e?.name === 'string' && e.name.startsWith(prefix)
+    const onAdd = (e) => { if (matches(e)) onChange(true) }
+    const onRemove = (e) => { if (matches(e)) onChange(false) }
+    map.on('overlayadd', onAdd)
+    map.on('overlayremove', onRemove)
+    return () => {
+      map.off('overlayadd', onAdd)
+      map.off('overlayremove', onRemove)
+    }
+  }, [map, prefix, onChange])
+  return null
+}
+
 /** Same pattern as TunnelOverlayWatcher but for the AppNeta MPs overlay. */
 function AppNetaOverlayWatcher({ onChange }) {
   const map = useMap()
@@ -857,7 +1008,21 @@ function FitBoundsToDevices({ devices }) {
   return null
 }
 
-function StatusBanner({ loading, error, count, shown, debug }) {
+// " + 2 gateways", and a warning sign when a configured gateway can't be drawn.
+// The tooltip lists every configured gateway's status.
+function GatewaySuffix({ gateways }) {
+  if (!gateways) return null
+  const { shown, warn } = gateways
+  return (
+    <>
+      {shown > 0 && ` + ${shown} gateway${shown === 1 ? '' : 's'}`}
+      {warn && <span className="gateway-warn"> ⚠ gateways</span>}
+    </>
+  )
+}
+
+function StatusBanner({ loading, error, count, shown, debug, gateways }) {
+  const title = gateways?.lines?.length ? gateways.lines.join('\n') : undefined
   if (error) {
     return (
       <div className="status-banner status-error">
@@ -877,14 +1042,16 @@ function StatusBanner({ loading, error, count, shown, debug }) {
   }
   if (shown != null) {
     return (
-      <div className="status-banner status-ok">
+      <div className="status-banner status-ok" title={title}>
         {shown} of {count} device{count === 1 ? '' : 's'} · non-compliant only
+        <GatewaySuffix gateways={gateways} />
       </div>
     )
   }
   return (
-    <div className="status-banner status-ok">
+    <div className="status-banner status-ok" title={title}>
       {count} device{count === 1 ? '' : 's'}
+      <GatewaySuffix gateways={gateways} />
       {debug && ' (debug mode — using sample data)'}
     </div>
   )

@@ -15,6 +15,8 @@ import {
   gatewayFilter,
   gatewayStatuses,
   gatewaysToShow,
+  describeGatewayStatus,
+  isGatewayProblem,
 } from '../src/lib/gateways.js'
 
 const EMPTY = { ids: [], names: [], truncated: false }
@@ -255,5 +257,66 @@ describe('gatewayStatuses (why a configured gateway is or is not showing)', () =
   test('nothing configured, nothing to report', () => {
     assert.deepEqual(gatewayStatuses({ ids: [], names: [] }, [], [], group), [])
     assert.deepEqual(gatewayStatuses(undefined, undefined, undefined, undefined), [])
+  })
+})
+
+describe('describeGatewayStatus (the words in the status banner tooltip)', () => {
+  const st = (ref, status, tunnels = 0) => ({ ref, status, deviceIds: [], tunnels })
+
+  test('shown, with the tunnel count (singular and plural)', () => {
+    assert.equal(describeGatewayStatus(st('SIN-GW-01', 'ok', 4)), '"SIN-GW-01": shown — 4 tunnels from this group')
+    assert.equal(describeGatewayStatus(st('SIN-GW-01', 'ok', 1)), '"SIN-GW-01": shown — 1 tunnel from this group')
+  })
+
+  test('no tunnel: hidden, and says how to draw it anyway', () => {
+    assert.equal(
+      describeGatewayStatus(st('QUIET', 'notunnels')),
+      '"QUIET": hidden — no tunnel from this group (Show all gateways draws it)',
+    )
+  })
+
+  test('no tunnel, with show-all on: shown, and says why there are no lines', () => {
+    assert.equal(
+      describeGatewayStatus(st('QUIET', 'notunnels'), { showAll: true }),
+      '"QUIET": shown by Show all gateways — no tunnel from this group',
+    )
+  })
+
+  test('no coordinates', () => {
+    assert.equal(
+      describeGatewayStatus(st('vEdge_RP_NewYork', 'nocoordinates')),
+      '"vEdge_RP_NewYork": can\'t be drawn — no latitude/longitude in Performance Center',
+    )
+  })
+
+  test('not found, by name: says names are case-sensitive', () => {
+    assert.equal(
+      describeGatewayStatus(st('sin-gw-01', 'notfound')),
+      '"sin-gw-01": not found — no device has exactly this name (names are case-sensitive)',
+    )
+  })
+
+  test('not found, by ID', () => {
+    assert.equal(describeGatewayStatus(st(999, 'notfound')), 'ID 999: not found — no device has this ID')
+  })
+
+  test('already in the group', () => {
+    assert.equal(
+      describeGatewayStatus(st(7115, 'ingroup')),
+      'ID 7115: already in this group — shown as one of its devices',
+    )
+  })
+
+  test('an unknown status still produces text rather than "undefined"', () => {
+    const text = describeGatewayStatus(st('X', 'weird'))
+    assert.ok(text.startsWith('"X": '))
+    assert.doesNotMatch(text, /undefined/)
+  })
+
+  test('only "not found" and "no coordinates" are problems worth a warning sign', () => {
+    const problems = ['ok', 'notunnels', 'ingroup', 'nocoordinates', 'notfound']
+      .filter((status) => isGatewayProblem(st('X', status)))
+    assert.deepEqual(problems, ['nocoordinates', 'notfound'])
+    assert.equal(isGatewayProblem(undefined), false)
   })
 })

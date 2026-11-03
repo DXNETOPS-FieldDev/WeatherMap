@@ -94,6 +94,11 @@ export default function TabbedPopup({ device, apiKey }) {
 
         {activeTab === 'site' && (
           <div className="tab-content">
+            {device.gateway && (
+              <p className="gateway-note">
+                Gateway — shown on this map for its SD-WAN tunnels, not as one of this group's devices.
+              </p>
+            )}
             {device.outage && <OutageWarning outage={device.outage} />}
             {device.ncm?.status === 'noncompliant' && (
               <ComplianceWarning ncm={device.ncm} onOpen={() => setActiveTab('compliance')} />

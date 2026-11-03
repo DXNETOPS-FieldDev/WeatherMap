@@ -21,9 +21,16 @@ const BADGE_SEVERITIES = new Set(['Critical', 'Major', 'Minor', 'Initial'])
 
 const iconCache = new Map()
 
-function getIcon(color, severity, badgeColor, badgeSeverity, ncmNonCompliant) {
-  const key = `${color}|${severity}|${badgeColor || ''}|${badgeSeverity || ''}|${ncmNonCompliant ? 'ncm' : ''}`
+function getIcon(color, severity, badgeColor, badgeSeverity, ncmNonCompliant, gateway) {
+  const key = `${color}|${severity}|${badgeColor || ''}|${badgeSeverity || ''}|${ncmNonCompliant ? 'ncm' : ''}|${gateway ? 'gw' : ''}`
   if (!iconCache.has(key)) {
+    const titles = [
+      gateway && 'Gateway — shown for its SD-WAN tunnels',
+      ncmNonCompliant && 'Configuration non-compliant (NCM)',
+    ].filter(Boolean)
+    const classes = ['device-marker-dot', ncmNonCompliant && 'ncm-noncompliant', gateway && 'gateway']
+      .filter(Boolean)
+      .join(' ')
     const badge = badgeColor
       ? `<div class="device-marker-badge" style="background:${badgeColor}" ` +
         `data-severity="${badgeSeverity}"></div>`
@@ -33,9 +40,9 @@ function getIcon(color, severity, badgeColor, badgeSeverity, ncmNonCompliant) {
       L.divIcon({
         className: 'device-marker',
         html:
-          `<div class="device-marker-dot${ncmNonCompliant ? ' ncm-noncompliant' : ''}" ` +
+          `<div class="${classes}" ` +
           `style="background:${color}" data-severity="${severity}"` +
-          `${ncmNonCompliant ? ' title="Configuration non-compliant (NCM)"' : ''}>${badge}</div>`,
+          `${titles.length ? ` title="${titles.join(' · ')}"` : ''}>${badge}</div>`,
         iconSize: [18, 18],
         iconAnchor: [9, 9],
         popupAnchor: [0, -9],
@@ -59,8 +66,10 @@ export default function DeviceMarker({ device, weatherApiKey }) {
       // A red ring marks an NCM non-compliant configuration, independent of
       // the alarm colour: a device can be alarm-free and still non-compliant.
       device.ncm?.status === 'noncompliant',
+      // A square marks a gateway: drawn for its tunnels, not as one of the group's devices.
+      device.gateway === true,
     )
-  }, [device.alarms, device.ncm?.status])
+  }, [device.alarms, device.ncm?.status, device.gateway])
 
   return (
     <Marker position={[device.latitude, device.longitude]} icon={icon}>
