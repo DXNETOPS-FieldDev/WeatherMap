@@ -28,8 +28,15 @@ describe('severityLabel', () => {
     assert.equal(severityLabel('MAJOR'), 'Major')
     assert.equal(severityLabel(' minor '), 'Minor')
   })
-  test('anything else is unknown (null), including numbers not yet mapped', () => {
-    for (const v of ['Warning', '', null, undefined, 1, 0, 99, {}]) assert.equal(severityLabel(v), null, String(v))
+  test('Performance Center codes 0, 1, 2 are Critical, Major, Minor', () => {
+    // Measured on dev-netops 2026-11-04: rules named "> 30%", "> 10%", "> 3%" carried codes 0, 1, 2, and the
+    // alarm console showed the same alarms as Critical, Major and Minor (74 rows, matched by rule).
+    assert.equal(severityLabel(0), 'Critical')
+    assert.equal(severityLabel(1), 'Major')
+    assert.equal(severityLabel(2), 'Minor')
+  })
+  test('anything else is unknown (null), including codes not seen yet', () => {
+    for (const v of ['Warning', '', null, undefined, 3, -1, 99, 1.5, '1', {}]) assert.equal(severityLabel(v), null, String(v))
   })
 })
 
@@ -78,10 +85,11 @@ describe('normalizeThresholdAlarm', () => {
     assert.notEqual(normalizeThresholdAlarm(row({ ClearTime: null })), null)
     assert.notEqual(normalizeThresholdAlarm(row({ ClearTime: 0 })), null)
   })
-  test('an unmapped severity is kept as unknown, with the raw value', () => {
-    const a = normalizeThresholdAlarm(row({ Severity: 1 }))
+  test('a code maps to its label; an unmapped one is kept as unknown, with the raw value', () => {
+    assert.equal(normalizeThresholdAlarm(row({ Severity: 0 })).severity, 'Critical')
+    const a = normalizeThresholdAlarm(row({ Severity: 9 }))
     assert.equal(a.severity, null)
-    assert.equal(a.rawSeverity, 1)
+    assert.equal(a.rawSeverity, 9)
   })
   test('no device to attach it to: not usable', () => {
     assert.equal(normalizeThresholdAlarm(row({ ItemID: null })), null)

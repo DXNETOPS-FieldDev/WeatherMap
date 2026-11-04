@@ -15,10 +15,11 @@ export const SEVERITIES = ['Critical', 'Major', 'Minor']
 const RANK = new Map(SEVERITIES.map((s, i) => [s, i]))
 const DEFAULT_SELECTED = ['Critical', 'Major']
 
-// Numeric Severity codes -> labels. Deliberately empty until real threshold
-// alarms show which number means what; an unmapped code stays unknown and never
-// colors a marker.
-const SEVERITY_CODES = new Map()
+// Numeric Severity codes -> labels. Measured on dev-netops 2026-11-04: threshold
+// rules named "> 30%", "> 10%" and "> 3%" carried codes 0, 1 and 2, and the alarm
+// console showed those same alarms as Critical, Major and Minor. Any other code
+// stays unknown and never colors a marker.
+const SEVERITY_CODES = new Map([[0, 'Critical'], [1, 'Major'], [2, 'Minor']])
 
 /** 'Critical' | 'Major' | 'Minor', or null when unknown. */
 export function severityLabel(raw) {
