@@ -546,6 +546,7 @@ export default function App() {
         count={dedupedDevices.length}
         shown={ncmFilterActive ? displayedDevices.length : null}
         debug={params.debug}
+        channel={config.releaseChannel}
       />
       {tunnelLayerOn && tunnelMetricsUnavailable && (
         <div className="status-banner status-empty tunnel-metrics-note">
@@ -857,20 +858,31 @@ function FitBoundsToDevices({ devices }) {
   return null
 }
 
-function StatusBanner({ loading, error, count, shown, debug }) {
+// A variant App View (built with CHANNEL=<name>, e.g. beta or thresholds) says
+// so on every banner, so it can't be mistaken for the stable WeatherMap
+// installed next to it. Absent for the stable build.
+function ChannelTag({ channel }) {
+  return typeof channel === 'string' && channel ? (
+    <span className="channel-tag">{channel.toUpperCase()}</span>
+  ) : null
+}
+
+function StatusBanner({ loading, error, count, shown, debug, channel }) {
   if (error) {
     return (
       <div className="status-banner status-error">
+        <ChannelTag channel={channel} />
         Failed to load devices: {error}
       </div>
     )
   }
   if (loading) {
-    return <div className="status-banner status-loading">Loading devices…</div>
+    return <div className="status-banner status-loading"><ChannelTag channel={channel} />Loading devices…</div>
   }
   if (count === 0) {
     return (
       <div className="status-banner status-empty">
+        <ChannelTag channel={channel} />
         No geo-located devices found for this group context.
       </div>
     )
@@ -878,12 +890,14 @@ function StatusBanner({ loading, error, count, shown, debug }) {
   if (shown != null) {
     return (
       <div className="status-banner status-ok">
+        <ChannelTag channel={channel} />
         {shown} of {count} device{count === 1 ? '' : 's'} · non-compliant only
       </div>
     )
   }
   return (
     <div className="status-banner status-ok">
+      <ChannelTag channel={channel} />
       {count} device{count === 1 ? '' : 's'}
       {debug && ' (debug mode — using sample data)'}
     </div>

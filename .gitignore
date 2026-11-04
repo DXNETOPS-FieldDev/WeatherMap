@@ -3,8 +3,8 @@ node_modules/
 
 # Build output
 dist/
-WeatherMap/
-WeatherMap.zip
+WeatherMap*/
+WeatherMap*.zip
 
 # Python
 __pycache__/

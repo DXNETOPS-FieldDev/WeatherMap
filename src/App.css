@@ -725,3 +725,17 @@ body,
   padding-left: 18px;
   color: #b71c1c;
 }
+
+/* Marks a variant App View (runtime-config "releaseChannel": beta, thresholds, ...). */
+.channel-tag {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 5px;
+  border-radius: 3px;
+  background: #6a1b9a;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  vertical-align: 1px;
+}
