@@ -342,7 +342,13 @@ function ThresholdAlarms({ alarms, selected, triageHref }) {
               </span>
               <span className="alarm-title">
                 {a.interfaceName && <div className="alarm-component">Interface · {a.interfaceName}</div>}
-                {a.ruleName || a.profile || a.description || '(no rule name)'}
+                {/* Triage View is per device, so every row opens the same page; without a
+                    configured page id (triageViewPageId) the rule name is plain text. */}
+                {triageHref ? (
+                  <a className="alarm-link" href={triageHref} target="_blank" rel="noopener noreferrer" title="Open Triage View">
+                    {a.ruleName || a.profile || a.description || '(no rule name)'}
+                  </a>
+                ) : (a.ruleName || a.profile || a.description || '(no rule name)')}
                 <br />
                 <small>
                   {/* MetricValuesMax: the alarm's maximum, not necessarily the current value. */}

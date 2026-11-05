@@ -477,6 +477,10 @@ keys above from `channels/thresholds.json`. How its figures are worked out:
 - **Alarms tab** — every active threshold alarm of any profile applied to the
   device, worst first, with the interface, rule name and the alarm's maximum
   value. Unticked severities are left out and counted ("3 Minor alarms hidden").
+  With `triageViewPageId` set, each alarm's rule name opens the device's
+  Triage View (as the "Investigate in Triage View" link does); `null` leaves
+  them as plain text. Set it for your own Portal after installing — the
+  Thresholds build ships `null` like the stable one.
   One interface over the highest rule holds all three severities at once (for
   example > 3 %, > 10 % and > 30 %); that is how Performance Center raises them.
 - **Availability** — the device's average `im_Availability` over the

@@ -282,6 +282,14 @@ body,
   overflow-y: auto;
 }
 
+.alarm-link {
+  text-decoration: underline dotted;
+}
+
+.alarm-link:hover {
+  text-decoration: underline;
+}
+
 .threshold-hidden-note {
   color: #666;
 }
