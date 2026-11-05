@@ -20,7 +20,7 @@ function batchUrl(batch) {
   const filter = `AlarmType eq 'Threshold' and (ItemID in (${list}) or interface/DeviceItemID in (${list}))`
   return '/pc/odata4/api/activealarms' +
     `?$filter=${encodeURIComponent(filter)}` +
-    `&$expand=${encodeURIComponent('interface($select=Name,DeviceItemID)')}` +
+    `&$expand=${encodeURIComponent('interface($select=Name,DeviceItemID,GlobalID)')}` +
     `&$select=${COLUMNS}&$top=${ROW_CAP}&$format=application/json`
 }
 

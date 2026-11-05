@@ -12,7 +12,7 @@ import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   SEVERITIES, severityLabel, parseSelectedSeverities, normalizeThresholdAlarm,
-  alarmsByDevice, worstSelectedSeverity, partitionBySeverity,
+  alarmsByDevice, worstSelectedSeverity, partitionBySeverity, alarmItemUrl,
 } from '../src/lib/threshold-alarms.js'
 
 const row = (over = {}) => ({
@@ -103,6 +103,14 @@ describe('normalizeThresholdAlarm', () => {
     assert.equal(normalizeThresholdAlarm(row({ MetricValuesMax: '0.0' })).value, 0)
     for (const v of [undefined, null, '', 'n/a']) assert.equal(normalizeThresholdAlarm(row({ MetricValuesMax: v })).value, null, String(v))
   })
+  test('an interface alarm keeps the interface GlobalID (the id Portal pages use, not the OData ID)', () => {
+    assert.equal(normalizeThresholdAlarm(ifaceRow({ interface: { Name: 'Et0/1', DeviceItemID: 227139, GlobalID: 55316 } })).interfaceGlobalId, 55316)
+    assert.equal(normalizeThresholdAlarm(ifaceRow()).interfaceGlobalId, null)
+    assert.equal(normalizeThresholdAlarm(row()).interfaceGlobalId, null)
+    for (const junk of ['55316x', 0, -1, '']) {
+      assert.equal(normalizeThresholdAlarm(ifaceRow({ interface: { Name: 'Et0/1', DeviceItemID: 227139, GlobalID: junk } })).interfaceGlobalId, null, String(junk))
+    }
+  })
   test('no device to attach it to: not usable', () => {
     assert.equal(normalizeThresholdAlarm(row({ ItemID: null })), null)
     assert.equal(normalizeThresholdAlarm(null), null)
@@ -182,5 +190,33 @@ describe('partitionBySeverity (the Alarms tab)', () => {
   })
   test('bad input: nothing shown, nothing hidden', () => {
     assert.deepEqual(partitionBySeverity(null, ['Major']), { shown: [], hidden: {} })
+  })
+})
+
+// Clicking an alarm opens the item it is on, through the Portal redirector, which
+// picks the page type itself (verified on dev-netops: GlobalID 55316 opened
+// Router atlanta-sw-acc-01 > Interface Et0/1). Same rule as BandwidthMap's
+// portalItemUrl: GlobalID only, digits only, relative so one build fits any Portal.
+describe('alarmItemUrl (where an alarm row links)', () => {
+  const ifaceAlarm = (gid) => ({ interfaceName: 'Et0/1', interfaceGlobalId: gid })
+  const deviceAlarm = { interfaceName: null, interfaceGlobalId: null }
+  test('an interface alarm opens its interface', () => {
+    assert.equal(alarmItemUrl(ifaceAlarm(55316), 54798), '/pc/redirector?ItemID=55316')
+  })
+  test('a device-level alarm opens its device', () => {
+    assert.equal(alarmItemUrl(deviceAlarm, 54798), '/pc/redirector?ItemID=54798')
+    assert.equal(alarmItemUrl(deviceAlarm, '54798'), '/pc/redirector?ItemID=54798')
+  })
+  test('an interface alarm without a GlobalID is not linked to the device instead', () => {
+    assert.equal(alarmItemUrl(ifaceAlarm(null), 54798), null)
+  })
+  test('ids that are not plain positive whole numbers are never put in a URL', () => {
+    for (const bad of ['55316&pg=x', '../admin', 'abc', '1 or 1', -5, 0, 1.5, null, undefined]) {
+      assert.equal(alarmItemUrl(ifaceAlarm(bad), 54798), null, String(bad))
+      assert.equal(alarmItemUrl(deviceAlarm, bad), null, String(bad))
+    }
+  })
+  test('no alarm: null', () => {
+    assert.equal(alarmItemUrl(null, 54798), null)
   })
 })

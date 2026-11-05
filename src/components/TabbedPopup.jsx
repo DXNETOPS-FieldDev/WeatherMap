@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Popup } from 'react-leaflet'
 import { topSeverity } from '../api/spectrum.js'
 import { getConfig } from '../lib/config.js'
-import { SEVERITIES, worstSelectedSeverity, partitionBySeverity } from '../lib/threshold-alarms.js'
+import { SEVERITIES, worstSelectedSeverity, partitionBySeverity, alarmItemUrl } from '../lib/threshold-alarms.js'
 
 const SEVERITY_COLOR = {
   Critical: '#d32f2f',
@@ -212,7 +212,12 @@ export default function TabbedPopup({ device, apiKey, selectedSeverities }) {
 
         {activeTab === 'alarms' && thresholdMode && (
           <div className="tab-content">
-            <ThresholdAlarms alarms={device.thresholdAlarms} selected={selectedSeverities} triageHref={triageHref} />
+            <ThresholdAlarms
+              alarms={device.thresholdAlarms}
+              selected={selectedSeverities}
+              triageHref={triageHref}
+              deviceGlobalId={device.globalId}
+            />
           </div>
         )}
 
@@ -307,7 +312,7 @@ const oneDecimal = (v) => Number(v.toFixed(1)).toLocaleString()
 // Thresholds variant: the device's threshold alarms (device and interfaces),
 // filtered by the severities ticked in the Network menu. `alarms` is null when
 // they are not loaded or their query failed — never shown as "No alarms".
-function ThresholdAlarms({ alarms, selected, triageHref }) {
+function ThresholdAlarms({ alarms, selected, triageHref, deviceGlobalId }) {
   if (alarms == null) return <p><em>Threshold alarms are not available for this device yet.</em></p>
   const { shown, hidden } = partitionBySeverity(alarms, selected)
   const hiddenParts = SEVERITIES.filter((s) => hidden[s]).map((s) => `${hidden[s]} ${s}`)
@@ -342,10 +347,16 @@ function ThresholdAlarms({ alarms, selected, triageHref }) {
               </span>
               <span className="alarm-title">
                 {a.interfaceName && <div className="alarm-component">Interface · {a.interfaceName}</div>}
-                {/* Triage View is per device, so every row opens the same page; without a
-                    configured page id (triageViewPageId) the rule name is plain text. */}
-                {triageHref ? (
-                  <a className="alarm-link" href={triageHref} target="_blank" rel="noopener noreferrer" title="Open Triage View">
+                {/* The alarm opens the item it is on: its interface's page, or the
+                    device's for a device-level alarm (Triage View stays at the top). */}
+                {alarmItemUrl(a, deviceGlobalId) ? (
+                  <a
+                    className="alarm-link"
+                    href={alarmItemUrl(a, deviceGlobalId)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={a.interfaceName ? `Open interface ${a.interfaceName}` : 'Open device'}
+                  >
                     {a.ruleName || a.profile || a.description || '(no rule name)'}
                   </a>
                 ) : (a.ruleName || a.profile || a.description || '(no rule name)')}

@@ -41,7 +41,7 @@ describe('fetchThresholdAlarms', () => {
     assert.ok(calls[0].startsWith('/pc/odata4/api/activealarms?'))
     const list = idsIn(calls[0]).join(',')
     assert.equal(q.get('$filter'), `AlarmType eq 'Threshold' and (ItemID in (${list}) or interface/DeviceItemID in (${list}))`)
-    assert.equal(q.get('$expand'), 'interface($select=Name,DeviceItemID)')
+    assert.equal(q.get('$expand'), 'interface($select=Name,DeviceItemID,GlobalID)')
     assert.equal(q.get('$format'), 'application/json')
     for (const col of ['ID', 'ItemID', 'Severity', 'AlarmType', 'ProfileName', 'StartTime', 'ClearTime', 'Description', 'MetricValuesMax']) {
       assert.ok(q.get('$select').split(',').includes(col), col)

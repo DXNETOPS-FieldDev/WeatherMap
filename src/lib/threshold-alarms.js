@@ -53,7 +53,7 @@ function finiteOrNull(v) {
 
 /**
  * One active threshold alarm as
- * `{ id, deviceId, interfaceName, severity, rawSeverity, profile, ruleName, value, startTime, description }`,
+ * `{ id, deviceId, interfaceName, interfaceGlobalId, severity, rawSeverity, profile, ruleName, value, startTime, description }`,
  * where `value` is the measured value (MetricValuesMax). DescriptionExtended is
  * not used: on dev-netops its "Exceed Threshold" and "Max Polled Value" read 0.0
  * on every alarm, whatever the rule and the measurement.
@@ -70,6 +70,7 @@ export function normalizeThresholdAlarm(row) {
     id: row.ID,
     deviceId,
     interfaceName: row.interface?.Name ?? null,
+    interfaceGlobalId: positiveInt(row.interface?.GlobalID),
     severity: severityLabel(row.Severity),
     rawSeverity: row.Severity,
     profile: row.ProfileName ?? null,
@@ -128,4 +129,17 @@ export function partitionBySeverity(alarms, selected) {
     else hidden[a.severity] = (hidden[a.severity] || 0) + 1
   }
   return { shown, hidden }
+}
+
+
+/**
+ * Where an alarm row links: its interface's Portal page for an interface alarm,
+ * the device's for a device-level one, through the redirector (it picks the page
+ * type). GlobalIDs only, never the OData ID (a different id space). null when
+ * there is no safe id, so an interface alarm never links to its device instead.
+ */
+export function alarmItemUrl(alarm, deviceGlobalId) {
+  if (!alarm || typeof alarm !== 'object') return null
+  const id = alarm.interfaceName != null ? positiveInt(alarm.interfaceGlobalId) : positiveInt(deviceGlobalId)
+  return id === null ? null : `/pc/redirector?ItemID=${id}`
 }
