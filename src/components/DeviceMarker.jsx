@@ -62,8 +62,14 @@ export default function DeviceMarker({ device, weatherApiKey }) {
     )
   }, [device.alarms, device.ncm?.status])
 
+  // The same array between renders: react-leaflet calls setLatLng whenever the
+  // position prop is a new object, and markercluster answers a "move" by removing
+  // and re-adding the marker, which folds a spidered-out cluster back up and
+  // closes its open popup. Every 60-second refresh re-renders the markers.
+  const position = useMemo(() => [device.latitude, device.longitude], [device.latitude, device.longitude])
+
   return (
-    <Marker position={[device.latitude, device.longitude]} icon={icon}>
+    <Marker position={position} icon={icon}>
       <TabbedPopup device={device} apiKey={weatherApiKey} />
     </Marker>
   )
