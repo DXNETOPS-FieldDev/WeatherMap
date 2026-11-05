@@ -619,6 +619,15 @@ export default function App() {
   const ncmFilterActive = ncmFilterOn && ncmAvailable
   const displayedDevices = ncmFilterActive ? nonCompliantClusterDevices : clusterDevices
 
+  // markercluster draws a cluster's bubble once and redraws it only when the
+  // cluster's members change, not when a member's icon does — so threshold
+  // alarms arriving after the markers, or a ticked severity, would leave the
+  // bubbles in their old color. The markers' own effects run before this one.
+  const clusterGroupRef = useRef(null)
+  useEffect(() => {
+    clusterGroupRef.current?.refreshClusters()
+  }, [displayedDevices, selectedSeverities])
+
   // Overlay labels, defined once so the initial registration and later
   // updates (useOverlayLabels) always agree.
   const devicesLabel = `Devices${clusterDevices.length ? ` (${clusterDevices.length})` : ''}`
@@ -733,6 +742,7 @@ export default function App() {
         >
           <Overlay checked={devicesLayerOn} name={devicesLabel}>
             <MarkerClusterGroup
+              ref={clusterGroupRef}
               iconCreateFunction={createClusterIcon}
               showCoverageOnHover={false}
               zoomToBoundsOnClick={false}
