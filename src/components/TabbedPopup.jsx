@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Popup } from 'react-leaflet'
 import { topSeverity } from '../api/spectrum.js'
 import { getConfig } from '../lib/config.js'
+import { SEVERITIES, worstSelectedSeverity, partitionBySeverity } from '../lib/threshold-alarms.js'
 
 const SEVERITY_COLOR = {
   Critical: '#d32f2f',
@@ -24,14 +25,33 @@ function severityLabel(sev) {
  * Four-tab Leaflet popup. Alarms come pre-fetched on the `device` prop —
  * the parent (App.jsx) batches a single Spectrum query for all devices.
  */
-export default function TabbedPopup({ device, apiKey }) {
+export default function TabbedPopup({ device, apiKey, selectedSeverities }) {
   const [activeTab, setActiveTab] = useState('site')
   const [weather, setWeather] = useState(null)
   const [weatherError, setWeatherError] = useState(null)
   const [weatherLoading, setWeatherLoading] = useState(false)
 
   const alarms = device.alarms || []
-  const severityClass = `popup-severity-${(topSeverity(alarms) || 'normal').toLowerCase()}`
+  // Thresholds variant: selectedSeverities is given and the Alarms tab lists
+  // the device's threshold alarms (device.thresholdAlarms) instead.
+  const thresholdMode = Array.isArray(selectedSeverities)
+  const popupSeverity = thresholdMode
+    ? worstSelectedSeverity(device.thresholdAlarms || [], selectedSeverities)
+    : topSeverity(alarms)
+  const severityClass = `popup-severity-${(popupSeverity || 'normal').toLowerCase()}`
+  // Leaflet reads className only when it first builds the popup, so a severity
+  // that changes later (threshold alarms arriving after the markers, a refresh,
+  // a ticked box) must be applied to the options and the live element here.
+  const popupRef = useRef(null)
+  useEffect(() => {
+    const popup = popupRef.current
+    if (!popup) return
+    popup.options.className = severityClass
+    const el = popup.getElement?.()
+    if (!el) return
+    for (const c of [...el.classList]) if (c.startsWith('popup-severity-')) el.classList.remove(c)
+    el.classList.add(severityClass)
+  }, [severityClass])
   const triagePageId = getConfig().triageViewPageId
   const triageHref =
     triagePageId && device.globalId != null
@@ -55,7 +75,7 @@ export default function TabbedPopup({ device, apiKey }) {
   }, [activeTab, weather, weatherLoading, device.latitude, device.longitude, apiKey])
 
   return (
-    <Popup minWidth={280} maxWidth={340} className={severityClass}>
+    <Popup ref={popupRef} minWidth={280} maxWidth={340} className={severityClass}>
       <div className="tabbed-popup">
         <div className="tabs">
           <button
@@ -167,12 +187,20 @@ export default function TabbedPopup({ device, apiKey }) {
 
         {activeTab === 'metrics' && (
           <div className="tab-content">
-            <MetricBar label="CPU Utilization" value={device.cpu} />
-            <MetricBar label="Memory Utilization" value={device.memory} />
-            <MetricBar label="Disk Used" value={device.disk} />
-            <p className="metrics-footnote">
-              <small>Average over the dashboard's time window.</small>
-            </p>
+            {/* metrics.profile "network" puts a `network` key on every device
+                (undefined while loading); otherwise the CPU / memory / disk set. */}
+            {'network' in device ? (
+              <NetworkMetrics network={device.network} />
+            ) : (
+              <>
+                <MetricBar label="CPU Utilization" value={device.cpu} />
+                <MetricBar label="Memory Utilization" value={device.memory} />
+                <MetricBar label="Disk Used" value={device.disk} />
+                <p className="metrics-footnote">
+                  <small>Average over the dashboard's time window.</small>
+                </p>
+              </>
+            )}
           </div>
         )}
 
@@ -182,7 +210,13 @@ export default function TabbedPopup({ device, apiKey }) {
           </div>
         )}
 
-        {activeTab === 'alarms' && (
+        {activeTab === 'alarms' && thresholdMode && (
+          <div className="tab-content">
+            <ThresholdAlarms alarms={device.thresholdAlarms} selected={selectedSeverities} triageHref={triageHref} />
+          </div>
+        )}
+
+        {activeTab === 'alarms' && !thresholdMode && (
           <div className="tab-content">
             {alarms.length === 0 && <p>No Alarms</p>}
             {alarms.length > 0 && triageHref && (
@@ -264,6 +298,113 @@ function ComplianceDetails({ ncm }) {
           </ul>
         </>
       )}
+    </>
+  )
+}
+
+const oneDecimal = (v) => Number(v.toFixed(1)).toLocaleString()
+
+// Thresholds variant: the device's threshold alarms (device and interfaces),
+// filtered by the severities ticked in the Network menu. `alarms` is null when
+// they are not loaded or their query failed — never shown as "No alarms".
+function ThresholdAlarms({ alarms, selected, triageHref }) {
+  if (alarms == null) return <p><em>Threshold alarms are not available for this device yet.</em></p>
+  const { shown, hidden } = partitionBySeverity(alarms, selected)
+  const hiddenParts = SEVERITIES.filter((s) => hidden[s]).map((s) => `${hidden[s]} ${s}`)
+  const hiddenTotal = SEVERITIES.reduce((n, s) => n + (hidden[s] || 0), 0)
+  return (
+    <>
+      {alarms.length === 0 && <p>No threshold alarms</p>}
+      {alarms.length > 0 && shown.length === 0 && <p>No threshold alarms of the ticked severities</p>}
+      {hiddenTotal > 0 && (
+        <p className="threshold-hidden-note">
+          <small>
+            {hiddenParts.join(', ')} alarm{hiddenTotal === 1 ? '' : 's'} hidden — tick{' '}
+            {SEVERITIES.filter((s) => hidden[s]).join(' / ')} alarms in the Network menu to show{' '}
+            {hiddenTotal === 1 ? 'it' : 'them'}.
+          </small>
+        </p>
+      )}
+      {shown.length > 0 && triageHref && (
+        <p className="triage-jump">
+          <a href={triageHref} target="_blank" rel="noopener noreferrer">
+            <img src="./topo-icon.png" alt="" width="16" height="16" />
+            Investigate in Triage View →
+          </a>
+        </p>
+      )}
+      {shown.length > 0 && (
+        <ul className="alarm-list threshold-alarm-list">
+          {shown.map((a) => (
+            <li key={a.id} className="alarm-item">
+              <span className="alarm-severity" style={{ background: SEVERITY_COLOR[a.severity] || '#666' }}>
+                {a.severity || `Code ${a.rawSeverity}`}
+              </span>
+              <span className="alarm-title">
+                {a.interfaceName && <div className="alarm-component">Interface · {a.interfaceName}</div>}
+                {a.ruleName || a.profile || a.description || '(no rule name)'}
+                <br />
+                <small>
+                  {/* MetricValuesMax: the alarm's maximum, not necessarily the current value. */}
+                  {a.value != null && <>Max {oneDecimal(a.value)}</>}
+                  {a.value != null && a.startTime != null && ' · '}
+                  {a.startTime != null && <>raised {new Date(a.startTime * 1000).toLocaleString()}</>}
+                </small>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  )
+}
+
+function formatBps(bps) {
+  const units = [[1e9, 'Gbps'], [1e6, 'Mbps'], [1e3, 'kbps']]
+  for (const [scale, unit] of units) if (bps >= scale) return `${oneDecimal(bps / scale)} ${unit}`
+  return `${oneDecimal(bps)} bps`
+}
+
+function BandwidthLine({ label, pct, bps }) {
+  if (pct == null && bps == null) return <p><strong>{label}:</strong> <em>not reported</em></p>
+  return (
+    <p>
+      <strong>{label}:</strong>{' '}
+      {pct != null ? `${oneDecimal(pct)}%` : <em>utilization not reported</em>}
+      {bps != null && <small> · {formatBps(bps)}</small>}
+    </p>
+  )
+}
+
+// metrics.profile "network": Availability and Bandwidth In / Out. `network` is
+// { bandwidth, availability }, null when nothing was reported, or undefined
+// while loading. See src/lib/bandwidth.js for how interfaces are combined.
+function NetworkMetrics({ network }) {
+  if (network === undefined) return <p>Loading metrics…</p>
+  const availability = network?.availability ?? { value: null, kind: null }
+  const bw = network?.bandwidth ?? null
+  return (
+    <>
+      {availability.value == null && <p><strong>Availability:</strong> <em>not reported</em></p>}
+      {availability.value != null && availability.kind === 'availability' && (
+        <p><strong>Availability:</strong> {oneDecimal(availability.value)}%</p>
+      )}
+      {availability.value != null && availability.kind === 'reachability' && (
+        <p>
+          <strong>Reachability:</strong> {oneDecimal(availability.value)}%
+          <br /><small>Availability not reported; share of polls answered instead.</small>
+        </p>
+      )}
+      <BandwidthLine label="Bandwidth In" pct={bw?.utilInPct ?? null} bps={bw?.inBps ?? null} />
+      <BandwidthLine label="Bandwidth Out" pct={bw?.utilOutPct ?? null} bps={bw?.outBps ?? null} />
+      <p className="metrics-footnote">
+        <small>
+          {bw
+            ? `Bandwidth: all ${bw.interfaces} interface${bw.interfaces === 1 ? '' : 's'} combined, latest sample in the last 15 minutes of the time range. `
+            : 'Bandwidth: no interface samples in the last 15 minutes of the time range. '}
+          Availability: average over the time range (at most the last 24 hours).
+        </small>
+      </p>
     </>
   )
 }

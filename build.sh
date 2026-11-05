@@ -16,6 +16,7 @@
 # and its own credential files. The name is lower-case letters and digits.
 #     CHANNEL=beta SCP_TARGET=none ./build.sh
 
+
 set -euo pipefail
 
 CHANNEL="${CHANNEL:-stable}"
@@ -65,14 +66,19 @@ rm -f "$APP_DIR"/*-proxy.properties
 if [[ "$CHANNEL" != "stable" ]]; then
     # A distinct name in the App View dropdown, and a tag in the map's status
     # banner (runtime-config "releaseChannel"), so the two can't be mistaken
-    # for each other.
+    # for each other. channels/<name>.json, when present, sets that variant's
+    # defaults: each top-level key in it replaces the same key in
+    # runtime-config.json (for example "alarms" and "metrics" for thresholds).
     echo "→ Marking the package as the $LABEL App View..."
     sed -i.bak -e "s/^appName=.*/appName=NetOps WeatherMap ($LABEL)/" \
         -e "s/^description=/description=$TAG — /" "$APP_DIR/appConfig.properties"
     rm -f "$APP_DIR/appConfig.properties.bak"
-    node -e 'const fs = require("fs"); const f = process.argv[1];
-        const c = JSON.parse(fs.readFileSync(f, "utf8")); c.releaseChannel = process.argv[2];
-        fs.writeFileSync(f, JSON.stringify(c, null, 2) + "\n")' "$APP_DIR/runtime-config.json" "$CHANNEL"
+    node -e 'const fs = require("fs"); const [f, channel, preset] = process.argv.slice(1);
+        const c = JSON.parse(fs.readFileSync(f, "utf8")); c.releaseChannel = channel;
+        if (fs.existsSync(preset)) Object.assign(c, JSON.parse(fs.readFileSync(preset, "utf8")));
+        fs.writeFileSync(f, JSON.stringify(c, null, 2) + "\n")' \
+        "$APP_DIR/runtime-config.json" "$CHANNEL" "channels/$CHANNEL.json"
+    if [[ -f "channels/$CHANNEL.json" ]]; then echo "  (defaults from channels/$CHANNEL.json)"; fi
 fi
 
 echo "→ Zipping $APP_DIR/..."

@@ -3,6 +3,7 @@ import { Marker } from 'react-leaflet'
 import L from 'leaflet'
 import { topDeviceSeverity, topComponentSeverity } from '../api/spectrum.js'
 import TabbedPopup from './TabbedPopup.jsx'
+import { worstSelectedSeverity } from '../lib/threshold-alarms.js'
 
 // Marker dot color follows the device's own alarm severity. A small corner
 // badge is added when the device has *component* (interface) alarms — same
@@ -45,8 +46,19 @@ function getIcon(color, severity, badgeColor, badgeSeverity, ncmNonCompliant) {
   return iconCache.get(key)
 }
 
-export default function DeviceMarker({ device, weatherApiKey }) {
+// Thresholds variant: alarms not loaded (or their query failed).
+const UNKNOWN_COLOR = '#9e9e9e'
+
+export default function DeviceMarker({ device, weatherApiKey, selectedSeverities }) {
   const icon = useMemo(() => {
+    const ncmNonCompliant = device.ncm?.status === 'noncompliant'
+    // Thresholds variant (selectedSeverities given): one color for the device
+    // and its interfaces together, from the worst ticked severity; no badge.
+    if (selectedSeverities) {
+      if (device.thresholdAlarms == null) return getIcon(UNKNOWN_COLOR, 'Unknown', null, null, ncmNonCompliant)
+      const worst = worstSelectedSeverity(device.thresholdAlarms, selectedSeverities)
+      return getIcon(SEVERITY_COLOR[worst] || NORMAL_COLOR, worst || 'Normal', null, null, ncmNonCompliant)
+    }
     const deviceTop = topDeviceSeverity(device.alarms)
     const color = SEVERITY_COLOR[deviceTop] || NORMAL_COLOR
     const componentTop = topComponentSeverity(device.alarms)
@@ -58,9 +70,9 @@ export default function DeviceMarker({ device, weatherApiKey }) {
       showBadge ? componentTop : null,
       // A red ring marks an NCM non-compliant configuration, independent of
       // the alarm colour: a device can be alarm-free and still non-compliant.
-      device.ncm?.status === 'noncompliant',
+      ncmNonCompliant,
     )
-  }, [device.alarms, device.ncm?.status])
+  }, [device.alarms, device.ncm?.status, device.thresholdAlarms, selectedSeverities])
 
   // The same array between renders: react-leaflet calls setLatLng whenever the
   // position prop is a new object, and markercluster answers a "move" by removing
@@ -70,7 +82,7 @@ export default function DeviceMarker({ device, weatherApiKey }) {
 
   return (
     <Marker position={position} icon={icon}>
-      <TabbedPopup device={device} apiKey={weatherApiKey} />
+      <TabbedPopup device={device} apiKey={weatherApiKey} selectedSeverities={selectedSeverities} />
     </Marker>
   )
 }

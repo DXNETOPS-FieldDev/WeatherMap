@@ -461,6 +461,33 @@ the iframe — no build needed.
 | `ncm.uiBaseUrl` | NCM web UI address as users' browsers reach it, for the "View in NCM" links. `null` hides them. Only used when `ncm-proxy.properties` is configured. |
 | `ncm.refreshIntervalMs` | How often compliance is reloaded. Default 15 minutes; compliance changes when NCM audits, not minute to minute. |
 | `ncm.lookbackDays` | How far back to look for the audit event that lists a device's failed policies. Default 365. |
+| `alarms.thresholdOnly` | `true` colors markers from Performance Center **threshold alarms** (raised by threshold profiles) instead of Spectrum alarms, and the Alarms tab lists only those. Absent or `false`: Spectrum, as before. The Thresholds build turns it on. |
+| `alarms.severities` | With `thresholdOnly`: which of `"Critical"`, `"Major"`, `"Minor"` start ticked in the Network menu. Default `["Critical", "Major"]`. Users can change the ticks; they reset on reload. |
+| `alarms.refreshIntervalMs` | With `thresholdOnly`: how often threshold alarms are reloaded. Default 60000 (1 minute). |
+| `metrics.profile` | `"network"` replaces the Metrics tab's CPU / Memory / Disk with **Availability** and **Bandwidth In / Out**. Absent or `"default"`: CPU / Memory / Disk. The Thresholds build sets `"network"`. |
+
+**The Thresholds variant** (`CHANNEL=thresholds ./build.sh`, installed as
+"NetOps WeatherMap (Thresholds)" next to the stable App View) sets the four
+keys above from `channels/thresholds.json`. How its figures are worked out:
+
+- **Marker color** — the worst *ticked* severity among the device's active
+  threshold alarms and its interfaces' alarms. Green: none of the ticked
+  severities. Grey: alarms not loaded yet, or the query failed (never shown as
+  green). A cluster takes the color of its worst device, as before.
+- **Alarms tab** — every active threshold alarm of any profile applied to the
+  device, worst first, with the interface, rule name and the alarm's maximum
+  value. Unticked severities are left out and counted ("3 Minor alarms hidden").
+  One interface over the highest rule holds all three severities at once (for
+  example > 3 %, > 10 % and > 30 %); that is how Performance Center raises them.
+- **Availability** — the device's average `im_Availability` over the
+  dashboard's time range, at most the last 24 hours. A device that doesn't
+  report it shows **Reachability** (share of polls answered) instead, labelled.
+- **Bandwidth In / Out** — all of the device's interfaces combined, from each
+  interface's latest sample in the last 15 minutes of the time range: the
+  total bits per second, and the utilization as total traffic over total
+  interface speed. A device with one busy interface among many idle ones
+  therefore shows a low percentage while that interface's threshold alarm
+  colors the marker.
 
 ---
 

@@ -13,6 +13,9 @@ import { fetchNetworkPathDetails } from './api/networkpath.js'
 import { fetchRadarFrames } from './api/rainviewer.js'
 import { fetchNcmCompliance, ncmConfig } from './api/ncm.js'
 import { ncmInfoForDevice, nonCompliantDevices } from './lib/ncm-compliance.js'
+import { fetchThresholdAlarms } from './api/pc-alarms.js'
+import { fetchNetworkMetrics } from './api/network-metrics.js'
+import { SEVERITIES, parseSelectedSeverities } from './lib/threshold-alarms.js'
 import { getConfig } from './lib/config.js'
 import DeviceMarker from './components/DeviceMarker.jsx'
 import RainviewerLayer from './components/RainviewerLayer.jsx'
@@ -30,9 +33,12 @@ const CLUSTER_COLOR = {
   Major: '#f57c00',
   Minor: '#fbc02d',
   Initial: '#1976d2',
+  Unknown: '#9e9e9e',
   Normal: '#388e3c',
 }
-const CLUSTER_RANK = { Critical: 4, Major: 3, Minor: 2, Initial: 1, Normal: 0 }
+// Unknown (threshold alarms not loaded) outranks Normal so a cluster is never
+// shown green on the strength of devices whose alarms are unknown.
+const CLUSTER_RANK = { Critical: 4, Major: 3, Minor: 2, Initial: 1, Unknown: 0.5, Normal: 0 }
 
 function createClusterIcon(cluster) {
   const markers = cluster.getAllChildMarkers()
@@ -121,6 +127,15 @@ export default function App() {
   const [radarFrames, setRadarFrames] = useState({ host: '', frames: [] })
   // null until the first NCM load completes; then a fetchNcmCompliance() result.
   const [ncm, setNcm] = useState(null)
+  // "Thresholds" variant (runtime-config alarms.thresholdOnly): markers and the
+  // Alarms tab use Performance Center threshold alarms instead of Spectrum.
+  const thresholdMode = config.alarms?.thresholdOnly === true
+  const alarmRefreshMs = config.alarms?.refreshIntervalMs ?? 60000
+  // null until the first load completes; then a fetchThresholdAlarms() result.
+  const [thresholdAlarms, setThresholdAlarms] = useState(null)
+  // metrics.profile "network": the Metrics tab shows Availability and Bandwidth.
+  const networkMetricsMode = config.metrics?.profile === 'network'
+  const [networkMetrics, setNetworkMetrics] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -135,7 +150,9 @@ export default function App() {
         const names = data.map((d) => d.name).filter(Boolean)
         let alarmsByName = new Map()
         try {
-          alarmsByName = await fetchSpectrumAlarmsForDevices(names)
+          // The Thresholds variant takes its alarms from Performance Center
+          // instead (below), so it doesn't ask Spectrum at all.
+          if (!thresholdMode) alarmsByName = await fetchSpectrumAlarmsForDevices(names)
         } catch (e) {
           // Non-fatal: render devices without alarms; alarms tab will show empty.
           console.warn('Alarm fetch failed:', e.message)
@@ -157,7 +174,45 @@ export default function App() {
     return () => {
       cancelled = true
     }
-  }, [params])
+  }, [params, thresholdMode])
+
+  // Threshold alarms (Thresholds variant) — after devices land, refreshed on an
+  // interval since threshold alarms raise and clear every poll cycle.
+  useEffect(() => {
+    if (!thresholdMode || devices.length === 0) return
+    let cancelled = false
+    const ids = devices.map((d) => d.id)
+    const load = () => {
+      fetchThresholdAlarms(ids, { debug: params.debug })
+        .then((result) => {
+          if (cancelled) return
+          for (const e of result.errors) console.warn('Threshold alarm fetch failed:', e)
+          setThresholdAlarms(result)
+        })
+    }
+    load()
+    const timer = setInterval(load, alarmRefreshMs)
+    return () => { cancelled = true; clearInterval(timer) }
+  }, [thresholdMode, devices, params.debug, alarmRefreshMs])
+
+  // Availability and Bandwidth for the Metrics tab ("network" profile). The
+  // dashboard's time range is fixed for the life of the page, so once is enough.
+  useEffect(() => {
+    if (!networkMetricsMode || devices.length === 0) return
+    let cancelled = false
+    fetchNetworkMetrics({
+      groupId: /^\d+$/.test(params.id ?? '') ? params.id : null,
+      deviceIds: devices.map((d) => d.id),
+      startTime: params.startTime,
+      endTime: params.endTime,
+      debug: params.debug,
+    }).then((result) => {
+      if (cancelled) return
+      for (const e of result.errors) console.warn('Network metrics fetch failed:', e)
+      setNetworkMetrics(result)
+    })
+    return () => { cancelled = true }
+  }, [networkMetricsMode, devices, params])
 
   // Power outages — independent of devices/alarms. Non-fatal on failure:
   // the layer toggle just shows nothing rather than blocking the map.
@@ -269,6 +324,20 @@ export default function App() {
       ncm: ncmInfoForDevice(ncm.index, ncm.latestEvents, d, uiBaseUrl),
     }))
   }, [devicesWithOutages, ncm])
+
+  // Thresholds variant: `thresholdAlarms` is the device's list ([] = none), or
+  // null while not loaded or when its query failed — never treated as "none".
+  // "network" metrics: `network` is { bandwidth, availability }, or null.
+  const devicesForMap = useMemo(() => {
+    if (!thresholdMode && !networkMetricsMode) return devicesWithNcm
+    return devicesWithNcm.map((d) => ({
+      ...d,
+      ...(thresholdMode && { thresholdAlarms: thresholdAlarms?.byDevice.get(d.id) ?? null }),
+      ...(networkMetricsMode && {
+        network: networkMetrics ? (networkMetrics.byDevice.get(d.id) ?? null) : undefined,
+      }),
+    }))
+  }, [devicesWithNcm, thresholdMode, thresholdAlarms, networkMetricsMode, networkMetrics])
 
   // SD-WAN tunnels — fetched after devices land so we can constrain the
   // query to tunnels whose endpoints are both on the map. Refreshes on an
@@ -511,10 +580,41 @@ export default function App() {
   )
   const clusterDevices = useMemo(
     () => (appnetaLayerOn
-      ? devicesWithNcm.filter((d) => !appnetaMpIdSet.has(d.id))
-      : devicesWithNcm),
-    [devicesWithNcm, appnetaLayerOn, appnetaMpIdSet],
+      ? devicesForMap.filter((d) => !appnetaMpIdSet.has(d.id))
+      : devicesForMap),
+    [devicesForMap, appnetaLayerOn, appnetaMpIdSet],
   )
+
+  // Thresholds variant: the severities ticked in the Network menu decide the
+  // marker colors and what the Alarms tab lists. Starts from runtime-config
+  // alarms.severities (default Critical + Major); not remembered between visits.
+  const [selectedSeverities, setSelectedSeverities] = useState(
+    () => parseSelectedSeverities(config.alarms?.severities),
+  )
+  const setSeverityTicked = useCallback((severity, on) => {
+    setSelectedSeverities((prev) => {
+      if (prev.includes(severity) === on) return prev
+      const next = new Set(prev)
+      if (on) next.add(severity)
+      else next.delete(severity)
+      return SEVERITIES.filter((s) => next.has(s))
+    })
+  }, [])
+  // Devices on the map with at least one alarm of each severity, for the labels.
+  const severityDeviceCounts = useMemo(() => {
+    const counts = Object.fromEntries(SEVERITIES.map((s) => [s, 0]))
+    if (!thresholdMode) return counts
+    for (const d of clusterDevices) {
+      for (const s of new Set((d.thresholdAlarms || []).map((a) => a.severity))) {
+        if (s in counts) counts[s] += 1
+      }
+    }
+    return counts
+  }, [thresholdMode, clusterDevices])
+  const severityLabels = Object.fromEntries(SEVERITIES.map((s) => [
+    `${s} alarms`,
+    `${s} alarms (${severityDeviceCounts[s]} device${severityDeviceCounts[s] === 1 ? '' : 's'})`,
+  ]))
   const nonCompliantClusterDevices = useMemo(() => nonCompliantDevices(clusterDevices), [clusterDevices])
   const ncmFilterActive = ncmFilterOn && ncmAvailable
   const displayedDevices = ncmFilterActive ? nonCompliantClusterDevices : clusterDevices
@@ -535,7 +635,12 @@ export default function App() {
     'SD-WAN Tunnels': tunnelsLabel,
     'AppNeta MPs': appnetaLabel,
     'Non-Compliant Devices': nonCompliantLabel,
+    ...(thresholdMode ? severityLabels : {}),
   })
+  const thresholdNote = !thresholdMode || !thresholdAlarms ? null
+    : thresholdAlarms.errors.length > 0 ? 'Threshold alarms could not be loaded for some devices — they are shown grey.'
+    : thresholdAlarms.truncated ? 'Too many threshold alarms to load them all — some may be missing.'
+    : null
   useOverlayLabels(envControlRef, { 'Power Outages': outagesLabel })
 
   return (
@@ -554,6 +659,9 @@ export default function App() {
           expose <code>{missingTunnelMetric}</code>. Tunnels render without
           jitter/latency/loss coloring.
         </div>
+      )}
+      {thresholdNote && (
+        <div className="status-banner status-empty tunnel-metrics-note">{thresholdNote}</div>
       )}
       <MapContainer
         center={defaultCenter}
@@ -621,7 +729,7 @@ export default function App() {
           ref={networkControlRef}
           position="topright"
           sortLayers
-          sortFunction={makeSortByPrefix(['Devices', 'SD-WAN Tunnels', 'AppNeta MPs', 'Non-Compliant Devices'])}
+          sortFunction={makeSortByPrefix(['Devices', 'SD-WAN Tunnels', 'AppNeta MPs', 'Non-Compliant Devices', 'Critical alarms', 'Major alarms', 'Minor alarms'])}
         >
           <Overlay checked={devicesLayerOn} name={devicesLabel}>
             <MarkerClusterGroup
@@ -635,7 +743,12 @@ export default function App() {
               }}
             >
               {displayedDevices.map((d) => (
-                <DeviceMarker key={d.id} device={d} weatherApiKey={owmApiKey} />
+                <DeviceMarker
+                  key={d.id}
+                  device={d}
+                  weatherApiKey={owmApiKey}
+                  selectedSeverities={thresholdMode ? selectedSeverities : null}
+                />
               ))}
             </MarkerClusterGroup>
           </Overlay>
@@ -658,6 +771,13 @@ export default function App() {
               <LayerGroup />
             </Overlay>
           )}
+          {/* Thresholds variant: which severities color the markers and fill
+              the Alarms tab. Filters, not layers, like Non-Compliant above. */}
+          {thresholdMode && SEVERITIES.map((s) => (
+            <Overlay key={s} checked={selectedSeverities.includes(s)} name={severityLabels[`${s} alarms`]}>
+              <LayerGroup />
+            </Overlay>
+          ))}
         </LayersControl>
 
 
@@ -668,6 +788,7 @@ export default function App() {
         <TunnelOverlayWatcher onChange={setTunnelLayerOn} />
         {config.showAppNetaPaths && <AppNetaOverlayWatcher onChange={setAppnetaLayerOn} />}
         {ncmAvailable && <NcmFilterOverlayWatcher onChange={setNcmFilterOn} />}
+        {thresholdMode && <SeverityOverlayWatcher onChange={setSeverityTicked} />}
         {config.showAlarmLegend && <Legend />}
         {config.showTunnelLegend && tunnelLayerOn && (
           <TunnelLegend
@@ -803,6 +924,24 @@ function NcmFilterOverlayWatcher({ onChange }) {
       typeof e?.name === 'string' && e.name.startsWith('Non-Compliant Devices')
     const onAdd = (e) => { if (matches(e)) onChange(true) }
     const onRemove = (e) => { if (matches(e)) onChange(false) }
+    map.on('overlayadd', onAdd)
+    map.on('overlayremove', onRemove)
+    return () => {
+      map.off('overlayadd', onAdd)
+      map.off('overlayremove', onRemove)
+    }
+  }, [map, onChange])
+  return null
+}
+
+/** Same pattern, for the Critical / Major / Minor alarm checkboxes: reports (severity, ticked). */
+function SeverityOverlayWatcher({ onChange }) {
+  const map = useMap()
+  useEffect(() => {
+    const severityOf = (e) =>
+      typeof e?.name === 'string' ? SEVERITIES.find((s) => e.name.startsWith(`${s} alarms`)) : undefined
+    const onAdd = (e) => { const s = severityOf(e); if (s) onChange(s, true) }
+    const onRemove = (e) => { const s = severityOf(e); if (s) onChange(s, false) }
     map.on('overlayadd', onAdd)
     map.on('overlayremove', onRemove)
     return () => {

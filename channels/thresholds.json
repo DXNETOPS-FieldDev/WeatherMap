@@ -1,0 +1,10 @@
+{
+  "alarms": {
+    "thresholdOnly": true,
+    "severities": ["Critical", "Major"],
+    "refreshIntervalMs": 60000
+  },
+  "metrics": {
+    "profile": "network"
+  }
+}
