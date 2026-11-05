@@ -43,6 +43,21 @@ describe('fetchNetworkMetrics', () => {
     assert.equal(q.get('endtime'), String(END))
   })
 
+  test('bandwidth asks for each interface\'s name in the same request', async () => {
+    const calls = stubFetch(() => json([]))
+    await fetchNetworkMetrics({ groupId: 1, deviceIds: [1], ...RANGE })
+    const q = new URL(calls.find((u) => familyOf(u) === 'bandwidth'), 'https://pc').searchParams
+    assert.equal(q.get('$expand'), 'interface($select=Name)')
+  })
+
+  test('the busiest interface reaches the result, named', async () => {
+    stubFetch((u) => (familyOf(u) === 'bandwidth'
+      ? json([{ ...port(10, 1, END - 300, 1e8, 3e8), interface: { Name: 'Et0/1' } }, port(11, 1, END - 300, 1e7, 1e7)])
+      : json([])))
+    const { byDevice } = await fetchNetworkMetrics({ groupId: 1, deviceIds: [1], ...RANGE })
+    assert.deepEqual(byDevice.get(1).bandwidth.busiest, { interfaceId: 10, name: 'Et0/1', utilInPct: 10, utilOutPct: 30 })
+  })
+
   test('an end time in milliseconds or ISO text still becomes seconds', async () => {
     for (const endTime of [END * 1000, new Date(END * 1000).toISOString()]) {
       const calls = stubFetch(() => json([]))

@@ -38,9 +38,11 @@ export function normalizePortSample(row) {
   if (deviceId === null || interfaceId === null) return null
   const speedIn = num(row.im_SpeedIn) ?? num(row.im_HistoricalInterfaceSpeed) ?? 0
   const speedOut = num(row.im_SpeedOut) ?? speedIn
+  const name = row.interface?.Name
   return {
     deviceId,
     interfaceId,
+    interfaceName: typeof name === 'string' && name !== '' ? name : null,
     t: num(row.Timestamp),
     inBps: num(row.im_BitsPerSecondIn),
     outBps: num(row.im_BitsPerSecondOut),
@@ -65,9 +67,34 @@ function direction(samples, bpsKey, speedKey) {
   return { bps, utilPct: capacity > 0 ? (100 * ratedBps) / capacity : null }
 }
 
+const interfacePct = (traffic, speed) => (typeof traffic === 'number' && speed > 0 ? (100 * traffic) / speed : null)
+
+/**
+ * The interface with the highest utilization in either direction, as
+ * `{ interfaceId, name, utilInPct, utilOutPct }`, or null when no interface
+ * has a percentage (no speed, or no traffic measured). Ties: lower id.
+ */
+function busiestInterface(samples) {
+  let best = null
+  let bestPct = -Infinity
+  for (const s of samples) {
+    const utilInPct = interfacePct(s.inBps, s.speedInBps)
+    const utilOutPct = interfacePct(s.outBps, s.speedOutBps)
+    if (utilInPct === null && utilOutPct === null) continue
+    const pct = Math.max(utilInPct ?? -Infinity, utilOutPct ?? -Infinity)
+    if (pct > bestPct || (pct === bestPct && s.interfaceId < best.interfaceId)) {
+      best = { interfaceId: s.interfaceId, name: s.interfaceName ?? null, utilInPct, utilOutPct }
+      bestPct = pct
+    }
+  }
+  return best
+}
+
 /**
  * Per-device totals from interface samples, as a Map of deviceId to
- * `{ interfaces, inBps, outBps, utilInPct, utilOutPct }`.
+ * `{ interfaces, inBps, outBps, utilInPct, utilOutPct, busiest }` (busiest: see
+ * busiestInterface — threshold rules fire per interface, so this is the figure
+ * that explains a marker's color when the combined percentage is low).
  *  - Throughput is the sum over the interfaces that were measured.
  *  - Utilization = traffic / capacity over the interfaces that were measured
  *    AND have a speed, so an unrated interface can't push it above reality.
@@ -99,6 +126,7 @@ export function aggregateDeviceBandwidth(samples) {
       outBps: outt.bps,
       utilInPct: inn.utilPct,
       utilOutPct: outt.utilPct,
+      busiest: busiestInterface(list),
     })
   }
   return out

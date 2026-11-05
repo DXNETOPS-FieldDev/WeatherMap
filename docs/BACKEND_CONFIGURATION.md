@@ -487,7 +487,8 @@ keys above from `channels/thresholds.json`. How its figures are worked out:
   total bits per second, and the utilization as total traffic over total
   interface speed. A device with one busy interface among many idle ones
   therefore shows a low percentage while that interface's threshold alarm
-  colors the marker.
+  colors the marker — so the tab also names the **busiest interface** (highest
+  utilization in either direction, same sample) with its own In / Out figures.
 
 ---
 

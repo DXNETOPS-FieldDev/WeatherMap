@@ -397,6 +397,16 @@ function NetworkMetrics({ network }) {
       )}
       <BandwidthLine label="Bandwidth In" pct={bw?.utilInPct ?? null} bps={bw?.inBps ?? null} />
       <BandwidthLine label="Bandwidth Out" pct={bw?.utilOutPct ?? null} bps={bw?.outBps ?? null} />
+      {/* Threshold rules fire per interface: this explains a red marker beside a low combined figure. */}
+      {bw?.busiest && (
+        <p>
+          <strong>Busiest interface:</strong> {bw.busiest.name ?? `ID ${bw.busiest.interfaceId}`}
+          <small>
+            {' '}— In {bw.busiest.utilInPct != null ? `${oneDecimal(bw.busiest.utilInPct)}%` : 'not reported'}
+            {' · '}Out {bw.busiest.utilOutPct != null ? `${oneDecimal(bw.busiest.utilOutPct)}%` : 'not reported'}
+          </small>
+        </p>
+      )}
       <p className="metrics-footnote">
         <small>
           {bw

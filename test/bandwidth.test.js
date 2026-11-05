@@ -26,9 +26,15 @@ describe('normalizePortSample', () => {
 
   test('maps the PC columns', () => {
     assert.deepEqual(normalizePortSample(row), {
-      deviceId: 7, interfaceId: 501, t: 1000,
+      deviceId: 7, interfaceId: 501, interfaceName: null, t: 1000,
       inBps: 2_000_000, outBps: 3_000_000, speedInBps: 1e9, speedOutBps: 1e9,
     })
+  })
+
+  test('the interface name comes from the expanded interface; blank or absent is null', () => {
+    assert.equal(normalizePortSample({ ...row, interface: { Name: 'Et0/1' } }).interfaceName, 'Et0/1')
+    assert.equal(normalizePortSample({ ...row, interface: { Name: '' } }).interfaceName, null)
+    assert.equal(normalizePortSample({ ...row, interface: null }).interfaceName, null)
   })
 
   test('numeric strings (CSV) become numbers', () => {
@@ -186,6 +192,77 @@ describe('aggregateDeviceBandwidth', () => {
   test('entries that are not samples are skipped', () => {
     const d = aggregateDeviceBandwidth([null, undefined, sample(10, 1, 100e6, 0, G)]).get(1)
     assert.equal(d.interfaces, 1)
+  })
+})
+
+// Threshold rules fire per interface, so the device's combined percentage can
+// read 0.4% while one interface is over 30%. The busiest interface explains
+// the marker's color: the one with the highest utilization in either direction.
+describe('aggregateDeviceBandwidth: busiest interface', () => {
+  const named = (name, ...args) => ({ ...sample(...args), interfaceName: name })
+
+  test('the interface with the highest utilization, in or out, with both its figures', () => {
+    const d = aggregateDeviceBandwidth([
+      named('Et0/0', 10, 1, 200e6, 50e6, G),
+      named('Et0/1', 11, 1, 10e6, 308e6, G),
+      named('Et0/2', 12, 1, 0, 0, G),
+    ]).get(1)
+    assert.deepEqual(d.busiest, { interfaceId: 11, name: 'Et0/1', utilInPct: 1, utilOutPct: 30.8 })
+  })
+
+  test('ranked by percentage, not traffic: a full slow link beats a busier fast one', () => {
+    const d = aggregateDeviceBandwidth([
+      named('fast', 10, 1, 500e6, 0, 10 * G),
+      named('slow', 11, 1, 90e6, 0, 100e6),
+    ]).get(1)
+    assert.equal(d.busiest.name, 'slow')
+    assert.equal(d.busiest.utilInPct, 90)
+  })
+
+  test('only the newest sample of each interface counts', () => {
+    const d = aggregateDeviceBandwidth([
+      named('old-peak', 10, 1, 900e6, 0, G),
+      named('old-peak', 10, 2, 10e6, 0, G),
+      named('steady', 11, 2, 50e6, 0, G),
+    ]).get(1)
+    assert.equal(d.busiest.name, 'steady')
+  })
+
+  test('an interface without a speed has no percentage and cannot be the busiest', () => {
+    const d = aggregateDeviceBandwidth([named('unrated', 10, 1, 900e6, 0, 0), named('rated', 11, 1, 1e6, 0, G)]).get(1)
+    assert.equal(d.busiest.name, 'rated')
+  })
+
+  test('a direction that was not measured is null, and the other still ranks', () => {
+    const d = aggregateDeviceBandwidth([named('a', 10, 1, null, 400e6, G), named('b', 11, 1, 100e6, 100e6, G)]).get(1)
+    assert.deepEqual(d.busiest, { interfaceId: 10, name: 'a', utilInPct: null, utilOutPct: 40 })
+  })
+
+  test('no interface with a percentage: null, not an interface at 0%', () => {
+    assert.equal(aggregateDeviceBandwidth([named('u', 10, 1, 5e6, 5e6, 0)]).get(1).busiest, null)
+    assert.equal(aggregateDeviceBandwidth([named('m', 10, 1, null, null, G)]).get(1).busiest, null)
+  })
+
+  test('an idle device still names its busiest interface, at 0%', () => {
+    assert.deepEqual(aggregateDeviceBandwidth([named('idle', 10, 1, 0, 0, G)]).get(1).busiest,
+      { interfaceId: 10, name: 'idle', utilInPct: 0, utilOutPct: 0 })
+  })
+
+  test('a tie goes to the lower interface id, whatever the input order', () => {
+    const a = named('a', 10, 1, 100e6, 0, G)
+    const b = named('b', 11, 1, 100e6, 0, G)
+    assert.equal(aggregateDeviceBandwidth([b, a]).get(1).busiest.name, 'a')
+    assert.equal(aggregateDeviceBandwidth([a, b]).get(1).busiest.name, 'a')
+  })
+
+  test('without a name the interface is still reported, name null', () => {
+    assert.equal(aggregateDeviceBandwidth([sample(10, 1, 100e6, 0, G)]).get(1).busiest.name, null)
+  })
+
+  test('devices are kept apart', () => {
+    const m = aggregateDeviceBandwidth([named('x', 10, 1, 100e6, 0, G, G, 1), named('y', 20, 1, 700e6, 0, G, G, 2)])
+    assert.equal(m.get(1).busiest.name, 'x')
+    assert.equal(m.get(2).busiest.name, 'y')
   })
 })
 

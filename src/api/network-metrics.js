@@ -97,7 +97,8 @@ export async function fetchNetworkMetrics({ groupId, deviceIds, startTime, endTi
         capped(await getRows(
           `/pc/odata4/api/portmfs?$filter=groups/any(L1:L1/ID eq ${groupId})` +
             `&starttime=${end - BANDWIDTH_WINDOW_SECONDS}&endtime=${end}` +
-            `&$select=${PORT_COLUMNS}&$top=${ROW_CAP}&$format=application/json`,
+            `&$select=${PORT_COLUMNS}&$expand=${encodeURIComponent('interface($select=Name)')}` +
+            `&$top=${ROW_CAP}&$format=application/json`,
           'Bandwidth',
         )))
   const family = (name, field, label) =>
