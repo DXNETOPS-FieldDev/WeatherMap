@@ -70,6 +70,26 @@ Either way produces `WeatherMap.zip` in the project root, ready to
 install via either method in the main README's
 [Install](../README.md#install) section.
 
+### Check every build on a Portal before handing it over
+
+`npm test` covers the logic; it can't see the map. `scripts/verify-portal.js` re-runs, in a
+signed-in browser, every behaviour already verified on the Portal: cluster colours match their
+worst device (with each severity ticking), the Network-menu counts match the app's own alarm
+responses, a popup inside a spread-out cluster keeps its border and survives a data refresh, the
+Alarms-tab links open the right interface and Triage View, and the Metrics tab has its lines. Each
+check prints how many items it looked at, and one that looked at nothing fails.
+
+Run it after **every** build, not only after a change to the part you touched — a fix that removed
+a side effect once broke the cluster colours while the fix itself passed its own check.
+
+1. Install the build (or serve it from disk, see the `netops-app-view` skill), then open the
+   dashboard holding the App View, on a group with clusters and alarms.
+2. With Playwright MCP: `browser_run_code_unsafe` with `filename` set to the script's absolute path.
+3. Expect `"verdict": "PASS"`; compare the printed `bundle` with `assets/index-*.js` in your zip.
+
+It changes nothing on the server and restores the severity ticks it toggles. Verified on the
+Thresholds variant; the stable path has not been run yet.
+
 ### Why the rename-then-zip step
 
 The portal expects the zip's **top-level entry to be the app folder
