@@ -45,9 +45,18 @@ function positiveInt(v) {
   return Number.isSafeInteger(n) && n > 0 ? n : null
 }
 
+function finiteOrNull(v) {
+  if (v === null || v === undefined || v === '') return null
+  const n = Number(v)
+  return Number.isFinite(n) ? n : null
+}
+
 /**
  * One active threshold alarm as
- * `{ id, deviceId, interfaceName, severity, rawSeverity, profile, startTime, description }`,
+ * `{ id, deviceId, interfaceName, severity, rawSeverity, profile, ruleName, value, startTime, description }`,
+ * where `value` is the measured value (MetricValuesMax). DescriptionExtended is
+ * not used: on dev-netops its "Exceed Threshold" and "Max Polled Value" read 0.0
+ * on every alarm, whatever the rule and the measurement.
  * or null when the row isn't one (another alarm type, already cleared, or not
  * attachable to a device).
  */
@@ -64,6 +73,8 @@ export function normalizeThresholdAlarm(row) {
     severity: severityLabel(row.Severity),
     rawSeverity: row.Severity,
     profile: row.ProfileName ?? null,
+    ruleName: (typeof row.Description === 'string' && row.Description.match(/Rule Name: ([^)]+)\)/)?.[1]) || null,
+    value: finiteOrNull(row.MetricValuesMax),
     startTime: Number.isFinite(Number(row.StartTime)) ? Number(row.StartTime) : null,
     description: row.Description ?? null,
   }

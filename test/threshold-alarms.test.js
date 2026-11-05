@@ -91,6 +91,18 @@ describe('normalizeThresholdAlarm', () => {
     assert.equal(a.severity, null)
     assert.equal(a.rawSeverity, 9)
   })
+  test('the rule name comes from the Description; absent or unmatched: null', () => {
+    const d = 'A Threshold Violation event has been raised. (Profile Name: BW Utilization, Rule Name: BW Utilization In > 30%)'
+    assert.equal(normalizeThresholdAlarm(row({ Description: d })).ruleName, 'BW Utilization In > 30%')
+    assert.equal(normalizeThresholdAlarm(row({ Description: 'something else' })).ruleName, null)
+    assert.equal(normalizeThresholdAlarm(row({ Description: null })).ruleName, null)
+  })
+  test('the measured value is MetricValuesMax as a number (OData sends text); missing or junk: null, and 0 stays 0', () => {
+    // Not DescriptionExtended: on dev-netops its "Max Polled Value" read 0.0 on every alarm whose value was 30-53.
+    assert.equal(normalizeThresholdAlarm(row({ MetricValuesMax: '52.75' })).value, 52.75)
+    assert.equal(normalizeThresholdAlarm(row({ MetricValuesMax: '0.0' })).value, 0)
+    for (const v of [undefined, null, '', 'n/a']) assert.equal(normalizeThresholdAlarm(row({ MetricValuesMax: v })).value, null, String(v))
+  })
   test('no device to attach it to: not usable', () => {
     assert.equal(normalizeThresholdAlarm(row({ ItemID: null })), null)
     assert.equal(normalizeThresholdAlarm(null), null)
