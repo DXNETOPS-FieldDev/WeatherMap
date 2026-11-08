@@ -170,3 +170,88 @@ describe('fetchNetworkMetrics', () => {
     assert.equal(r.byDevice.size, 0)
   })
 })
+
+// WAN circuits (metrics.wanGroup): the members of one PC interface group, on the map's devices,
+// with their newest bandwidth samples. Measured on dev-netops 2026-11-08: an interface-group
+// filter works on both `interfaces` and `portmfs` (a bogus group id returns 0 rows), while
+// `device/groups/any(...)` is SILENTLY IGNORED — so the map's devices are matched by id batches.
+describe('fetchNetworkMetrics: WAN circuits', () => {
+  const W = 590260
+  const filterOf = (u) => decodeURIComponent(new URL(u, 'https://pc').searchParams.get('$filter') || '')
+  const isWanInventory = (u) => u.includes('/interfaces?') && filterOf(u).includes(`groups/any(L1:L1/ID eq ${W})`)
+  const isWanSamples = (u) => u.includes('/portmfs?') && filterOf(u).includes(`groups/any(L1:L1/ID eq ${W})`)
+  const isGroupLookup = (u) => u.includes('/groups?')
+  const ifRow = (id, device, name) => ({ ID: id, DeviceItemID: device, Name: name, Alias: null, SpeedIn: 50e6, SpeedOut: 50e6 })
+
+  test('not configured: no WAN requests and no `wan` on the devices', async () => {
+    const calls = stubFetch(() => json([]))
+    const { byDevice } = await fetchNetworkMetrics({ groupId: 1, deviceIds: [7], ...RANGE })
+    assert.equal(calls.filter((u) => u.includes('/interfaces?') || isGroupLookup(u)).length, 0)
+    assert.equal('wan' in byDevice.get(7), false)
+  })
+
+  test('a group id: inventory and samples by 40-device batches, group AND device ids, last 15 minutes', async () => {
+    const calls = stubFetch(() => json([]))
+    const ids = Array.from({ length: 45 }, (_, i) => i + 1)
+    await fetchNetworkMetrics({ groupId: 1, deviceIds: ids, ...RANGE, wanGroup: W })
+    const inv = calls.filter(isWanInventory), smp = calls.filter(isWanSamples)
+    assert.deepEqual(inv.map((u) => idsIn(u).length), [40, 5])
+    assert.deepEqual(smp.map((u) => idsIn(u).length), [40, 5])
+    assert.equal(filterOf(inv[0]), `groups/any(L1:L1/ID eq ${W}) and DeviceItemID in (${ids.slice(0, 40).join(',')})`)
+    const q = new URL(smp[0], 'https://pc').searchParams
+    assert.equal(q.get('starttime'), String(END - 900))
+    assert.equal(q.get('endtime'), String(END))
+    assert.equal(calls.filter(isGroupLookup).length, 0)
+  })
+
+  test('each device gets its circuits, worst first; a device without any gets [] (none, not unknown)', async () => {
+    stubFetch((u) => (isWanInventory(u) ? json([ifRow(10, 7, 'ge0/0'), ifRow(11, 7, 'ge0/1')])
+      : isWanSamples(u) ? json([port(10, 7, END - 300, 5e6, 1e6, 50e6), port(11, 7, END - 300, 40e6, 1e6, 50e6)])
+      : json([])))
+    const { byDevice } = await fetchNetworkMetrics({ groupId: 1, deviceIds: [7, 8], ...RANGE, wanGroup: W })
+    assert.deepEqual(byDevice.get(7).wan.map((c) => [c.name, c.inPct]), [['ge0/1', 80], ['ge0/0', 10]])
+    assert.deepEqual(byDevice.get(8).wan, [])
+  })
+
+  test('a group name is looked up by exact name (quotes escaped), then used by id', async () => {
+    const calls = stubFetch((u) => (isGroupLookup(u) ? json([{ ID: W, Name: "Omar's WAN" }]) : json([])))
+    await fetchNetworkMetrics({ groupId: 1, deviceIds: [7], ...RANGE, wanGroup: "Omar's WAN" })
+    assert.equal(filterOf(calls.find(isGroupLookup)), "Name eq 'Omar''s WAN'")
+    assert.equal(calls.filter(isWanInventory).length, 1)
+  })
+
+  test('a name that matches no group, or several, is an error; circuits are unknown (null) and nothing else is asked', async () => {
+    for (const found of [[], [{ ID: 1, Name: 'X' }, { ID: 2, Name: 'X' }]]) {
+      const calls = stubFetch((u) => (isGroupLookup(u) ? json(found) : json([])))
+      const r = await fetchNetworkMetrics({ groupId: 1, deviceIds: [7], ...RANGE, wanGroup: 'X' })
+      assert.equal(r.byDevice.get(7).wan, null)
+      assert.match(r.errors.join(' '), /WAN group "X"/)
+      assert.equal(calls.filter((u) => u.includes('/interfaces?')).length, 0)
+    }
+  })
+
+  test('a setting that is neither a positive id nor a name is an error, with no request built from it', async () => {
+    for (const bad of [0, -3, 1.5, '', '   ', {}, true]) {
+      const calls = stubFetch(() => json([]))
+      const r = await fetchNetworkMetrics({ groupId: 1, deviceIds: [7], ...RANGE, wanGroup: bad })
+      assert.equal(r.byDevice.get(7).wan, null, JSON.stringify(bad))
+      assert.equal(calls.filter((u) => u.includes('/interfaces?') || isGroupLookup(u)).length, 0, JSON.stringify(bad))
+    }
+  })
+
+  test('a failing batch leaves only its own devices unknown, and is reported', async () => {
+    stubFetch((u) => (isWanInventory(u) && idsIn(u).includes(1) ? new Response('x', { status: 500 }) : json([])))
+    const ids = Array.from({ length: 45 }, (_, i) => i + 1)
+    const r = await fetchNetworkMetrics({ groupId: 1, deviceIds: ids, ...RANGE, wanGroup: W })
+    assert.equal(r.byDevice.get(1).wan, null)
+    assert.deepEqual(r.byDevice.get(45).wan, [])
+    assert.match(r.errors.join(' '), /WAN circuits/)
+  })
+
+  test('the WAN lookup does not disturb availability or the device-wide bandwidth', async () => {
+    const calls = stubFetch(() => json([]))
+    await fetchNetworkMetrics({ groupId: 1, deviceIds: [7], ...RANGE, wanGroup: W })
+    assert.equal(calls.filter((u) => familyOf(u) === 'bandwidth' && !isWanSamples(u)).length, 1)
+    assert.ok(calls.some((u) => familyOf(u) === 'availability'))
+  })
+})

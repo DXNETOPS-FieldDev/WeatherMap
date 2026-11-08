@@ -146,3 +146,56 @@ export function pickAvailability(figures) {
   if (reachability !== null) return { value: reachability, kind: 'reachability' }
   return { value: null, kind: null }
 }
+
+
+/**
+ * The WAN circuits list: one entry per member of the configured interface group
+ * (metrics.wanGroup), per device, as a Map of deviceId to circuits sorted worst
+ * first (higher of In / Out), circuits without a sample last, ties by name. Each is
+ * `{ interfaceId, name, alias, sampled, inBps, outBps, speedInBps, speedOutBps,
+ * inPct, outPct }`. The newest sample counts; speeds come from it, else from the
+ * inventory. A circuit with no sample keeps null figures — never an invented 0 %.
+ * `interfaces` are PC `interfaces` rows; `samples` come from normalizePortSample.
+ */
+export function wanCircuitsByDevice(interfaces, samples) {
+  const newest = new Map()
+  for (const s of Array.isArray(samples) ? samples : []) {
+    if (!s || typeof s !== 'object') continue
+    const prev = newest.get(s.interfaceId)
+    if (!prev || (s.t ?? -Infinity) >= (prev.t ?? -Infinity)) newest.set(s.interfaceId, s)
+  }
+  const pct = (bps, speed) => (typeof bps === 'number' && speed > 0 ? (100 * bps) / speed : null)
+  const out = new Map()
+  for (const row of Array.isArray(interfaces) ? interfaces : []) {
+    const interfaceId = num(row?.ID)
+    const deviceId = num(row?.DeviceItemID)
+    if (interfaceId === null || deviceId === null) continue
+    const s = newest.get(interfaceId)
+    const invIn = toBps(num(row.SpeedIn) ?? 0)
+    const invOut = toBps(num(row.SpeedOut) ?? 0) || invIn
+    const speedInBps = s?.speedInBps > 0 ? s.speedInBps : invIn
+    const speedOutBps = s?.speedOutBps > 0 ? s.speedOutBps : invOut
+    const alias = typeof row.Alias === 'string' && row.Alias.trim() ? row.Alias : null
+    const circuit = {
+      interfaceId,
+      name: row.Name ?? null,
+      alias,
+      sampled: Boolean(s),
+      inBps: s ? s.inBps : null,
+      outBps: s ? s.outBps : null,
+      speedInBps,
+      speedOutBps,
+      inPct: s ? pct(s.inBps, speedInBps) : null,
+      outPct: s ? pct(s.outBps, speedOutBps) : null,
+    }
+    if (!out.has(deviceId)) out.set(deviceId, [])
+    out.get(deviceId).push(circuit)
+  }
+  const worst = (c) => Math.max(c.inPct ?? -1, c.outPct ?? -1)
+  for (const list of out.values()) {
+    list.sort((a, b) => (a.sampled === b.sampled ? 0 : a.sampled ? -1 : 1)
+      || worst(b) - worst(a)
+      || String(a.name ?? '').localeCompare(String(b.name ?? '')))
+  }
+  return out
+}

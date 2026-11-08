@@ -1,4 +1,4 @@
-import { aggregateDeviceBandwidth, normalizePortSample, pickAvailability } from '../lib/bandwidth.js'
+import { aggregateDeviceBandwidth, normalizePortSample, pickAvailability, wanCircuitsByDevice } from '../lib/bandwidth.js'
 
 // The popup's Metrics tab for the "network" profile: per-device Availability
 // and Bandwidth In/Out. Pure arithmetic lives in src/lib/bandwidth.js.
@@ -42,6 +42,25 @@ async function getRows(url, label) {
   return Array.isArray(body?.value) ? body.value : []
 }
 
+/**
+ * metrics.wanGroup → `{ id }`, or `{ error }` for a setting that can't be used. A positive
+ * whole number is a PC group id; text is an exact group name, looked up once (it must
+ * match exactly one group). Anything else is an error, and no request is built from it.
+ */
+async function resolveWanGroup(wanGroup) {
+  if (typeof wanGroup === 'number') {
+    return Number.isSafeInteger(wanGroup) && wanGroup > 0 ? { id: wanGroup } : { error: `WAN group ${wanGroup} is not a group id` }
+  }
+  if (typeof wanGroup !== 'string' || wanGroup.trim() === '') return { error: 'WAN group setting is not a group id or name' }
+  const name = wanGroup.trim()
+  const rows = await getRows(
+    `/pc/odata4/api/groups?$filter=${encodeURIComponent(`Name eq '${name.replace(/'/g, "''")}'`)}&$select=ID,Name&$format=application/json`,
+    'WAN group lookup',
+  )
+  if (rows.length === 1 && toDeviceId(rows[0].ID) !== null) return { id: rows[0].ID }
+  return { error: `WAN group "${name}" ${rows.length === 0 ? 'not found' : `matches ${rows.length} groups`}` }
+}
+
 function meanByDevice(rows, field) {
   const sums = new Map()
   for (const r of rows) {
@@ -64,7 +83,7 @@ function meanByDevice(rows, field) {
  * query is named in `errors` and leaves only its own figure empty; `truncated`
  * means a query hit the row cap, so the newest samples may be missing.
  */
-export async function fetchNetworkMetrics({ groupId, deviceIds, startTime, endTime, debug } = {}) {
+export async function fetchNetworkMetrics({ groupId, deviceIds, startTime, endTime, debug, wanGroup } = {}) {
   const result = { byDevice: new Map(), truncated: false, errors: [] }
   const ids = [...new Set((Array.isArray(deviceIds) ? deviceIds : []).map(toDeviceId).filter((id) => id !== null))]
   if (debug || ids.length === 0) return result
@@ -112,6 +131,36 @@ export async function fetchNetworkMetrics({ groupId, deviceIds, startTime, endTi
     family('reachabilitymfs', 'im_Reachability', 'reachability'),
   ])
 
+  // WAN circuits (metrics.wanGroup): the group's interfaces on these devices plus their newest
+  // samples. Matched by device-id batches: `device/groups/any(...)` is silently ignored by PC.
+  // `wan` per device: circuits ([] = none), or null when they could not be loaded.
+  const wanConfigured = wanGroup !== undefined && wanGroup !== null
+  const wanByDevice = new Map()
+  if (wanConfigured) {
+    let group
+    try { group = await resolveWanGroup(wanGroup) } catch (e) { group = { error: e.message } }
+    if (group.error) {
+      result.errors.push(group.error)
+      for (const id of ids) wanByDevice.set(id, null)
+    } else {
+      await Promise.all(chunk(ids, IDS_PER_REQUEST).map(async (batch) => {
+        const filter = encodeURIComponent(`groups/any(L1:L1/ID eq ${group.id}) and DeviceItemID in (${batch.join(',')})`)
+        try {
+          const [inventory, samples] = await Promise.all([
+            getRows(`/pc/odata4/api/interfaces?$filter=${filter}&$select=ID,Name,Alias,SpeedIn,SpeedOut,DeviceItemID&$top=${ROW_CAP}&$format=application/json`, 'WAN circuits'),
+            getRows(`/pc/odata4/api/portmfs?$filter=${filter}&starttime=${end - BANDWIDTH_WINDOW_SECONDS}&endtime=${end}&$select=${PORT_COLUMNS}&$top=${ROW_CAP}&$format=application/json`, 'WAN circuit samples'),
+          ])
+          capped(samples)
+          const grouped = wanCircuitsByDevice(inventory, samples.map(normalizePortSample).filter(Boolean))
+          for (const id of batch) wanByDevice.set(id, grouped.get(id) ?? [])
+        } catch (e) {
+          result.errors.push(`WAN circuits for ${batch.length} devices: ${e.message}`)
+          for (const id of batch) wanByDevice.set(id, null)
+        }
+      }))
+    }
+  }
+
   const bandwidth = aggregateDeviceBandwidth(bwRows.map(normalizePortSample).filter(Boolean))
   const availability = meanByDevice(availRows, 'im_Availability')
   const reachability = meanByDevice(reachRows, 'im_Reachability')
@@ -119,6 +168,7 @@ export async function fetchNetworkMetrics({ groupId, deviceIds, startTime, endTi
     result.byDevice.set(id, {
       bandwidth: bandwidth.get(id) ?? null,
       availability: pickAvailability({ availability: availability.get(id), reachability: reachability.get(id) }),
+      ...(wanConfigured && { wan: wanByDevice.get(id) ?? null }),
     })
   }
   return result

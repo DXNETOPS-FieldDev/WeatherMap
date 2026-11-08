@@ -10,7 +10,7 @@
 // second; a speed below 100,000 is megabits (x 1,000,000).
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
-import { normalizePortSample, aggregateDeviceBandwidth, pickAvailability } from '../src/lib/bandwidth.js'
+import { normalizePortSample, aggregateDeviceBandwidth, pickAvailability, wanCircuitsByDevice } from '../src/lib/bandwidth.js'
 
 const G = 1e9
 const sample = (iface, t, inBps, outBps, speedIn = G, speedOut = speedIn, device = 1) => ({
@@ -294,5 +294,76 @@ describe('pickAvailability', () => {
 
   test('numeric strings from CSV are accepted', () => {
     assert.deepEqual(pickAvailability({ availability: '98.2' }), { value: 98.2, kind: 'availability' })
+  })
+})
+
+// The customer's ask (2026-11-06): bandwidth must come from the ISP / external WAN circuits, shown
+// per circuit, not averaged over every interface on the device. The circuits are the members of a
+// PC interface group (metrics.wanGroup). Inputs: that group's `interfaces` rows for the map's
+// devices (ID, Name, Alias, SpeedIn/Out, DeviceItemID) and portmfs samples (normalizePortSample).
+describe('wanCircuitsByDevice (the WAN circuits list)', () => {
+  const iface = (id, device, name, over = {}) => ({ ID: id, DeviceItemID: device, Name: name, Alias: null, SpeedIn: 50e6, SpeedOut: 50e6, ...over })
+  const smp = (id, device, t, inBps, outBps, speed = 50e6) => ({ deviceId: device, interfaceId: id, interfaceName: null, t, inBps, outBps, speedInBps: speed, speedOutBps: speed })
+
+  test('one circuit per group interface, by device, with its own In / Out utilization and speed', () => {
+    const m = wanCircuitsByDevice([iface(1, 7, 'ge0/0'), iface(2, 7, 'ge0/1')], [smp(1, 7, 100, 21e6, 6e6), smp(2, 7, 100, 5e6, 10e6)])
+    assert.deepEqual(m.get(7), [
+      { interfaceId: 1, name: 'ge0/0', alias: null, sampled: true, inBps: 21e6, outBps: 6e6, speedInBps: 50e6, speedOutBps: 50e6, inPct: 42, outPct: 12 },
+      { interfaceId: 2, name: 'ge0/1', alias: null, sampled: true, inBps: 5e6, outBps: 10e6, speedInBps: 50e6, speedOutBps: 50e6, inPct: 10, outPct: 20 },
+    ])
+  })
+  test('the newest sample of each circuit counts, in any order', () => {
+    const m = wanCircuitsByDevice([iface(1, 7, 'ge0/0')], [smp(1, 7, 300, 5e6, 0), smp(1, 7, 100, 45e6, 0), smp(1, 7, 200, 40e6, 0)])
+    assert.equal(m.get(7)[0].inPct, 10)
+  })
+  test('a circuit with no sample is listed as not sampled — no 0 % invented', () => {
+    const c = wanCircuitsByDevice([iface(1, 7, 'vni-0/0.0')], []).get(7)[0]
+    assert.equal(c.sampled, false)
+    for (const k of ['inPct', 'outPct', 'inBps', 'outBps']) assert.equal(c[k], null, k)
+    assert.equal(c.speedInBps, 50e6)
+  })
+  test('a direction with no traffic value has no percentage; the other still does', () => {
+    const c = wanCircuitsByDevice([iface(1, 7, 'a')], [smp(1, 7, 1, null, 25e6)]).get(7)[0]
+    assert.equal(c.inPct, null)
+    assert.equal(c.outPct, 50)
+  })
+  test('speed: the sample\'s, else the inventory\'s; megabit values are scaled; none means no percentage', () => {
+    const fromSample = wanCircuitsByDevice([iface(1, 7, 'a', { SpeedIn: 1e9, SpeedOut: 1e9 })], [smp(1, 7, 1, 25e6, 0, 50e6)]).get(7)[0]
+    assert.equal(fromSample.inPct, 50)
+    const fromInventory = wanCircuitsByDevice([iface(1, 7, 'a', { SpeedIn: 100, SpeedOut: 100 })], [smp(1, 7, 1, 25e6, 0, 0)]).get(7)[0]
+    assert.equal(fromInventory.speedInBps, 100e6)
+    assert.equal(fromInventory.inPct, 25)
+    const none = wanCircuitsByDevice([iface(1, 7, 'a', { SpeedIn: null, SpeedOut: 0 })], [smp(1, 7, 1, 25e6, 3e6, 0)]).get(7)[0]
+    assert.equal(none.inPct, null)
+    assert.equal(none.inBps, 25e6)
+  })
+  test('worst circuit first (by its higher direction); not-sampled last; ties by name', () => {
+    const m = wanCircuitsByDevice(
+      [iface(1, 7, 'b'), iface(2, 7, 'a'), iface(3, 7, 'z-down'), iface(4, 7, 'c')],
+      [smp(1, 7, 1, 5e6, 40e6), smp(2, 7, 1, 5e6, 40e6), smp(4, 7, 1, 45e6, 0)])
+    assert.deepEqual(m.get(7).map((c) => c.name), ['c', 'a', 'b', 'z-down'])
+  })
+  test('a sampled circuit with no percentage (unknown speed) still comes before an unsampled one', () => {
+    const m = wanCircuitsByDevice(
+      [iface(1, 7, 'a-unsampled'), iface(2, 7, 'z-no-speed', { SpeedIn: 0, SpeedOut: 0 })],
+      [smp(2, 7, 1, 10e6, 10e6, 0)])
+    assert.deepEqual(m.get(7).map((c) => c.name), ['z-no-speed', 'a-unsampled'])
+  })
+  test('the alias is kept, blank is null', () => {
+    const m = wanCircuitsByDevice([iface(1, 7, 'a', { Alias: 'WAN interface: ISP-1' }), iface(2, 7, 'b', { Alias: '  ' })], [])
+    assert.deepEqual(m.get(7).map((c) => c.alias), ['WAN interface: ISP-1', null])
+  })
+  test('samples of interfaces outside the group are ignored; devices kept apart', () => {
+    const m = wanCircuitsByDevice([iface(1, 7, 'a'), iface(2, 8, 'b')], [smp(9, 7, 1, 50e6, 50e6), smp(2, 8, 1, 10e6, 0)])
+    assert.equal(m.get(7).length, 1)
+    assert.equal(m.get(7)[0].sampled, false)
+    assert.equal(m.get(8)[0].inPct, 20)
+  })
+  test('traffic above the line rate reads above 100 (not clamped)', () => {
+    assert.equal(wanCircuitsByDevice([iface(1, 7, 'a')], [smp(1, 7, 1, 60e6, 0)]).get(7)[0].inPct, 120)
+  })
+  test('bad input: an empty map; rows without an id or device are skipped', () => {
+    assert.equal(wanCircuitsByDevice(null, null).size, 0)
+    assert.equal(wanCircuitsByDevice([{ Name: 'x' }, iface(1, null, 'y')], []).size, 0)
   })
 })
