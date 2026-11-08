@@ -1,10 +1,14 @@
 {
   "alarms": {
     "thresholdOnly": true,
-    "severities": ["Critical", "Major"],
+    "severities": [
+      "Critical",
+      "Major"
+    ],
     "refreshIntervalMs": 60000
   },
   "metrics": {
-    "profile": "network"
+    "profile": "network",
+    "wanGroup": null
   }
 }

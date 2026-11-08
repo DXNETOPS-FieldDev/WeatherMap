@@ -15,7 +15,8 @@
 //
 // Proven able to fail (2026-11-05, Thresholds on dev): with refreshClusters() removed it failed the
 // four cluster-colour checks; with the marker position memo removed it failed "popup survives a
-// refresh"; the good build passed 17 of 17.
+// refresh"; the good build passed 17 of 17. (2026-11-08) With metrics.wanGroup set: a build listing only
+// the first WAN circuit failed "WAN circuits listed = the group's members"; the good build passed 19 of 19.
 //
 // Every check prints how many items it looked at; a check that inspected nothing FAILS.
 // It changes nothing on the server. It ticks and unticks the Network-menu severities and puts
@@ -234,10 +235,38 @@ async (page) => {
     }
 
     const metrics = await tab('Metrics')
-    const want = config.metrics?.profile === 'network' ? ['Bandwidth In', 'Bandwidth Out'] : ['CPU Utilization', 'Memory Utilization']
+    const wanGroup = config.metrics?.wanGroup ?? null
+    const want = config.metrics?.profile !== 'network' ? ['CPU Utilization', 'Memory Utilization']
+      : wanGroup != null ? ['WAN circuits'] : ['Bandwidth In', 'Bandwidth Out']
     const missing = want.filter((w) => !metrics.includes(w))
     const avail = config.metrics?.profile !== 'network' || /Availability|Reachability/.test(metrics)
-    record('Metrics tab lines present', missing.length === 0 && avail, want.length, `missing: ${missing.join(', ') || 'none'}${config.metrics?.profile === 'network' ? `; busiest line: ${metrics.includes('Busiest interface') ? 'yes' : 'no'}` : ''}`)
+    record('Metrics tab lines present', missing.length === 0 && avail, want.length, `missing: ${missing.join(', ') || 'none'}${config.metrics?.profile === 'network' && wanGroup == null ? `; busiest line: ${metrics.includes('Busiest interface') ? 'yes' : 'no'}` : ''}`)
+
+    // WAN circuits (metrics.wanGroup): the popup's circuit lines = this device's members of the group,
+    // counted by an independent query (by device id — PC ignores device/groups/any silently).
+    if (config.metrics?.profile === 'network' && wanGroup != null) {
+      const shown = await popup.locator('.wan-circuit').count()
+      const indep = await frame.evaluate(async ({ group, name }) => {
+        const get = async (u) => { const r = await fetch(u); return r.ok ? (await r.json()).value : null }
+        let id = typeof group === 'number' ? group : null
+        if (id == null) {
+          const g = await get(`/pc/odata4/api/groups?$filter=${encodeURIComponent(`Name eq '${String(group).trim().replace(/'/g, "''")}'`)}&$select=ID&$format=application/json`)
+          id = g?.length === 1 ? g[0].ID : null
+        }
+        const d = await get(`/pc/odata4/api/devices?$filter=${encodeURIComponent(`Name eq '${name.replace(/'/g, "''")}'`)}&$select=ID&$format=application/json`)
+        if (id == null || !d?.length) return { error: `group ${id}, devices ${d?.length}` }
+        const counts = []
+        for (const dev of d) {
+          const m = await get(`/pc/odata4/api/interfaces?$filter=${encodeURIComponent(`groups/any(L1:L1/ID eq ${id}) and DeviceItemID eq ${dev.ID}`)}&$select=ID&$top=1000&$format=application/json`)
+          counts.push(m?.length ?? -1)
+        }
+        return { group: id, counts }
+      }, { group: wanGroup, name: deviceName ?? '' })
+      const expected = indep.counts ? Math.max(...indep.counts) : null
+      const noneText = /WAN circuits:\s*none on this device/.test(metrics)
+      record('WAN circuit lines = the device\'s members of the WAN group', !indep.error && (shown === expected || (expected === 0 && noneText)), 1,
+        indep.error ? `independent query failed: ${indep.error}` : `${deviceName}: ${shown} lines shown, ${expected} members of group ${indep.group}`)
+    }
 
     // Survives the next refresh (threshold alarms or tunnels, whichever polls).
     const refreshMs = (thresholdMode ? config.alarms?.refreshIntervalMs : config.tunnels?.refreshIntervalMs) ?? 60000
@@ -249,6 +278,42 @@ async (page) => {
     const stillName = still ? (await popup.locator('.tab-content').innerText()).length > 0 : false
     record('popup in a spidered cluster survives a refresh', seen && still === 1 && stillName, seen ? 1 : 0,
       `${seen ? `refresh after ${Math.round((Date.now() - t0) / 1000)} s` : 'no refresh seen'}; popup ${still ? 'open' : 'CLOSED'}`)
+  }
+
+  // WAN circuits on a device that HAS some (the popup device above may have none): open the
+  // standalone markers until one lists circuits, and compare its lines with an independent count.
+  if (config.metrics?.profile === 'network' && config.metrics?.wanGroup != null) {
+    await clickEmptyMap()
+    const dots = frame.locator('.device-marker-dot')
+    let done = false
+    for (let i = 0; i < Math.min(await dots.count(), 12) && !done; i++) {
+      await dots.nth(i).click({ force: true }); await sleep(500)
+      const popup = frame.locator('.leaflet-popup')
+      const name = (await popup.locator('.tab-content').innerText().catch(() => '')).split('\n').find((l) => l.startsWith('Name'))?.replace('Name:', '').trim()
+      await popup.locator('.tab', { hasText: 'Metrics' }).click(); await sleep(500)
+      const lines = await popup.locator('.wan-circuit').evaluateAll((ls) => ls.map((l) => l.innerText.replace(/\s+/g, ' ').trim()))
+      if (lines.length > 0 && name) {
+        const indep = await frame.evaluate(async ({ group, name }) => {
+          const get = async (u) => { const r = await fetch(u); return r.ok ? (await r.json()).value : null }
+          let id = typeof group === 'number' ? group : null
+          if (id == null) {
+            const g = await get(`/pc/odata4/api/groups?$filter=${encodeURIComponent(`Name eq '${String(group).trim().replace(/'/g, "''")}'`)}&$select=ID&$format=application/json`)
+            id = g?.length === 1 ? g[0].ID : null
+          }
+          const d = await get(`/pc/odata4/api/devices?$filter=${encodeURIComponent(`Name eq '${name.replace(/'/g, "''")}'`)}&$select=ID&$format=application/json`)
+          if (id == null || !d?.length) return { error: true }
+          const m = await get(`/pc/odata4/api/interfaces?$filter=${encodeURIComponent(`groups/any(L1:L1/ID eq ${id}) and DeviceItemID eq ${d[0].ID}`)}&$select=Name&$top=1000&$format=application/json`)
+          return { names: (m ?? []).map((x) => x.Name).sort() }
+        }, { group: config.metrics.wanGroup, name })
+        const shownNames = lines.map((l) => l.split(' ')[0]).sort()
+        const same = !indep.error && JSON.stringify(shownNames) === JSON.stringify(indep.names)
+        record('WAN circuits listed = the group\'s members on a device that has them', same, lines.length,
+          `${name}: shown [${shownNames.join(', ')}], group members [${(indep.names ?? []).join(', ')}]`)
+        done = true
+      }
+      await clickEmptyMap()
+    }
+    if (!done) record('WAN circuits listed = the group\'s members on a device that has them', false, 0, 'no standalone marker lists any WAN circuit — is the group right?')
   }
 
   page.off('response', onResponse)

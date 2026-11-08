@@ -465,6 +465,7 @@ the iframe — no build needed.
 | `alarms.severities` | With `thresholdOnly`: which of `"Critical"`, `"Major"`, `"Minor"` start ticked in the Network menu. Default `["Critical", "Major"]`. Users can change the ticks; they reset on reload. |
 | `alarms.refreshIntervalMs` | With `thresholdOnly`: how often threshold alarms are reloaded. Default 60000 (1 minute). |
 | `metrics.profile` | `"network"` replaces the Metrics tab's CPU / Memory / Disk with **Availability** and **Bandwidth In / Out**. Absent or `"default"`: CPU / Memory / Disk. The Thresholds build sets `"network"`. |
+| `metrics.wanGroup` | With `metrics.profile` `"network"`: the PC **interface group** holding the ISP / external WAN circuits, by group **id** (a number) or **exact name** (text). Set, the Metrics tab lists each of the device's circuits in that group with its own In / Out utilization instead of the device-wide figure. Absent or `null`: the device-wide figure, as before. |
 
 **The Thresholds variant** (`CHANNEL=thresholds ./build.sh`, installed as
 "NetOps WeatherMap (Thresholds)" next to the stable App View) sets the four
@@ -484,6 +485,14 @@ keys above from `channels/thresholds.json`. How its figures are worked out:
   the Thresholds build ships `null` like the stable one.
   One interface over the highest rule holds all three severities at once (for
   example > 3 %, > 10 % and > 30 %); that is how Performance Center raises them.
+- **WAN circuits** (with `metrics.wanGroup`) — each member of that interface group on the
+  device, worst first, with its In / Out utilization from its latest sample in the last 15
+  minutes and its speed. A circuit with no recent sample says so (it is not shown as 0 %); a
+  device with no member says "none on this device". The app shows whatever the group holds, so
+  the group must contain only the circuits you mean: PC's built-in "All WAN Interfaces" is
+  maintained by Network Flow Analysis, covers only flow-enabled devices, and on our lab put real
+  ISP links in "All LAN-ET" — build your own group. Apply the bandwidth threshold profile to the
+  same group so the alarms (and marker colours) come from the same circuits.
 - **Availability** — the device's average `im_Availability` over the
   dashboard's time range, at most the last 24 hours. A device that doesn't
   report it shows **Reachability** (share of polls answered) instead, labelled.

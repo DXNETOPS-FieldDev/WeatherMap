@@ -396,6 +396,38 @@ function BandwidthLine({ label, pct, bps }) {
 // metrics.profile "network": Availability and Bandwidth In / Out. `network` is
 // { bandwidth, availability }, null when nothing was reported, or undefined
 // while loading. See src/lib/bandwidth.js for how interfaces are combined.
+const pctText = (v) => (v != null ? `${oneDecimal(v)}%` : '—')
+
+// The ISP / external WAN circuits of this device (metrics.wanGroup), each with its own
+// In / Out utilization, worst first. null = could not be loaded; [] = none on this device.
+function WanCircuits({ circuits }) {
+  if (circuits === null) return <p><strong>WAN circuits:</strong> <em>could not be loaded</em></p>
+  if (circuits.length === 0) return <p><strong>WAN circuits:</strong> <em>none on this device</em></p>
+  return (
+    <>
+      <p className="wan-heading"><strong>WAN circuits</strong></p>
+      <ul className="wan-circuits">
+        {circuits.map((c) => (
+          <li key={c.interfaceId} className="wan-circuit">
+            <span className="wan-circuit-name">
+              {c.name ?? `ID ${c.interfaceId}`}
+              {c.alias && <small> · {c.alias}</small>}
+            </span>
+            {c.sampled ? (
+              <span className="wan-circuit-figures">
+                In {pctText(c.inPct)} · Out {pctText(c.outPct)}
+                {(c.speedInBps > 0 || c.speedOutBps > 0) && <small> · {formatBps(Math.max(c.speedInBps, c.speedOutBps))}</small>}
+              </span>
+            ) : (
+              <span className="wan-circuit-figures"><em>no sample in the last 15 minutes</em></span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </>
+  )
+}
+
 function NetworkMetrics({ network }) {
   if (network === undefined) return <p>Loading metrics…</p>
   const availability = network?.availability ?? { value: null, kind: null }
@@ -412,10 +444,16 @@ function NetworkMetrics({ network }) {
           <br /><small>Availability not reported; share of polls answered instead.</small>
         </p>
       )}
-      <BandwidthLine label="Bandwidth In" pct={bw?.utilInPct ?? null} bps={bw?.inBps ?? null} />
-      <BandwidthLine label="Bandwidth Out" pct={bw?.utilOutPct ?? null} bps={bw?.outBps ?? null} />
+      {/* metrics.wanGroup set: the WAN circuits, each on its own, replace the device-wide figure. */}
+      {'wan' in (network ?? {}) && <WanCircuits circuits={network.wan} />}
+      {!('wan' in (network ?? {})) && (
+        <>
+          <BandwidthLine label="Bandwidth In" pct={bw?.utilInPct ?? null} bps={bw?.inBps ?? null} />
+          <BandwidthLine label="Bandwidth Out" pct={bw?.utilOutPct ?? null} bps={bw?.outBps ?? null} />
+        </>
+      )}
       {/* Threshold rules fire per interface: this explains a red marker beside a low combined figure. */}
-      {bw?.busiest && (
+      {!('wan' in (network ?? {})) && bw?.busiest && (
         <p>
           <strong>Busiest interface:</strong> {bw.busiest.name ?? `ID ${bw.busiest.interfaceId}`}
           <small>
@@ -426,9 +464,11 @@ function NetworkMetrics({ network }) {
       )}
       <p className="metrics-footnote">
         <small>
-          {bw
-            ? `Bandwidth: all ${bw.interfaces} interface${bw.interfaces === 1 ? '' : 's'} combined, latest sample in the last 15 minutes of the time range. `
-            : 'Bandwidth: no interface samples in the last 15 minutes of the time range. '}
+          {'wan' in (network ?? {})
+            ? 'WAN circuits: members of the configured WAN interface group, latest sample in the last 15 minutes of the time range. '
+            : bw
+              ? `Bandwidth: all ${bw.interfaces} interface${bw.interfaces === 1 ? '' : 's'} combined, latest sample in the last 15 minutes of the time range. `
+              : 'Bandwidth: no interface samples in the last 15 minutes of the time range. '}
           Availability: average over the time range (at most the last 24 hours).
         </small>
       </p>

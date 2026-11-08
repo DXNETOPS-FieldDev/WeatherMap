@@ -290,6 +290,30 @@ body,
   text-decoration: underline;
 }
 
+.wan-heading {
+  margin-bottom: 2px !important;
+}
+
+.wan-circuits {
+  list-style: none;
+  margin: 0 0 6px;
+  padding: 0;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.wan-circuit {
+  display: flex;
+  flex-direction: column;
+  padding: 3px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 13px;
+}
+
+.wan-circuit-figures {
+  color: #333;
+}
+
 .threshold-hidden-note {
   color: #666;
 }

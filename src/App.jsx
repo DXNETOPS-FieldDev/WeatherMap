@@ -206,13 +206,14 @@ export default function App() {
       startTime: params.startTime,
       endTime: params.endTime,
       debug: params.debug,
+      wanGroup: config.metrics?.wanGroup ?? undefined,
     }).then((result) => {
       if (cancelled) return
       for (const e of result.errors) console.warn('Network metrics fetch failed:', e)
       setNetworkMetrics(result)
     })
     return () => { cancelled = true }
-  }, [networkMetricsMode, devices, params])
+  }, [networkMetricsMode, devices, params, config.metrics?.wanGroup])
 
   // Power outages — independent of devices/alarms. Non-fatal on failure:
   // the layer toggle just shows nothing rather than blocking the map.
