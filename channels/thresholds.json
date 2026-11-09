@@ -10,5 +10,6 @@
   "metrics": {
     "profile": "network",
     "wanGroup": null
-  }
+  },
+  "showAppNetaPaths": false
 }
