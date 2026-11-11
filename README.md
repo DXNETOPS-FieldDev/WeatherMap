@@ -146,6 +146,14 @@ guessing.
   Portal server must be able to reach NCM's web application (usually
   port 8880)
 
+> **Check connectivity before you install (recommended).** Run the
+> [connectivity check](tools/connectivity-check/README.md) on the NetOps
+> Portal server. It confirms the server can reach each service you use
+> (Spectrum, AppNeta, the Data Aggregator, NCM, and the map, weather,
+> radar and outage services). If one can't be reached, it says why and
+> what to fix: a firewall rule, a certificate or a proxy setting. It
+> changes nothing on the server.
+
 ---
 
 ## Download
@@ -432,6 +440,11 @@ is fine and the issue is in your backend configuration — see
 
 See [Troubleshooting](docs/BACKEND_CONFIGURATION.md#troubleshooting)
 in Backend Configuration.
+
+If a layer stays empty or a backend reports an error, run the
+[connectivity check](tools/connectivity-check/README.md) on the Portal
+server. With an existing install it uses the saved settings, so it shows
+straight away whether the server can still reach that service.
 
 ---
 
