@@ -68,6 +68,16 @@ function toDate(epochMs) {
 }
 
 /**
+ * The device records in a devices/info response, or null if it isn't one.
+ * NCM wraps them in a paged object ({ devices, limit, offset,
+ * totalRecordCount }); a bare array is accepted too.
+ */
+export function ncmDeviceList(body) {
+  if (Array.isArray(body)) return body
+  return Array.isArray(body?.devices) ? body.devices : null
+}
+
+/**
  * Index NCM device records for matching. Each device is reachable by its
  * full host name (NCM's `hostName` and `deviceName`), by short name, and by
  * management IP. A value shared by two devices is marked ambiguous.
