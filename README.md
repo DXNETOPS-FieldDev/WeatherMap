@@ -428,6 +428,18 @@ is fine and the issue is in your backend configuration — see
 
 ---
 
+## WeatherMap Thresholds (variant)
+
+**NetOps WeatherMap (Thresholds)** colors the map from Performance
+Management **threshold alarms** instead of Spectrum, with Critical / Major /
+Minor checkboxes in the Network menu, and shows bandwidth **per ISP / WAN
+circuit**, driven by one interface group. It installs as a separate App
+View (`WeatherMapThresholds`) next to the standard one. Install, the
+interface-group setup and its settings (`metrics.wanGroup`,
+`triageViewPageId`) are in **[WeatherMap Thresholds](docs/THRESHOLDS.md)**.
+
+---
+
 ## Troubleshooting
 
 See [Troubleshooting](docs/BACKEND_CONFIGURATION.md#troubleshooting)
