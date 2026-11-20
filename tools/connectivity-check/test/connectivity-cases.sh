@@ -95,7 +95,7 @@ https_proxy=http://127.0.0.1:9 run_case "shell proxy tried after a direct failur
 
 # 12. Only the map/weather/radar/outage services, as before an install (no API key).
 run_case "map, weather, radar and outage services" 'n\nn\nn\nn\ny\n' "$NONE" 0 \
-  'OpenStreetMap +OK' 'OpenWeatherMap +OK' 'RainViewer +OK' 'ODIN \(outages\) +OK' 'Tile server c' \
+  'OpenStreetMap +OK' 'OpenWeatherMap +OK' 'RainViewer +OK' 'ODIN \(outages\) +OK' 'NIFC \(wildfires\) +OK' 'Fire locations' 'Tile server c' \
   'API key: not tested' 'Radar tiles' "users' browsers load"
 
 # 1. Everything from the saved WeatherMap settings, with login tests.

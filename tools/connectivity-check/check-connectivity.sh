@@ -16,7 +16,7 @@
 # send to us. Passwords and tokens are never printed or written to the log.
 #
 # It can also check the services the users' BROWSERS call (OpenStreetMap, OpenWeatherMap,
-# RainViewer, ODIN) from this server. That shows whether the network lets the Portal reach
+# RainViewer, ODIN, NIFC wildfires) from this server. That shows whether the network lets the Portal reach
 # them; users' workstations need the same access.
 #
 # Needs: bash 4+, curl, openssl. Optional: the Portal's Java keytool (to check
@@ -580,6 +580,11 @@ RC="$APP_DIR/runtime-config.json"
 OWM_KEY=$(grep -o -E '"owmApiKey"[[:space:]]*:[[:space:]]*"[^"]*"' "$RC" 2>/dev/null | head -1 | sed -E 's/.*"([^"]*)"$/\1/')
 ODIN_URL=$(grep -o -E '"apiUrl"[[:space:]]*:[[:space:]]*"https?://[^"]*"' "$RC" 2>/dev/null | head -1 | sed -E 's/.*"([^"]*)"$/\1/')
 ODIN_URL="${ODIN_URL:-https://ornl.opendatasoft.com/api/explore/v2.1/catalog/datasets/odin-real-time-outages-county}"
+NIFC_PER=$(grep -o -E '"perimetersUrl"[[:space:]]*:[[:space:]]*"https?://[^"]*"' "$RC" 2>/dev/null | head -1 | sed -E 's/.*"([^"]*)"$/\1/')
+NIFC_PER="${NIFC_PER:-https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters_Current/FeatureServer/0/query}"
+NIFC_INC=$(grep -o -E '"incidentsUrl"[[:space:]]*:[[:space:]]*"https?://[^"]*"' "$RC" 2>/dev/null | head -1 | sed -E 's/.*"([^"]*)"$/\1/')
+NIFC_INC="${NIFC_INC:-https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query}"
+NIFC_Q="where=1%3D1&outFields=OBJECTID&returnGeometry=false&resultRecordCount=1&f=geojson"
 
 # web_url <label> <url> <ok-codes regex> <content-type regex> [shown-url]; status 1 on failure
 web_url() {
@@ -680,9 +685,18 @@ web_rainviewer() {
 web_odin() {
   web_url "Outage records" "$ODIN_URL/records?limit=1" '200' 'json'
 }
+nifc_features() { # ArcGIS can answer a bad query with HTTP 200 and {"error": ...}: require "features"
+  if body_has '"features"'; then return 0; fi
+  step "HTTPS: the reply has no features: $(grep -o -E '"message"[^,}]*' "$TMPD/body" | head -1)"
+  fail "NIFC answered, but not with fire data"; return 1
+}
+web_nifc() {
+  web_url "Fire perimeters" "$NIFC_PER?$NIFC_Q" '200' 'json' && nifc_features || return
+  web_url "Fire locations" "$NIFC_INC?$NIFC_Q" '200' 'json' && nifc_features
+}
 
-say "== Map, weather, radar and power-outage services"
-if ask_yn "Also check OpenStreetMap, OpenWeatherMap, RainViewer and ODIN from this server?" y; then
+say "== Map, weather, radar, power-outage and wildfire services"
+if ask_yn "Also check OpenStreetMap, OpenWeatherMap, RainViewer, ODIN and NIFC from this server?" y; then
   say "    (In WeatherMap the users' browsers load these. This shows whether the network lets the Portal reach"
   say "     them; users' workstations, and the Portal's Content-Security-Policy if set, need the same access.)"
   say ""
@@ -691,6 +705,7 @@ if ask_yn "Also check OpenStreetMap, OpenWeatherMap, RainViewer and ODIN from th
   web_service "OpenWeatherMap" owm        "https://tile.openweathermap.org/map/precipitation_new/0/0/0.png"
   web_service "RainViewer"     rainviewer "https://api.rainviewer.com/public/weather-maps.json"
   web_service "ODIN (outages)" odin       "$ODIN_URL/records?limit=1"
+  web_service "NIFC (wildfires)" nifc     "$NIFC_PER?$NIFC_Q"
 else
   WEB_CHECKED=0
   say "    skipped"; say ""
@@ -708,10 +723,10 @@ done
 say ""
 say "Result: $nok OK, $nwarn WARN, $nfail FAIL, $nskip SKIPPED (of ${#NAMES[@]} services)"
 if (( WEB_CHECKED )); then
-  say "Map, weather, radar and outage services were checked from this server. Users' browsers load them in"
+  say "Map, weather, radar, outage and wildfire services were checked from this server. Users' browsers load them in"
   say "WeatherMap, so users' workstations need the same access."
 else
-  say "Not checked: map tiles, weather, radar and power outages (users' browsers load those directly)."
+  say "Not checked: map tiles, weather, radar, power outages and wildfires (users' browsers load those directly)."
 fi
 say "Log: $LOG"
 (( nfail == 0 ))

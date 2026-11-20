@@ -9,7 +9,7 @@ It changes nothing on the server. It only reads, and writes one log file you can
 ## Why run it
 
 WeatherMap pulls data from several services. Some are inside your network (Spectrum, the Data
-Aggregator, NCM), and some are on the internet (AppNeta, map tiles, weather, radar, power outages).
+Aggregator, NCM), and some are on the internet (AppNeta, map tiles, weather, radar, power outages, wildfires).
 Firewalls, web proxies and TLS inspection commonly block one of them. After an install, that only
 shows up as an empty layer or an error in the map, with no explanation.
 
@@ -34,7 +34,7 @@ these from inside the Portal's Java. This check tests exactly that path.
 It asks about each one first. Answer **no** for any service you don't use, and it is skipped and never
 contacted. The DA question defaults to yes, because the DA is part of every NetOps Portal installation.
 
-**2. Services the users' browsers call**: map tiles, weather, radar and power outages.
+**2. Services the users' browsers call**: map tiles, weather, radar, power outages and wildfires.
 
 | Service | What the check fetches |
 |---|---|
@@ -42,6 +42,7 @@ contacted. The DA question defaults to yes, because the DA is part of every NetO
 | OpenWeatherMap | one weather tile, and the current-conditions API |
 | RainViewer | the radar frame list, then one radar tile |
 | ODIN (power outages) | one outage record |
+| NIFC (wildfires) | one fire perimeter and one fire location record |
 
 > **Important:** in WeatherMap, the **users' browsers** load these, not the Portal server. A pass here
 > shows that your network lets the Portal server reach them. It does **not** prove that a user's
@@ -92,7 +93,7 @@ The same questions follow for AppNeta (organization ID and API token instead of 
 password), the Data Aggregator and NCM. Then:
 
 ```
-Also check OpenStreetMap, OpenWeatherMap, RainViewer and ODIN from this server? [Y/n]:
+Also check OpenStreetMap, OpenWeatherMap, RainViewer, ODIN and NIFC from this server? [Y/n]:
 ```
 
 - **Enter** takes the default, shown in capitals.
