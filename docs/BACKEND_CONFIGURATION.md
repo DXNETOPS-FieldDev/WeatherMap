@@ -242,6 +242,10 @@ Notes on this value:
   actually deployed, not because it's a recommended pattern.
 - Whether saving this setting requires a NetOps Portal restart to take
   effect isn't documented — verify in your own environment.
+- **The Wildfires overlay needs `https://services3.arcgis.com` in
+  `connect-src`** (not in the value above, which predates it). Until it
+  is added, the browser blocks NIFC and the overlay stays empty; the
+  console shows a CSP `connect-src` violation.
 
 ### Origins WeatherMap needs
 
@@ -254,6 +258,7 @@ Notes on this value:
 | `api.rainviewer.com` | connect-src | RainViewer available-timestamps API |
 | `https://tilecache.rainviewer.com` | img-src | RainViewer radar tile images |
 | `https://ornl.opendatasoft.com` | connect-src | ODIN power-outage API |
+| `https://services3.arcgis.com` | connect-src | NIFC wildfire perimeters and incident locations |
 
 The Spectrum, AppNeta, and Data Aggregator APIs don't need CSP entries
 — they're proxied same-origin through the shipped JSPs.
@@ -457,6 +462,9 @@ the iframe — no build needed.
 | `odata.resolution` | OData metric aggregation resolution (e.g. `RATE`, `HOUR`). |
 | `powerOutages.apiUrl` | ODIN dataset endpoint for power-outage polygons. Defaults to the public ORNL mirror. |
 | `powerOutages.maxRecords` | Pagination cap for ODIN. 5000 covers nationwide storms comfortably. |
+| `wildfires.perimetersUrl` / `.incidentsUrl` | NIFC WFIGS query endpoints for current fire perimeters and incident locations. Remove the whole `wildfires` section to turn the overlay off. |
+| `wildfires.nearbyMiles` | `0` (default): only devices **inside** a fire perimeter get a wildfire banner, like Power Outages. A positive number also flags devices within that many miles of a fire. |
+| `wildfires.refreshIntervalMs` | How often fires are reloaded. Default 15 minutes. |
 | `triageViewPageId` | The Performance Center page id for Triage View in **your** environment. **Must change before going live — see above.** Leave `null` to hide the deep-links. |
 | `ncm.uiBaseUrl` | NCM web UI address as users' browsers reach it, for the "View in NCM" links. `null` hides them. Only used when `ncm-proxy.properties` is configured. |
 | `ncm.refreshIntervalMs` | How often compliance is reloaded. Default 15 minutes; compliance changes when NCM audits, not minute to minute. |
@@ -633,6 +641,12 @@ the browser console for a CSP `connect-src` violation on
 voluntary — some utilities (notably FPL in Florida, PG&E in Northern
 California) don't participate, so absence of polygons in those areas
 may be real, not a bug.
+
+**Wildfires overlay stays empty** — check the browser console for a
+CSP `connect-src` violation on `services3.arcgis.com`. If CSP is fine,
+the overlay covers the **US only**, shows **wildfires only** (prescribed
+burns are left out), and a new or small fire may have a location but no
+mapped perimeter yet.
 
 **Gray box instead of a map** — CSP is blocking OSM tiles. Confirm
 `https://*.tile.openstreetmap.org` is in the portal's `img-src`.

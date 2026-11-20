@@ -10,6 +10,7 @@
  */
 
 import { getConfig } from '../lib/config.js'
+import { computeBbox, pointInGeometry } from '../lib/geo.js'
 
 const PAGE_SIZE = 100  // OpenDataSoft per-call cap
 
@@ -80,54 +81,6 @@ export function bannerOutageCount(devices) {
     if (d?.outage) shown.add(d.outage)
   }
   return shown.size
-}
-
-function computeBbox(coords) {
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
-  const walk = (a) => {
-    if (typeof a[0] === 'number') {
-      if (a[0] < minX) minX = a[0]
-      if (a[0] > maxX) maxX = a[0]
-      if (a[1] < minY) minY = a[1]
-      if (a[1] > maxY) maxY = a[1]
-    } else {
-      for (const item of a) walk(item)
-    }
-  }
-  walk(coords)
-  return [minX, minY, maxX, maxY]
-}
-
-// Ray-casting point-in-ring. Ring is an array of [lon, lat] pairs.
-function pointInRing([x, y], ring) {
-  let inside = false
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [xi, yi] = ring[i]
-    const [xj, yj] = ring[j]
-    if (((yi > y) !== (yj > y)) &&
-        (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
-      inside = !inside
-    }
-  }
-  return inside
-}
-
-function pointInPolygon(pt, polygon) {
-  if (!pointInRing(pt, polygon[0])) return false
-  for (let i = 1; i < polygon.length; i++) {
-    if (pointInRing(pt, polygon[i])) return false  // inside a hole
-  }
-  return true
-}
-
-function pointInGeometry(pt, geom) {
-  if (geom.type === 'Polygon') return pointInPolygon(pt, geom.coordinates)
-  if (geom.type === 'MultiPolygon') {
-    for (const poly of geom.coordinates) {
-      if (pointInPolygon(pt, poly)) return true
-    }
-  }
-  return false
 }
 
 export async function fetchActiveOutages() {

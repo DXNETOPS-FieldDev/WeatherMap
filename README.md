@@ -47,6 +47,10 @@ up another tool."*
   meters affected, cause (storm vs scheduled vs equipment), and ETR.
   When a whole metro of devices goes red, this often answers it before
   you've even opened a ticket.
+- **Wildfire overlay (US)** — active wildfire perimeters and fire
+  locations from the National Interagency Fire Center (NIFC). A device
+  inside a fire perimeter says so in its popup; optionally, so does a
+  device within a set distance of a fire. See [Wildfires](WILDFIRES.md).
 
 ### Single-click drill-down
 
@@ -113,7 +117,7 @@ guessing.
 ### Operator-friendly controls
 
 - **Env / Network split layer control** — environmental overlays
-  (weather, radar, power outages) and network overlays (SD-WAN tunnels,
+  (weather, radar, power outages, wildfires) and network overlays (SD-WAN tunnels,
   AppNeta paths) toggle independently. You can stack just the layers
   relevant to the question you're asking.
 - **Filterable legends** — both the SD-WAN sites legend and the AppNeta
@@ -459,6 +463,7 @@ credited as a courtesy.
 | [OpenStreetMap](https://www.openstreetmap.org/copyright) | Base map tiles | Required by OSM's tile usage policy. Shown in the map's attribution corner whenever the map is displayed. |
 | [OpenWeatherMap](https://openweathermap.org/) | Precipitation / temperature / wind / clouds overlays, current-conditions popup | Required by OWM's terms. Shown in the map's attribution corner while any weather overlay is active. |
 | [RainViewer](https://www.rainviewer.com/) | Animated radar playback | Required under RainViewer's free API terms ("Weather data by RainViewer" with a link back to rainviewer.com). Shown in the map's attribution corner while the radar overlay is active. |
+| [NIFC WFIGS](https://data-nifc.opendata.arcgis.com/) (National Interagency Fire Center) | Wildfire overlay | Courtesy credit; NIFC's terms are a warranty disclaimer only. Shown in the map's attribution corner while the overlay is active. |
 | [ODIN](https://ornl.opendatasoft.com/) (DoE / Oak Ridge National Laboratory) | Power-grid outage overlay | Courtesy credit — no explicit attribution requirement was found in ODIN's published terms. |
 
 Software licenses for the open-source libraries WeatherMap is built on —

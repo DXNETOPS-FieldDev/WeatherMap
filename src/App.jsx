@@ -7,6 +7,7 @@ import { useUrlParams } from './hooks/useUrlParams.js'
 import { fetchDevices } from './api/odata.js'
 import { fetchSpectrumAlarmsForDevices } from './api/spectrum.js'
 import { fetchActiveOutages, correlateOutagesToDevices, bannerOutageCount } from './api/odin.js'
+import { fetchWildfires, correlateWildfiresToDevices, bannerFireCount } from './api/wildfires.js'
 import { fetchTunnels, getTunnelMetricsStatus } from './api/tunnels.js'
 import { fetchAppNetaPaths, fetchAppNetaMpDevices } from './api/appneta.js'
 import { fetchNetworkPathDetails } from './api/networkpath.js'
@@ -18,6 +19,7 @@ import DeviceMarker from './components/DeviceMarker.jsx'
 import RainviewerLayer from './components/RainviewerLayer.jsx'
 import Legend from './components/Legend.jsx'
 import PowerOutageLayer from './components/PowerOutageLayer.jsx'
+import WildfireLayer from './components/WildfireLayer.jsx'
 import TunnelLayer from './components/TunnelLayer.jsx'
 import TunnelLegend from './components/TunnelLegend.jsx'
 import AppNetaLayer from './components/AppNetaLayer.jsx'
@@ -113,6 +115,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [outages, setOutages] = useState([])
+  const [wildfires, setWildfires] = useState([])
   const [tunnels, setTunnels] = useState([])
   const [tunnelMetricsUnavailable, setTunnelMetricsUnavailable] = useState(false)
   const [missingTunnelMetric, setMissingTunnelMetric] = useState(null)
@@ -173,6 +176,22 @@ export default function App() {
     const timer = setInterval(load, config.powerOutages.refreshIntervalMs)
     return () => { cancelled = true; clearInterval(timer) }
   }, [config.powerOutages.refreshIntervalMs])
+
+  // Wildfires (NIFC) — same pattern as power outages: independent of devices, non-fatal on failure,
+  // refreshed on an interval. Off entirely when runtime-config has no `wildfires` section.
+  const wildfireRefreshMs = config.wildfires?.refreshIntervalMs ?? 900000
+  useEffect(() => {
+    if (!config.wildfires) return
+    let cancelled = false
+    const load = () => {
+      fetchWildfires()
+        .then((data) => { if (!cancelled) setWildfires(data) })
+        .catch((e) => console.warn('Wildfire fetch failed:', e.message))
+    }
+    load()
+    const timer = setInterval(load, wildfireRefreshMs)
+    return () => { cancelled = true; clearInterval(timer) }
+  }, [config.wildfires, wildfireRefreshMs])
 
   // NCM configuration compliance — optional and independent of devices.
   // When NCM isn't configured on this Portal the proxy answers 404 and the
@@ -256,19 +275,28 @@ export default function App() {
     return dedupedDevices.map((d) => ({ ...d, outage: map.get(d.id) || null }))
   }, [dedupedDevices, outages])
 
+  // Attach the wildfire that affects each device (inside a perimeter, or within wildfires.nearbyMiles),
+  // for the popup's Site Info banner.
+  const wildfireNearbyMiles = config.wildfires?.nearbyMiles ?? 0
+  const devicesWithWildfires = useMemo(() => {
+    if (wildfires.length === 0) return devicesWithOutages
+    const map = correlateWildfiresToDevices(devicesWithOutages, wildfires, wildfireNearbyMiles)
+    return devicesWithOutages.map((d) => ({ ...d, wildfire: map.get(d.id) || null }))
+  }, [devicesWithOutages, wildfires, wildfireNearbyMiles])
+
   // Attach NCM compliance to each device for the marker ring and the popup's
   // Compliance tab. Absent entirely (no `ncm` field) when NCM isn't configured.
   const devicesWithNcm = useMemo(() => {
-    if (!ncm || !ncm.enabled) return devicesWithOutages
+    if (!ncm || !ncm.enabled) return devicesWithWildfires
     if (ncm.error) {
-      return devicesWithOutages.map((d) => ({ ...d, ncm: { status: 'unavailable', error: ncm.error } }))
+      return devicesWithWildfires.map((d) => ({ ...d, ncm: { status: 'unavailable', error: ncm.error } }))
     }
     const { uiBaseUrl } = ncmConfig()
-    return devicesWithOutages.map((d) => ({
+    return devicesWithWildfires.map((d) => ({
       ...d,
       ncm: ncmInfoForDevice(ncm.index, ncm.latestEvents, d, uiBaseUrl),
     }))
-  }, [devicesWithOutages, ncm])
+  }, [devicesWithWildfires, ncm])
 
   // SD-WAN tunnels — fetched after devices land so we can constrain the
   // query to tunnels whose endpoints are both on the map. Refreshes on an
@@ -530,13 +558,16 @@ export default function App() {
   // still draws every outage.
   const affectedOutageCount = useMemo(() => bannerOutageCount(displayedDevices), [displayedDevices])
   const outagesLabel = `Power Outages${affectedOutageCount ? ` (${affectedOutageCount})` : ''}`
+  // Same rule for wildfires: distinct fires in the banners of the devices on the map.
+  const affectedFireCount = useMemo(() => bannerFireCount(displayedDevices), [displayedDevices])
+  const wildfiresLabel = `Wildfires${affectedFireCount ? ` (${affectedFireCount})` : ''}`
   useOverlayLabels(networkControlRef, {
     'Devices': devicesLabel,
     'SD-WAN Tunnels': tunnelsLabel,
     'AppNeta MPs': appnetaLabel,
     'Non-Compliant Devices': nonCompliantLabel,
   })
-  useOverlayLabels(envControlRef, { 'Power Outages': outagesLabel })
+  useOverlayLabels(envControlRef, { 'Power Outages': outagesLabel, 'Wildfires': wildfiresLabel })
 
   return (
     <div className="app">
@@ -576,7 +607,7 @@ export default function App() {
           ref={envControlRef}
           position="topright"
           sortLayers
-          sortFunction={makeSortByPrefix(['Precipitation', 'Temperature', 'Wind', 'Clouds', 'Weather Radar', 'Power Outages'])}
+          sortFunction={makeSortByPrefix(['Precipitation', 'Temperature', 'Wind', 'Clouds', 'Weather Radar', 'Power Outages', 'Wildfires'])}
         >
           <Overlay checked name="Precipitation">
             <TileLayer
@@ -612,6 +643,11 @@ export default function App() {
           <Overlay name={outagesLabel}>
             <PowerOutageLayer outages={outages} />
           </Overlay>
+          {config.wildfires && (
+            <Overlay name={wildfiresLabel}>
+              <WildfireLayer fires={wildfires} />
+            </Overlay>
+          )}
         </LayersControl>
 
         {/* Primary control: network layers (what the operator actively

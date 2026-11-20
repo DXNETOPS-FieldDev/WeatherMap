@@ -229,6 +229,38 @@ body,
   color: #5d4037;
 }
 
+.wildfire-warning {
+  background: #fbe9e7;
+  border-left: 3px solid #d84315;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  border-radius: 2px;
+}
+
+.wildfire-warning strong {
+  color: #bf360c;
+}
+
+.wildfire-warning small {
+  color: #4e342e;
+}
+
+/* Flame marker for fires without a mapped perimeter (WildfireLayer). */
+.wildfire-icon {
+  font-size: 14px;
+  line-height: 16px;
+  text-align: center;
+  background: none;
+  border: none;
+  filter: drop-shadow(0 0 1px #fff);
+}
+
+.wildfire-icon-contained {
+  opacity: 0.45;
+}
+
 .weather-headline {
   display: flex;
   align-items: center;

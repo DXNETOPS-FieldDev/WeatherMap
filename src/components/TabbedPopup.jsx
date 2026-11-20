@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Popup } from 'react-leaflet'
 import { topSeverity } from '../api/spectrum.js'
 import { getConfig } from '../lib/config.js'
+import { fireFacts, distanceText } from '../api/wildfires.js'
 
 const SEVERITY_COLOR = {
   Critical: '#d32f2f',
@@ -95,6 +96,7 @@ export default function TabbedPopup({ device, apiKey }) {
         {activeTab === 'site' && (
           <div className="tab-content">
             {device.outage && <OutageWarning outage={device.outage} />}
+            {device.wildfire && <WildfireWarning wildfire={device.wildfire} />}
             {device.ncm?.status === 'noncompliant' && (
               <ComplianceWarning ncm={device.ncm} onOpen={() => setActiveTab('compliance')} />
             )}
@@ -304,6 +306,26 @@ function OutageWarning({ outage }) {
       {etr && (
         <><br /><small>ETR: {etr}</small></>
       )}
+    </div>
+  )
+}
+
+// Wildfire banner (NIFC): inside a fire perimeter, or — when wildfires.nearbyMiles is set — within that
+// distance of a fire. `wildfire` is { fire, kind: 'inside'|'nearby', miles } from correlateWildfiresToDevices.
+function WildfireWarning({ wildfire }) {
+  const { fire, kind, miles } = wildfire
+  const f = fireFacts(fire)
+  return (
+    <div className="wildfire-warning">
+      <strong>
+        {kind === 'inside' ? '🔥 Inside an active wildfire perimeter' : `🔥 Active wildfire ${distanceText(miles)} away`}
+      </strong>
+      <br />
+      <small>{f.title}</small>
+      {f.size && (<><br /><small>{f.size}</small></>)}
+      {f.dates && (<><br /><small>{f.dates}</small></>)}
+      <br />
+      <small>Source: NIFC</small>
     </div>
   )
 }
