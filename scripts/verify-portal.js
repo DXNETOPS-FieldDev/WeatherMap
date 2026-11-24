@@ -20,6 +20,9 @@
 // (2026-11-23, stable) It caught a real defect on its first stable run: a stable build without the marker
 // position memo (missing from every stable release up to v1.1.1) failed "popup survives a refresh", 6 of 7;
 // the same build with the memo passed 8 of 8.
+// (2026-11-24, stable) Availability line + hover tooltip checks: the v1.1.4 dev build passed 9 of 9; a v1.1.3 build
+// passed 8 of 8 with the tooltip check listed under `skipped` (pre-1.1.4, Disk Used); the same v1.1.4 build with the
+// <Tooltip> removed FAILED "hover tooltip names the device" (tooltip not shown), 8 of 9.
 //
 // Every check prints how many items it looked at; a check that inspected nothing FAILS.
 // It changes nothing on the server. It ticks and unticks the Network-menu severities and puts
@@ -27,6 +30,7 @@
 
 async (page) => {
   const results = []
+  const skipped = []
   const record = (check, pass, inspected, detail) => results.push({ check, pass: Boolean(pass) && inspected > 0, inspected, detail })
 
   const COLOR = {
@@ -184,6 +188,13 @@ async (page) => {
     const target = bubbles[0].worst
     const idx = await spidered.evaluateAll((ds, t) => Math.max(0, ds.findIndex((d) => d.dataset.severity === t)), target)
     const markerSev = await spidered.nth(idx).evaluate((d) => d.dataset.severity)
+    // Hover first: the tooltip (v1.1.4+) must name the device the popup then opens for.
+    const dotBox = await spidered.nth(idx).boundingBox()
+    let tooltipText = null
+    if (dotBox) {
+      await page.mouse.move(dotBox.x + dotBox.width / 2, dotBox.y + dotBox.height / 2); await sleep(600)
+      tooltipText = (await frame.locator('.leaflet-tooltip.device-tooltip').allInnerTexts()).join(' | ') || null
+    }
     await spidered.nth(idx).click({ force: true }); await sleep(700)
     const popup = frame.locator('.leaflet-popup')
     const tab = async (t) => { await popup.locator('.tab', { hasText: t }).click(); await sleep(400); return popup.locator('.tab-content').innerText() }
@@ -242,8 +253,19 @@ async (page) => {
     const want = config.metrics?.profile !== 'network' ? ['CPU Utilization', 'Memory Utilization']
       : wanGroup != null ? ['WAN circuits'] : ['Bandwidth In', 'Bandwidth Out']
     const missing = want.filter((w) => !metrics.includes(w))
-    const avail = config.metrics?.profile !== 'network' || /Availability|Reachability/.test(metrics)
-    record('Metrics tab lines present', missing.length === 0 && avail, want.length, `missing: ${missing.join(', ') || 'none'}${config.metrics?.profile === 'network' && wanGroup == null ? `; busiest line: ${metrics.includes('Busiest interface') ? 'yes' : 'no'}` : ''}`)
+    // Stable builds before v1.1.4 show "Disk Used" and have no hover tooltip; from v1.1.4 the tab shows
+    // Availability (or Reachability) instead, and the markers have a tooltip. Both are required then.
+    const legacyStable = config.metrics?.profile !== 'network' && metrics.includes('Disk Used')
+    const avail = legacyStable || /Availability|Reachability/.test(metrics)
+    record('Metrics tab lines present', missing.length === 0 && avail, want.length, `missing: ${[...missing, ...(avail ? [] : ['Availability/Reachability'])].join(', ') || 'none'}${legacyStable ? '; pre-1.1.4 build (Disk Used)' : ''}${config.metrics?.profile === 'network' && wanGroup == null ? `; busiest line: ${metrics.includes('Busiest interface') ? 'yes' : 'no'}` : ''}`)
+    if (legacyStable) {
+      skipped.push('hover tooltip names the device: pre-1.1.4 build, which has no tooltip')
+    } else if (thresholdMode) {
+      skipped.push('hover tooltip names the device: not built into the Thresholds variant yet')
+    } else {
+      record('hover tooltip names the device', Boolean(tooltipText && deviceName && tooltipText.includes(deviceName)), dotBox ? 1 : 0,
+        `${deviceName}: tooltip ${tooltipText ? `"${tooltipText}"` : 'not shown'}`)
+    }
 
     // WAN circuits (metrics.wanGroup): the popup's circuit lines = this device's members of the group,
     // counted by an independent query (by device id — PC ignores device/groups/any silently).
@@ -326,5 +348,6 @@ async (page) => {
     summary: `${results.length - failed.length} of ${results.length} checks passed`,
     app, bundle, mode: thresholdMode ? 'thresholds' : 'stable', group: frame.url().match(/[?&]id=(\d+)/)?.[1],
     results: results.map((r) => `${r.pass ? 'PASS' : 'FAIL'}  ${r.check}  [${r.inspected}]  ${r.detail}`),
+    skipped,
   }
 }
