@@ -385,15 +385,23 @@ If the `<EntityType Name="sdntunnel">` block has no
 `NavigationProperty` whose name ends in `mfs`, tunnel metric coloring
 won't be available on that version.
 
-**Device CPU / memory / disk depend on those metrics being polled.**
-These come from the `cpuandmemorymfs` expansion on the devices query.
-Devices that aren't polled for the `im_CPUUtilization`,
-`im_MemoryUtilization`, and `im_DiskPercentUsed` families — AppNeta
-Monitoring Points and general-purpose endpoints, for example — return
-empty values there, and the popup's Metrics tab shows nothing. This is
-an inventory/polling condition in Performance Center, not a WeatherMap
-setting. Devices still render on the map regardless (position comes
-from lat/long, color from alarm severity).
+**Device CPU, memory and availability depend on those metrics being polled.**
+CPU and memory come from the device-level `cpuandmemorymfs` family on the
+devices query, or, for devices that report them per component, from
+`cpumfs` (per CPU) and `memorymfs` (per memory pool), averaged across the
+device's CPUs or pools as Performance Center's own gauges do. The
+Availability line comes from `availabilitymfs`; a device with no
+availability (one that is down has none) shows `reachabilitymfs` instead,
+labelled "Reachability". A device polled for none of these shows "not
+available". This is an inventory/polling condition in Performance Center,
+not a WeatherMap setting. Devices still render on the map regardless
+(position comes from lat/long, color from alarm severity).
+
+**AppNeta path targets are left out of the Devices layer.** Performance
+Center lists them as devices (no IP address, no protocols, nothing
+polled). With `includeAppNeta` off (the default) they are hidden along
+with the AppNeta monitoring points; the AppNeta MPs overlay still shows
+them as targets.
 
 ---
 

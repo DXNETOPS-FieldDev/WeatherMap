@@ -27,7 +27,10 @@ export async function fetchDevices({ id, startTime, endTime, debug }) {
   const text = await response.text()
   const devices = parseDevicesCsv(text)
   if (debug) return devices
-  return fillComponentMetrics(devices, { startTime, endTime }, { resolution: getConfig().odata.resolution })
+  const window = { startTime, endTime }
+  const { resolution } = getConfig().odata
+  const withCpu = await fillComponentMetrics(devices, window, { resolution })
+  return fillAvailability(withCpu, window, { resolution })
 }
 
 // Some devices report CPU and memory only per component — one row per CPU in cpumfs, one per memory pool in
@@ -40,11 +43,11 @@ const COMPONENT_FAMILIES = [
   { set: 'memorymfs', field: 'memory' },
 ]
 
-export function componentMetricsQuery(set, ids, { startTime, endTime }, resolution) {
+export function componentMetricsQuery(set, ids, { startTime, endTime }, resolution, field = 'im_Utilization') {
   return (
     `/pc/odata4/api/${set}` +
     `?$filter=${encodeURIComponent(`DeviceItemID in (${ids.join(',')})`)}` +
-    `&$apply=${encodeURIComponent('groupby((DeviceItemID),aggregate(im_Utilization with average as Value))')}` +
+    `&$apply=${encodeURIComponent(`groupby((DeviceItemID),aggregate(${field} with average as Value))`)}` +
     `&starttime=${startTime}` +
     `&endtime=${endTime}` +
     `&resolution=${resolution}` +
@@ -89,6 +92,38 @@ export async function fillComponentMetrics(devices, window, { fetchImpl = fetch,
   })
 }
 
+/**
+ * The Metrics tab's "is it up?" line: each device's `availability` becomes `{ value, kind }`, the average
+ * of im_Availability over the window (kind "availability"), or, for devices with none, of im_Reachability
+ * (kind "reachability"), or null when PC reports neither. A device that is down has no availability at
+ * all — PC shows it NOT REACHABLE — and reachability 0 %, so the fallback is what reports "down".
+ * A failing query is logged and only leaves its own figure out.
+ */
+export async function fillAvailability(devices, window, { fetchImpl = fetch, resolution, log = console, batchSize = 40 } = {}) {
+  const ids = devices.map((d) => d.id).filter((id) => id != null)
+  if (ids.length === 0) return devices
+  const averages = async (set, field, wanted) => {
+    const out = new Map()
+    try {
+      for (let i = 0; i < wanted.length; i += batchSize) {
+        const response = await fetchImpl(componentMetricsQuery(set, wanted.slice(i, i + batchSize), window, resolution, field))
+        if (!response.ok) throw new Error(`${set} query failed: HTTP ${response.status}`)
+        for (const [id, v] of parseComponentMetrics(await response.json())) out.set(id, v)
+      }
+    } catch (e) {
+      log.warn(`Availability: ${e.message}`)
+    }
+    return out
+  }
+  const availability = await averages('availabilitymfs', 'im_Availability', ids)
+  const reachability = await averages('reachabilitymfs', 'im_Reachability', ids.filter((id) => !availability.has(id)))
+  return devices.map((d) => {
+    if (availability.has(d.id)) return { ...d, availability: { value: availability.get(d.id), kind: 'availability' } }
+    if (reachability.has(d.id)) return { ...d, availability: { value: reachability.get(d.id), kind: 'reachability' } }
+    return { ...d, availability: null }
+  })
+}
+
 function buildDevicesQuery({ id, startTime, endTime }) {
   // Relative path — resolves against whatever host the App View is loaded
   // from (dev-netops, prod-netops, etc.) so no env-specific edit is needed.
@@ -100,8 +135,7 @@ function buildDevicesQuery({ id, startTime, endTime }) {
     '&$expand=cpuandmemorymfs($apply=groupby((DeviceItemID),' +
       'aggregate(' +
         'im_CPUUtilization with average as Value,' +
-        'im_MemoryUtilization with average as Value1,' +
-        'im_DiskPercentUsed with average as Value2' +
+        'im_MemoryUtilization with average as Value1' +
       ')))' +
     `&starttime=${startTime}` +
     `&endtime=${endTime}` +
@@ -165,7 +199,6 @@ export function normalizeDevice(row) {
     longitude: Number(row.Longitude),
     cpu: numOrNull(row['cpuandmemorymfs/Value']),
     memory: numOrNull(row['cpuandmemorymfs/Value1']),
-    disk: numOrNull(row['cpuandmemorymfs/Value2']),
     // '' when PC sent the column empty; undefined when the column wasn't asked for.
     protocols: 'SupportedProtocols' in row ? (row.SupportedProtocols == null ? '' : String(row.SupportedProtocols)) : undefined,
     polledItems: numOrNull(row.PolledItemCount),

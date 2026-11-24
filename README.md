@@ -52,7 +52,7 @@ up another tool."*
 
 - **Four-tab device popup** — *Site Info* (name, IP, location,
   power-grid status), *Weather* (live conditions at the site), *Metrics*
-  (CPU / Memory / Disk over the dashboard's time window), *Alarms*
+  (CPU, Memory and Availability over the dashboard's time window), *Alarms*
   (full active alarm list from DX NetOps Spectrum). All without leaving the map.
 - **Deep-link straight to NetOps Triage View** — a topology icon next
   to the device name and an "Investigate in Triage View →" link inside
