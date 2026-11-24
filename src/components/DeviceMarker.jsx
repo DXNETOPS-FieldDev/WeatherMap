@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
-import { Marker } from 'react-leaflet'
+import { Marker, Tooltip } from 'react-leaflet'
 import L from 'leaflet'
 import { topDeviceSeverity, topComponentSeverity } from '../api/spectrum.js'
 import TabbedPopup from './TabbedPopup.jsx'
+import { deviceTooltipLines } from '../lib/deviceTooltip.js'
 
 // Marker dot color follows the device's own alarm severity. A small corner
 // badge is added when the device has *component* (interface) alarms — same
@@ -34,8 +35,7 @@ function getIcon(color, severity, badgeColor, badgeSeverity, ncmNonCompliant) {
         className: 'device-marker',
         html:
           `<div class="device-marker-dot${ncmNonCompliant ? ' ncm-noncompliant' : ''}" ` +
-          `style="background:${color}" data-severity="${severity}"` +
-          `${ncmNonCompliant ? ' title="Configuration non-compliant (NCM)"' : ''}>${badge}</div>`,
+          `style="background:${color}" data-severity="${severity}">${badge}</div>`,
         iconSize: [18, 18],
         iconAnchor: [9, 9],
         popupAnchor: [0, -9],
@@ -70,6 +70,13 @@ export default function DeviceMarker({ device, weatherApiKey }) {
 
   return (
     <Marker position={position} icon={icon}>
+      {/* Hover: who this is, without opening the popup. "Configuration non-compliant" used to be the dot's
+          own title attribute; it moved here so the browser doesn't show a second tooltip on top. */}
+      <Tooltip direction="top" offset={[0, -10]} className="device-tooltip">
+        {deviceTooltipLines(device).map((line, i) => (
+          <div key={i} className={i === 0 ? 'device-tooltip-name' : undefined}>{line}</div>
+        ))}
+      </Tooltip>
       <TabbedPopup device={device} apiKey={weatherApiKey} />
     </Marker>
   )
