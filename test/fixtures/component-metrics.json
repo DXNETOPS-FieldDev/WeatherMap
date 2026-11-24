@@ -1,0 +1,72 @@
+{
+ "captured": "2026-11-24T16:42:35.752Z, live PC OData (lab Portal)",
+ "window": {
+  "start": 1795534955,
+  "end": 1795538555
+ },
+ "devices": {
+  "309675": "router: one CPU, one memory pool",
+  "309671": "Linux switch: 49 CPUs, 4 RAM pools (PC's own gauges showed 50.26% / 49.43%)",
+  "13975": "switch: memory utilization not collected (null)",
+  "7115": "device that also has device-level values",
+  "309682": "device with no component data (absent from both responses)"
+ },
+ "cpumfs": {
+  "query": "/pc/odata4/api/cpumfs?$filter=DeviceItemID%20in%20(309675%2C309671%2C13975%2C7115%2C309682)&$apply=groupby((DeviceItemID),aggregate(im_Utilization with average as Value))&starttime=<start>&endtime=<end>&resolution=RATE&$format=application/json",
+  "response": {
+   "@odata.context": "$metadata#cpumfs",
+   "@odata.metadataEtag": "\"2d339f65-b7ba-4817-b724-79348135f2af\"",
+   "value": [
+    {
+     "@odata.id": null,
+     "DeviceItemID": 7115,
+     "Value": 54
+    },
+    {
+     "@odata.id": null,
+     "DeviceItemID": 13975,
+     "Value": 0
+    },
+    {
+     "@odata.id": null,
+     "DeviceItemID": 309671,
+     "Value": 50.26034482758621
+    },
+    {
+     "@odata.id": null,
+     "DeviceItemID": 309675,
+     "Value": 0
+    }
+   ]
+  }
+ },
+ "memorymfs": {
+  "query": "/pc/odata4/api/memorymfs?$filter=DeviceItemID%20in%20(309675%2C309671%2C13975%2C7115%2C309682)&$apply=groupby((DeviceItemID),aggregate(im_Utilization with average as Value))&starttime=<start>&endtime=<end>&resolution=RATE&$format=application/json",
+  "response": {
+   "@odata.context": "$metadata#memorymfs",
+   "@odata.metadataEtag": "\"2d339f65-b7ba-4817-b724-79348135f2af\"",
+   "value": [
+    {
+     "@odata.id": null,
+     "DeviceItemID": 7115,
+     "Value": 29
+    },
+    {
+     "@odata.id": null,
+     "DeviceItemID": 13975,
+     "Value": null
+    },
+    {
+     "@odata.id": null,
+     "DeviceItemID": 309671,
+     "Value": 49.4285985306289
+    },
+    {
+     "@odata.id": null,
+     "DeviceItemID": 309675,
+     "Value": 88.2137617211858
+    }
+   ]
+  }
+ }
+}
