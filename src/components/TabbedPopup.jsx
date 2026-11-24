@@ -171,7 +171,7 @@ export default function TabbedPopup({ device, apiKey }) {
           <div className="tab-content">
             <MetricBar label="CPU Utilization" value={device.cpu} />
             <MetricBar label="Memory Utilization" value={device.memory} />
-            <MetricBar label="Disk Used" value={device.disk} />
+            <AvailabilityLine availability={device.availability} />
             <p className="metrics-footnote">
               <small>Average over the dashboard's time window.</small>
             </p>
@@ -343,6 +343,23 @@ function humanize(s) {
   return s
     .replace(/([a-z])([A-Z])/g, '$1 $2')
     .replace(/^./, (c) => c.toUpperCase())
+}
+
+// "Is it up?": Availability, or Reachability when PC computes no availability (a device that is down has
+// none). Plain text rather than a bar: here a high value is good, and the bars colour high values red.
+function AvailabilityLine({ availability }) {
+  if (!availability || availability.value == null || !Number.isFinite(availability.value)) {
+    return <p>Availability: <em>not available</em></p>
+  }
+  if (availability.kind === 'reachability') {
+    return (
+      <p className="availability-line">
+        <strong>Reachability:</strong> {availability.value.toFixed(1)}%
+        <br /><small>Availability not reported; share of polls answered instead.</small>
+      </p>
+    )
+  }
+  return <p className="availability-line"><strong>Availability:</strong> {availability.value.toFixed(1)}%</p>
 }
 
 function MetricBar({ label, value }) {

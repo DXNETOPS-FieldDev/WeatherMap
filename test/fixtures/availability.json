@@ -1,0 +1,56 @@
+{
+ "captured": "2026-11-24T18:30:25.257Z, live PC OData (lab Portal)",
+ "devices": {
+  "7116": "device with neither family",
+  "309675": "router: up, both families",
+  "309682": "router: down (PC shows NOT REACHABLE), reachability only",
+  "1078087": "device with reachability only",
+  "1202322": "second record with the same device name: availability 100, reachability 0"
+ },
+ "availabilitymfs": {
+  "response": {
+   "@odata.context": "$metadata#availabilitymfs",
+   "@odata.metadataEtag": "\"2d339f65-b7ba-4817-b724-79348135f2af\"",
+   "value": [
+    {
+     "@odata.id": null,
+     "DeviceItemID": 309675,
+     "Value": 100
+    },
+    {
+     "@odata.id": null,
+     "DeviceItemID": 1202322,
+     "Value": 100
+    }
+   ]
+  }
+ },
+ "reachabilitymfs": {
+  "response": {
+   "@odata.context": "$metadata#reachabilitymfs",
+   "@odata.metadataEtag": "\"2d339f65-b7ba-4817-b724-79348135f2af\"",
+   "value": [
+    {
+     "@odata.id": null,
+     "DeviceItemID": 309675,
+     "Value": 100
+    },
+    {
+     "@odata.id": null,
+     "DeviceItemID": 309682,
+     "Value": 0
+    },
+    {
+     "@odata.id": null,
+     "DeviceItemID": 1078087,
+     "Value": 0
+    },
+    {
+     "@odata.id": null,
+     "DeviceItemID": 1202322,
+     "Value": 0
+    }
+   ]
+  }
+ }
+}

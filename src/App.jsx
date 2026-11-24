@@ -232,7 +232,7 @@ export default function App() {
   //   1. Prefer the duplicate whose ID appears in a tunnel — that's the
   //      one PC's tunnel polling is actually using for the physical device.
   //   2. If neither is in tunnels yet (initial load, before tunnels arrive),
-  //      prefer the one with non-null cpu/memory/disk metrics.
+  //      prefer the one with non-null cpu/memory metrics.
   //   3. Otherwise keep the first encountered.
   // The right long-term fix is for the PC admin to delete the stale record.
   const dedupedDevices = useMemo(() => {
@@ -260,8 +260,8 @@ export default function App() {
         if (candInTunnels) byKey.set(key, d)
         continue
       }
-      const prevHasMetrics = prev.cpu != null || prev.memory != null || prev.disk != null
-      const candHasMetrics = d.cpu != null || d.memory != null || d.disk != null
+      const prevHasMetrics = prev.cpu != null || prev.memory != null
+      const candHasMetrics = d.cpu != null || d.memory != null
       if (candHasMetrics && !prevHasMetrics) byKey.set(key, d)
     }
     return [...byKey.values()]
