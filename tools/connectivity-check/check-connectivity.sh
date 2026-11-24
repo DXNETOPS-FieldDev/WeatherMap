@@ -581,7 +581,8 @@ OWM_KEY=$(grep -o -E '"owmApiKey"[[:space:]]*:[[:space:]]*"[^"]*"' "$RC" 2>/dev/
 ODIN_URL=$(grep -o -E '"apiUrl"[[:space:]]*:[[:space:]]*"https?://[^"]*"' "$RC" 2>/dev/null | head -1 | sed -E 's/.*"([^"]*)"$/\1/')
 ODIN_URL="${ODIN_URL:-https://ornl.opendatasoft.com/api/explore/v2.1/catalog/datasets/odin-real-time-outages-county}"
 
-# web_url <label> <url> <ok-codes regex> <content-type regex> [shown-url]; status 1 on failure
+# web_url <label> <url> <ok-codes regex> <content-type regex> [shown-url]; status 1 on failure, 2 when the
+# certificate isn't trusted here (a WARN, but there is no reply, so callers must not go on to read one)
 web_url() {
   local label="$1" url="$2" codes="$3" tre="$4" shown="${5:-$2}"
   parse_url "$url" || { step "$label: bad URL"; fail "bad URL"; return 1; }
@@ -597,7 +598,7 @@ web_url() {
     why "if that issuer is your web proxy or firewall, the traffic is being TLS-inspected; browsers then need"
     why "that proxy's CA (usually pushed to workstations already) — or ask for an inspection bypass for $U_HOST"
     warn "certificate not trusted here (issuer: ${iss:-unknown}): TLS inspection?"
-    return 0
+    return 2
   fi
   if (( H_RC != 0 )); then
     step "HTTPS: FAILED — $(curl_cause "$H_RC")${H_ERR:+ ($H_ERR)}"

@@ -29,7 +29,8 @@ trap 'rm -rf "$WORK"' EXIT
 cd "$WORK" || exit 1
 
 pass=0; total=0
-# run_case <name> <answers> <app-dir> <expected-exit> <pattern>... (all patterns must match the output)
+# run_case <name> <answers> <app-dir> <expected-exit> <pattern>... (all patterns must match the output;
+# a pattern starting with ! must NOT match)
 run_case() {
   local name="$1" answers="$2" appdir="$3" want_rc="$4"; shift 4
   total=$((total + 1))
@@ -39,7 +40,11 @@ run_case() {
   [[ "$rc" == "$want_rc" ]] || { ok=0; missing+=("exit $rc, wanted $want_rc"); }
   local p
   for p in "$@"; do
-    grep -q -E -- "$p" <<<"$out" || { ok=0; missing+=("no match: $p"); }
+    if [[ "$p" == !* ]]; then
+      grep -q -E -- "${p#!}" <<<"$out" && { ok=0; missing+=("should not match: ${p#!}"); }
+    else
+      grep -q -E -- "$p" <<<"$out" || { ok=0; missing+=("no match: $p"); }
+    fi
   done
   if (( ok )); then
     pass=$((pass + 1)); echo "PASS  $name"
@@ -97,6 +102,17 @@ https_proxy=http://127.0.0.1:9 run_case "shell proxy tried after a direct failur
 run_case "map, weather, radar and outage services" 'n\nn\nn\nn\ny\n' "$NONE" 0 \
   'OpenStreetMap +OK' 'OpenWeatherMap +OK' 'RainViewer +OK' 'ODIN \(outages\) +OK' 'Tile server c' \
   'API key: not tested' 'Radar tiles' "users' browsers load"
+
+# 14. TLS inspection: the network re-signs every web certificate with a CA this server doesn't trust
+#     (simulated: curl may trust only an unrelated CA). Each service must say "certificate not trusted",
+#     not a follow-up symptom of having no reply to read ("no radar frames", "API key accepted").
+openssl req -x509 -newkey rsa:2048 -nodes -keyout "$WORK/inspect-key.pem" -out "$WORK/inspect-ca.pem" -days 1 \
+  -subj "/CN=WeatherMap test unrelated CA" >/dev/null 2>&1
+CURL_CA_BUNDLE="$WORK/inspect-ca.pem" SSL_CERT_FILE="$WORK/inspect-ca.pem" run_case "web certificates not trusted (TLS inspection)" \
+  'n\nn\nn\nn\ny\n' "$NONE" 0 \
+  'OpenStreetMap +WARN .*certificate not trusted' 'OpenWeatherMap +WARN .*certificate not trusted' \
+  'RainViewer +WARN .*certificate not trusted' 'ODIN \(outages\) +WARN .*certificate not trusted' \
+  '!no radar frames' '!API key accepted'
 
 # 1. Everything from the saved WeatherMap settings, with login tests.
 run_case "saved settings, all OK" 'y\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\n' "$APP_DIR" 0 \
