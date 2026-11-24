@@ -9,14 +9,17 @@
 //   2. browser_run_code_unsafe with filename = <absolute path to this file>.
 // It reads nothing from the repo and holds no host, page id or group id: everything comes from
 // the open page. Written for the stable app and the Thresholds variant (detected from
-// runtime-config); VERIFIED ON THE THRESHOLDS VARIANT ONLY (2026-11-05) — the stable path has not
-// been run yet, so treat its first result as a check of the script too.
+// runtime-config). Verified on the Thresholds variant (2026-11-05) and on the stable app (2026-11-23,
+// dev, 8 of 8).
 // Takes about two minutes (it waits for one data refresh).
 //
 // Proven able to fail (2026-11-05, Thresholds on dev): with refreshClusters() removed it failed the
 // four cluster-colour checks; with the marker position memo removed it failed "popup survives a
 // refresh"; the good build passed 17 of 17. (2026-11-08) With metrics.wanGroup set: a build listing only
 // the first WAN circuit failed "WAN circuits listed = the group's members"; the good build passed 19 of 19.
+// (2026-11-23, stable) It caught a real defect on its first stable run: a stable build without the marker
+// position memo (missing from every stable release up to v1.1.1) failed "popup survives a refresh", 6 of 7;
+// the same build with the memo passed 8 of 8.
 //
 // Every check prints how many items it looked at; a check that inspected nothing FAILS.
 // It changes nothing on the server. It ticks and unticks the Network-menu severities and puts
