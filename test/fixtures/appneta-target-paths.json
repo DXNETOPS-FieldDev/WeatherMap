@@ -1,0 +1,110 @@
+{
+  "_note": "REAL AppNeta v3/path inventory (id, pathName, sourceAppliance, target) for the 15 paths ending at one globe (Seattle), joined with the DA networkpath LocalID, captured 2026-11-24 from the dev Portal. Monitoring point names and one web-site target replaced by examples; nothing else edited.",
+  "paths": [
+    {
+      "id": 308166,
+      "pathName": "MP-Miami <-> seattle-isp-1 (single)",
+      "sourceAppliance": "MP-Miami",
+      "target": "seattle-isp-1",
+      "localId": 229649
+    },
+    {
+      "id": 308168,
+      "pathName": "MP-SanFran <-> seattle-isp-1 (single)",
+      "sourceAppliance": "MP-SanFran",
+      "target": "seattle-isp-1",
+      "localId": 229651
+    },
+    {
+      "id": 308169,
+      "pathName": "MP-Chicago <-> seattle-isp-1 (single)",
+      "sourceAppliance": "MP-Chicago",
+      "target": "seattle-isp-1",
+      "localId": 229652
+    },
+    {
+      "id": 308170,
+      "pathName": "MP-Houston <-> seattle-isp-1 (single)",
+      "sourceAppliance": "MP-Houston",
+      "target": "seattle-isp-1",
+      "localId": 229653
+    },
+    {
+      "id": 308171,
+      "pathName": "MP-Chicago <-> seattle-isp-2 (single)",
+      "sourceAppliance": "MP-Chicago",
+      "target": "seattle-isp-2",
+      "localId": 229655
+    },
+    {
+      "id": 308173,
+      "pathName": "MP-Miami <-> seattle-isp-2 (single)",
+      "sourceAppliance": "MP-Miami",
+      "target": "seattle-isp-2",
+      "localId": 229657
+    },
+    {
+      "id": 308174,
+      "pathName": "MP-SanFran <-> seattle-isp-2 (single)",
+      "sourceAppliance": "MP-SanFran",
+      "target": "seattle-isp-2",
+      "localId": 229658
+    },
+    {
+      "id": 308175,
+      "pathName": "MP-Houston <-> seattle-isp-2 (single)",
+      "sourceAppliance": "MP-Houston",
+      "target": "seattle-isp-2",
+      "localId": 229659
+    },
+    {
+      "id": 308180,
+      "pathName": "MP-SanFran <-> Target-Seattle-Dual-Ended (dual)",
+      "sourceAppliance": "MP-SanFran",
+      "target": "vk35-seattle-appneta",
+      "localId": 230032
+    },
+    {
+      "id": 308181,
+      "pathName": "MP-NewYork <-> Target-Seattle-Dual-Ended (dual)",
+      "sourceAppliance": "MP-NewYork",
+      "target": "vk35-seattle-appneta",
+      "localId": 230029
+    },
+    {
+      "id": 308189,
+      "pathName": "MP-Miami <-> shop.example.com (single)",
+      "sourceAppliance": "MP-Miami",
+      "target": "shop.example.com",
+      "localId": 230266
+    },
+    {
+      "id": 308191,
+      "pathName": "MP-SanFran <-> shop.example.com (single)",
+      "sourceAppliance": "MP-SanFran",
+      "target": "shop.example.com",
+      "localId": 230268
+    },
+    {
+      "id": 308275,
+      "pathName": "MP-NewYork <-> shop.example.com (single)",
+      "sourceAppliance": "MP-NewYork",
+      "target": "shop.example.com",
+      "localId": 231185
+    },
+    {
+      "id": 310954,
+      "pathName": "MP-NewYork <-> seattle-isp-1 (single)",
+      "sourceAppliance": "MP-NewYork",
+      "target": "seattle-isp-1",
+      "localId": 752026
+    },
+    {
+      "id": 310955,
+      "pathName": "MP-NewYork <-> seattle-isp-2 (single)",
+      "sourceAppliance": "MP-NewYork",
+      "target": "seattle-isp-2",
+      "localId": 752025
+    }
+  ]
+}

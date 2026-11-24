@@ -1,9 +1,12 @@
 import Papa from 'papaparse'
 import { getConfig } from '../lib/config.js'
+import { targetRecordsByName } from '../lib/appnetaTargets.js'
 
 /**
  * Fetch device inventory + average CPU utilization for the dashboard's
- * group context and time range. Returns an array of normalized device objects.
+ * group context and time range. Returns { devices, appnetaRecords }: the normalized device objects, and
+ * the AppNeta records (path targets, monitoring points) from the same response by name, which the AppNeta
+ * target popup links to even when they are hidden from the device markers.
  *
  * In debug mode, loads /sample-devices.csv from the public/ folder instead
  * of hitting the OData API. Useful for development without portal access.
@@ -25,12 +28,12 @@ export async function fetchDevices({ id, startTime, endTime, debug }) {
     throw new Error(`Devices query failed: HTTP ${response.status}`)
   }
   const text = await response.text()
-  const devices = parseDevicesCsv(text)
-  if (debug) return devices
+  const { devices, appnetaRecords } = parseDevicesCsv(text)
+  if (debug) return { devices, appnetaRecords }
   const window = { startTime, endTime }
   const { resolution } = getConfig().odata
   const withCpu = await fillComponentMetrics(devices, window, { resolution })
-  return fillAvailability(withCpu, window, { resolution })
+  return { devices: await fillAvailability(withCpu, window, { resolution }), appnetaRecords }
 }
 
 // Some devices report CPU and memory only per component — one row per CPU in cpumfs, one per memory pool in
@@ -153,11 +156,11 @@ function parseDevicesCsv(text) {
   })
 
   const { includeAppNeta, includeSdwanControllers } = getConfig()
-  return data
-    .map(normalizeDevice)
-    .filter((d) => isRenderable(d))
+  const all = data.map(normalizeDevice).filter((d) => isRenderable(d))
+  const devices = all
     .filter((d) => includeAppNeta || !isAppNetaDevice(d))
     .filter((d) => includeSdwanControllers || !isSdwanController(d))
+  return { devices, appnetaRecords: targetRecordsByName(all) }
 }
 
 // AppNeta Monitoring Points (e.g. "dev-vk35-Miami-AppNeta") are synthetic

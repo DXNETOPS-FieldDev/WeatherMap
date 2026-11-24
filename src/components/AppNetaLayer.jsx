@@ -1,6 +1,7 @@
 import { LayerGroup, Marker, Polyline, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import { getConfig } from '../lib/config.js'
+import { targetPopupRows } from '../lib/appnetaTargets.js'
 
 // Target-anchor marker — used for the non-MP endpoints of AppNeta paths
 // (ISP labels like "chicago-isp-1", public hostnames like "web.mydomain.com",
@@ -143,7 +144,17 @@ function curvedPath(src, dst, controlMag, segments = 20) {
  *   paths       normalized path records from src/api/appneta.js
  *   appnetaMps  MP devices from fetchAppNetaMpDevices()
  */
-export default function AppNetaLayer({ paths, appnetaMps }) {
+// A PC link opened in a new tab, or plain text when there is no PC page to open.
+function LinkOrText({ href, text }) {
+  if (!href) return text
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer">
+      {text}
+    </a>
+  )
+}
+
+export default function AppNetaLayer({ paths, appnetaMps, targetRecords = new Map() }) {
   // Never early-return — keep the LayerGroup mounted even when paths/MPs
   // filter to empty. Returning null caused react-leaflet's Overlay to lose
   // track of the layer, so re-checking an MP in the legend (which would
@@ -214,15 +225,24 @@ export default function AppNetaLayer({ paths, appnetaMps }) {
           // (NYC, Chicago) and would otherwise be buried.
           zIndexOffset={1000}
         >
-          <Popup>
+          <Popup maxHeight={320}>
             <div className="appneta-popup">
               <strong>{a.locality || 'Target'}</strong>
               <br />
               <small>{a.paths.length} path{a.paths.length === 1 ? '' : 's'} terminate here</small>
               <hr />
               <div className="appneta-anchor-targets">
-                {[...new Set(a.paths.map((p) => p.target))].sort().map((t) => (
-                  <div key={t}>{t}</div>
+                {targetPopupRows(a.paths, targetRecords).map((t) => (
+                  <div key={t.target} className="appneta-anchor-target">
+                    <div className="appneta-anchor-target-name">
+                      <LinkOrText href={t.href} text={t.target} />
+                    </div>
+                    {t.paths.map((p) => (
+                      <div key={p.id} className="appneta-anchor-path">
+                        <LinkOrText href={p.href} text={p.label} />
+                      </div>
+                    ))}
+                  </div>
                 ))}
               </div>
             </div>

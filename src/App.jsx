@@ -118,6 +118,8 @@ export default function App() {
   const [missingTunnelMetric, setMissingTunnelMetric] = useState(null)
   const [appnetaPaths, setAppnetaPaths] = useState([])
   const [appnetaMps, setAppnetaMps] = useState([])
+  // AppNeta targets / MPs by name, from the devices query: the target popup links to their PC pages.
+  const [appnetaRecords, setAppnetaRecords] = useState(() => new Map())
   const [radarFrames, setRadarFrames] = useState({ host: '', frames: [] })
   // null until the first NCM load completes; then a fetchNcmCompliance() result.
   const [ncm, setNcm] = useState(null)
@@ -128,8 +130,9 @@ export default function App() {
     setError(null)
 
     fetchDevices(params)
-      .then(async (data) => {
+      .then(async ({ devices: data, appnetaRecords: records }) => {
         if (cancelled) return
+        setAppnetaRecords(records)
         // Fetch alarms for all devices in one batched POST; merge onto
         // each device so markers can color by severity without per-tab fetches.
         const names = data.map((d) => d.name).filter(Boolean)
@@ -646,6 +649,7 @@ export default function App() {
               <AppNetaLayer
                 paths={visibleAppnetaPaths}
                 appnetaMps={visibleAppnetaMps}
+                targetRecords={appnetaRecords}
               />
             </Overlay>
           )}
