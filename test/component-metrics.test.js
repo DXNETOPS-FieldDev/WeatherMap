@@ -109,11 +109,14 @@ describe('fillComponentMetrics', () => {
     assert.equal(out[1].memory, null)
   })
 
-  test('many devices are split into batches', async () => {
+  test('many devices are split into batches of 40 by default', async () => {
     const calls = []
-    const many = Array.from({ length: 450 }, (_, i) => device(1000 + i))
-    await fillComponentMetrics(many, WINDOW, { fetchImpl: route(calls), resolution: 'RATE', log: quiet, batchSize: 200 })
-    assert.equal(calls.filter((c) => c.includes('/cpumfs?')).length, 3)
+    const many = Array.from({ length: 85 }, (_, i) => device(1000 + i))
+    await fillComponentMetrics(many, WINDOW, { fetchImpl: route(calls), resolution: 'RATE', log: quiet })
+    const cpu = calls.filter((c) => c.includes('/cpumfs?'))
+    assert.equal(cpu.length, 3)
+    const sizes = cpu.map((c) => new URL(c, 'https://p.example').searchParams.get('$filter').split(',').length)
+    assert.deepEqual(sizes, [40, 40, 5])
     assert.equal(calls.filter((c) => c.includes('/memorymfs?')).length, 3)
   })
 
