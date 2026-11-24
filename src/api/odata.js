@@ -65,7 +65,8 @@ export function parseComponentMetrics(resp) {
  * Fill each device's missing cpu / memory from its component metrics. Device-level values are never replaced.
  * Only devices missing a value are queried, in batches. A failed query leaves the devices as they were.
  */
-export async function fillComponentMetrics(devices, window, { fetchImpl = fetch, resolution, log = console, batchSize = 200 } = {}) {
+// 40 ids per request: the Thresholds variant saw Performance Center answer 400 to 89 ids in one URL.
+export async function fillComponentMetrics(devices, window, { fetchImpl = fetch, resolution, log = console, batchSize = 40 } = {}) {
   const found = {}
   try {
     for (const { set, field } of COMPONENT_FAMILIES) {
