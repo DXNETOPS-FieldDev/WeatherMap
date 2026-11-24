@@ -43,6 +43,7 @@ contacted. The DA question defaults to yes, because the DA is part of every NetO
 | RainViewer | the radar frame list, then one radar tile |
 | ODIN (power outages) | one outage record |
 | NIFC (wildfires) | one fire perimeter and one fire location record |
+| CWFIS (wildfires in Canada) | one fire location record |
 
 > **Important:** in WeatherMap, the **users' browsers** load these, not the Portal server. A pass here
 > shows that your network lets the Portal server reach them. It does **not** prove that a user's
@@ -93,7 +94,7 @@ The same questions follow for AppNeta (organization ID and API token instead of 
 password), the Data Aggregator and NCM. Then:
 
 ```
-Also check OpenStreetMap, OpenWeatherMap, RainViewer, ODIN and NIFC from this server? [Y/n]:
+Also check OpenStreetMap, OpenWeatherMap, RainViewer, ODIN, NIFC and CWFIS from this server? [Y/n]:
 ```
 
 - **Enter** takes the default, shown in capitals.

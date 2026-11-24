@@ -1,6 +1,6 @@
 import { GeoJSON, Marker, Popup, LayerGroup, Pane } from 'react-leaflet'
 import L from 'leaflet'
-import { fireFacts } from '../api/wildfires.js'
+import { fireFacts, fireSource } from '../api/wildfires.js'
 
 // Active fires red-orange; fully contained ones muted, so the eye goes to what is still burning.
 const ACTIVE = '#d84315'
@@ -17,7 +17,16 @@ const flameIcon = (fire) => L.divIcon({
   popupAnchor: [0, -8],
 })
 
-const ATTRIBUTION = 'Wildfire data: <a href="https://www.nifc.gov/" target="_blank" rel="noopener">NIFC</a>'
+const NIFC_CREDIT = '<a href="https://www.nifc.gov/" target="_blank" rel="noopener">NIFC</a>'
+// Open Government Licence – Canada asks for this attribution statement.
+const CWFIS_CREDIT = '<a href="https://cwfis.cfs.nrcan.gc.ca/" target="_blank" rel="noopener">CWFIS</a>'
+  + ' (contains information licensed under the Open Government Licence – Canada)'
+const attributionFor = (fires) => {
+  const credits = []
+  if (fires.some((f) => f.source !== 'CWFIS')) credits.push(NIFC_CREDIT)
+  if (fires.some((f) => f.source === 'CWFIS')) credits.push(CWFIS_CREDIT)
+  return `Wildfire data: ${credits.join(', ')}`
+}
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({
@@ -30,13 +39,13 @@ function popupHtml(fire) {
   const lines = [`<strong>🔥 ${escapeHtml(f.title)}</strong>`]
   if (f.size) lines.push(escapeHtml(f.size))
   if (f.dates) lines.push(`<small>${escapeHtml(f.dates)}</small>`)
-  if (!fire.perimeter) lines.push('<small>No mapped perimeter yet: shown at its reported location</small>')
-  lines.push('<small>Source: NIFC</small>')
+  if (!fire.perimeter && fire.source !== 'CWFIS') lines.push('<small>No mapped perimeter yet: shown at its reported location</small>')
+  lines.push(`<small>Source: ${escapeHtml(fireSource(fire))}</small>`)
   return `<div class="wildfire-popup">${lines.join('<br>')}</div>`
 }
 
 /**
- * Active US wildfires from NIFC: perimeters as polygons, and fires that have no mapped perimeter yet as
+ * Active wildfires (NIFC for the US, CWFIS for Canada): perimeters as polygons, and fires that have no mapped perimeter yet as
  * small markers at their reported location. Renders nothing until there is data.
  */
 export default function WildfireLayer({ fires }) {
@@ -44,6 +53,7 @@ export default function WildfireLayer({ fires }) {
 
   const withPerimeter = fires.filter((f) => f.perimeter)
   const pointOnly = fires.filter((f) => !f.perimeter && f.point)
+  const attribution = attributionFor(fires)
   const byFeature = new Map()
   const features = withPerimeter.map((fire, i) => {
     byFeature.set(i, fire)
@@ -51,13 +61,13 @@ export default function WildfireLayer({ fires }) {
   })
 
   return (
-    <LayerGroup attribution={ATTRIBUTION}>
+    <LayerGroup attribution={attribution}>
       {features.length > 0 && (
         <GeoJSON
           // react-leaflet's GeoJSON doesn't diff `data`; remount when the set changes.
           key={withPerimeter.map((f) => f.id).join('|')}
           data={{ type: 'FeatureCollection', features }}
-          attribution={ATTRIBUTION}
+          attribution={attribution}
           style={(feature) => {
             const color = colorFor(byFeature.get(feature.properties.i))
             return { color, weight: 1.5, opacity: 0.9, fillColor: color, fillOpacity: 0.3 }

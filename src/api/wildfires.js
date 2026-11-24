@@ -12,6 +12,7 @@
 
 import { getConfig } from '../lib/config.js'
 import { computeBbox, pointInGeometry, distanceToGeometryMiles } from '../lib/geo.js'
+import { fetchCanadaFires } from './wildfires-canada.js'
 
 const WILDFIRE_TYPES = ['WF', 'CX']
 const PAGE_SIZE = 2000   // both services' maxRecordCount (2026-11-20)
@@ -50,6 +51,7 @@ export function parseWildfires(perimeterResp, incidentResp) {
     const c = f.geometry?.type === 'Point' ? f.geometry.coordinates : null
     fires.set(id || `incident-${fires.size}`, {
       id: id || `incident-${fires.size}`,
+      source: 'NIFC',
       name: p.IncidentName || 'Unnamed fire',
       state: state(p.POOState),
       acres: num(p.IncidentSize),
@@ -69,6 +71,7 @@ export function parseWildfires(perimeterResp, incidentResp) {
     const known = fires.get(id)
     fires.set(id, {
       id,
+      source: 'NIFC',
       // The perimeter's name and mapped acres are the better record (proper casing; measured area).
       name: p.poly_IncidentName || known?.name || 'Unnamed fire',
       state: state(p.attr_POOState) ?? known?.state ?? null,
@@ -158,10 +161,7 @@ export async function fetchAllPages(url, params, fetchImpl = fetch, { maxPages =
   return all
 }
 
-/** Fetch and merge both NIFC feeds. Resolves to [] when the wildfires settings are absent. */
-export async function fetchWildfires() {
-  const cfg = getConfig().wildfires
-  if (!cfg?.perimetersUrl || !cfg?.incidentsUrl) return []
+async function fetchNifc(cfg, fetchImpl) {
   const [perimeters, incidents] = await Promise.all([
     fetchAllPages(cfg.perimetersUrl, {
       where: typeFilter('attr_IncidentTypeCategory'),
@@ -169,14 +169,37 @@ export async function fetchWildfires() {
       geometryPrecision: '4',
       maxAllowableOffset: '0.002',
       outSR: '4326',
-    }),
+    }, fetchImpl),
     fetchAllPages(cfg.incidentsUrl, {
       where: typeFilter('IncidentTypeCategory'),
       outFields: INCIDENT_FIELDS,
       outSR: '4326',
-    }),
+    }, fetchImpl),
   ])
   return parseWildfires({ features: perimeters }, { features: incidents })
+}
+
+/**
+ * Fetch every configured source: NIFC (US) when perimetersUrl and incidentsUrl are set, CWFIS (Canada) when
+ * canadaUrl is set. Sources load independently: one failing (blocked by the Portal CSP, down) is logged and the
+ * others' fires are returned. Rejects only when every configured source failed, so the app keeps what it has.
+ * Resolves to [] when no source is configured.
+ */
+export async function fetchWildfires(opts = {}) {
+  const cfg = 'cfg' in opts ? opts.cfg : getConfig().wildfires
+  const { fetchImpl = fetch, now = new Date(), log = console } = opts
+  const sources = []
+  if (cfg?.perimetersUrl && cfg?.incidentsUrl) sources.push(['NIFC', () => fetchNifc(cfg, fetchImpl)])
+  if (cfg?.canadaUrl) sources.push(['CWFIS', () => fetchCanadaFires(cfg.canadaUrl, fetchImpl, now)])
+  if (sources.length === 0) return []
+  const results = await Promise.allSettled(sources.map(([, load]) => load()))
+  const fires = []
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled') fires.push(...r.value)
+    else log.warn(`Wildfire source ${sources[i][0]} failed: ${r.reason?.message ?? r.reason}`)
+  })
+  if (results.every((r) => r.status === 'rejected')) throw new Error('All wildfire sources failed')
+  return fires
 }
 
 const shortDate = (ms) => new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -189,7 +212,10 @@ const shortDate = (ms) => new Date(ms).toLocaleDateString('en-US', { month: 'sho
 export function fireFacts(fire) {
   const title = fire.state ? `${fire.name} (${fire.state})` : fire.name
   const parts = []
-  if (fire.acres !== null && fire.acres !== undefined) {
+  if (fire.source === 'CWFIS') {
+    if (fire.hectares !== null && fire.hectares !== undefined) parts.push(hectaresText(fire.hectares))
+    if (fire.stage) parts.push(fire.stage)
+  } else if (fire.acres !== null && fire.acres !== undefined) {
     parts.push(fire.acres < 1 ? 'less than 1 acre' : `${Math.round(fire.acres).toLocaleString('en-US')} acres`)
   }
   if (fire.contained !== null && fire.contained !== undefined) parts.push(`${fire.contained}% contained`)
@@ -197,6 +223,18 @@ export function fireFacts(fire) {
   if (fire.discoveredAt) d.push(`Discovered ${shortDate(fire.discoveredAt)}`)
   if (fire.updatedAt) d.push(`${d.length ? 'updated' : 'Updated'} ${shortDate(fire.updatedAt)}`)
   return { title, size: parts.length ? parts.join(' · ') : null, dates: d.length ? d.join(' · ') : null }
+}
+
+// "less than 1 ha" / "301,240 ha (744,380 acres)": Canadian fires are reported in hectares.
+function hectaresText(ha) {
+  if (ha < 1) return 'less than 1 ha'
+  const n = (v) => Math.round(v).toLocaleString('en-US')
+  return `${n(ha)} ha (${n(ha * 2.4710538)} acres)`
+}
+
+/** Who reported the fire, for "Source: …" lines. */
+export function fireSource(fire) {
+  return fire?.source === 'CWFIS' ? 'CWFIS (Canada)' : 'NIFC'
 }
 
 /** "less than 1 mi" / "about 8 mi". */

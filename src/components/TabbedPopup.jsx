@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Popup } from 'react-leaflet'
 import { topSeverity } from '../api/spectrum.js'
 import { getConfig } from '../lib/config.js'
-import { fireFacts, distanceText } from '../api/wildfires.js'
+import { fireFacts, fireSource, distanceText } from '../api/wildfires.js'
 
 const SEVERITY_COLOR = {
   Critical: '#d32f2f',
@@ -310,7 +310,7 @@ function OutageWarning({ outage }) {
   )
 }
 
-// Wildfire banner (NIFC): inside a fire perimeter, or — when wildfires.nearbyMiles is set — within that
+// Wildfire banner (NIFC, CWFIS): inside a fire perimeter, or — when wildfires.nearbyMiles is set — within that
 // distance of a fire. `wildfire` is { fire, kind: 'inside'|'nearby', miles } from correlateWildfiresToDevices.
 function WildfireWarning({ wildfire }) {
   const { fire, kind, miles } = wildfire
@@ -325,7 +325,7 @@ function WildfireWarning({ wildfire }) {
       {f.size && (<><br /><small>{f.size}</small></>)}
       {f.dates && (<><br /><small>{f.dates}</small></>)}
       <br />
-      <small>Source: NIFC</small>
+      <small>Source: {fireSource(fire)}</small>
     </div>
   )
 }

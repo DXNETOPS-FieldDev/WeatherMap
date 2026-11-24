@@ -16,7 +16,7 @@
 # send to us. Passwords and tokens are never printed or written to the log.
 #
 # It can also check the services the users' BROWSERS call (OpenStreetMap, OpenWeatherMap,
-# RainViewer, ODIN, NIFC wildfires) from this server. That shows whether the network lets the Portal reach
+# RainViewer, ODIN, NIFC and CWFIS wildfires) from this server. That shows whether the network lets the Portal reach
 # them; users' workstations need the same access.
 #
 # Needs: bash 4+, curl, openssl. Optional: the Portal's Java keytool (to check
@@ -585,6 +585,9 @@ NIFC_PER="${NIFC_PER:-https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/
 NIFC_INC=$(grep -o -E '"incidentsUrl"[[:space:]]*:[[:space:]]*"https?://[^"]*"' "$RC" 2>/dev/null | head -1 | sed -E 's/.*"([^"]*)"$/\1/')
 NIFC_INC="${NIFC_INC:-https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query}"
 NIFC_Q="where=1%3D1&outFields=OBJECTID&returnGeometry=false&resultRecordCount=1&f=geojson"
+CWFIS_URL=$(grep -o -E '"canadaUrl"[[:space:]]*:[[:space:]]*"https?://[^"]*"' "$RC" 2>/dev/null | head -1 | sed -E 's/.*"([^"]*)"$/\1/')
+CWFIS_URL="${CWFIS_URL:-https://geoserver.cwfif.nrcan.gc.ca/geoserver/public/wfs}"
+CWFIS_Q="service=WFS&version=2.0.0&request=GetFeature&typeNames=public:cwfif_national_activefires&outputFormat=application/json&count=1"
 
 # web_url <label> <url> <ok-codes regex> <content-type regex> [shown-url]; status 1 on failure
 web_url() {
@@ -694,9 +697,15 @@ web_nifc() {
   web_url "Fire perimeters" "$NIFC_PER?$NIFC_Q" '200' 'json' && nifc_features || return
   web_url "Fire locations" "$NIFC_INC?$NIFC_Q" '200' 'json' && nifc_features
 }
+web_cwfis() {
+  web_url "Canadian fire locations" "$CWFIS_URL?$CWFIS_Q" '200' 'json' || return
+  if body_has '"features"'; then return 0; fi
+  step "HTTPS: the reply has no features"
+  fail "CWFIS answered, but not with fire data"; return 1
+}
 
 say "== Map, weather, radar, power-outage and wildfire services"
-if ask_yn "Also check OpenStreetMap, OpenWeatherMap, RainViewer, ODIN and NIFC from this server?" y; then
+if ask_yn "Also check OpenStreetMap, OpenWeatherMap, RainViewer, ODIN, NIFC and CWFIS from this server?" y; then
   say "    (In WeatherMap the users' browsers load these. This shows whether the network lets the Portal reach"
   say "     them; users' workstations, and the Portal's Content-Security-Policy if set, need the same access.)"
   say ""
@@ -706,6 +715,7 @@ if ask_yn "Also check OpenStreetMap, OpenWeatherMap, RainViewer, ODIN and NIFC f
   web_service "RainViewer"     rainviewer "https://api.rainviewer.com/public/weather-maps.json"
   web_service "ODIN (outages)" odin       "$ODIN_URL/records?limit=1"
   web_service "NIFC (wildfires)" nifc     "$NIFC_PER?$NIFC_Q"
+  web_service "CWFIS (Canada)" cwfis      "$CWFIS_URL?$CWFIS_Q"
 else
   WEB_CHECKED=0
   say "    skipped"; say ""

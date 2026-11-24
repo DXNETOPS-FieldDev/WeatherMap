@@ -17,6 +17,7 @@
   "wildfires": {
     "perimetersUrl": "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters_Current/FeatureServer/0/query",
     "incidentsUrl": "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query",
+    "canadaUrl": "https://geoserver.cwfif.nrcan.gc.ca/geoserver/public/wfs",
     "nearbyMiles": 0,
     "refreshIntervalMs": 900000
   },

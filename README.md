@@ -47,8 +47,9 @@ up another tool."*
   meters affected, cause (storm vs scheduled vs equipment), and ETR.
   When a whole metro of devices goes red, this often answers it before
   you've even opened a ticket.
-- **Wildfire overlay (US)** — active wildfire perimeters and fire
-  locations from the National Interagency Fire Center (NIFC). A device
+- **Wildfire overlay (US and Canada)** — active wildfire perimeters and
+  fire locations from the National Interagency Fire Center (NIFC), and
+  Canadian fire locations from Natural Resources Canada (CWFIS). A device
   inside a fire perimeter says so in its popup; optionally, so does a
   device within a set distance of a fire. See [Wildfires](WILDFIRES.md).
 
@@ -464,6 +465,7 @@ credited as a courtesy.
 | [OpenWeatherMap](https://openweathermap.org/) | Precipitation / temperature / wind / clouds overlays, current-conditions popup | Required by OWM's terms. Shown in the map's attribution corner while any weather overlay is active. |
 | [RainViewer](https://www.rainviewer.com/) | Animated radar playback | Required under RainViewer's free API terms ("Weather data by RainViewer" with a link back to rainviewer.com). Shown in the map's attribution corner while the radar overlay is active. |
 | [NIFC WFIGS](https://data-nifc.opendata.arcgis.com/) (National Interagency Fire Center) | Wildfire overlay | Courtesy credit; NIFC's terms are a warranty disclaimer only. Shown in the map's attribution corner while the overlay is active. |
+| [CWFIS](https://cwfis.cfs.nrcan.gc.ca/) (Natural Resources Canada) | Wildfire overlay (Canada) | Required by the Open Government Licence – Canada: "contains information licensed under the Open Government Licence – Canada". Shown in the map's attribution corner while Canadian fires are on the map. |
 | [ODIN](https://ornl.opendatasoft.com/) (DoE / Oak Ridge National Laboratory) | Power-grid outage overlay | Courtesy credit — no explicit attribution requirement was found in ODIN's published terms. |
 
 Software licenses for the open-source libraries WeatherMap is built on —

@@ -177,7 +177,7 @@ export default function App() {
     return () => { cancelled = true; clearInterval(timer) }
   }, [config.powerOutages.refreshIntervalMs])
 
-  // Wildfires (NIFC) — same pattern as power outages: independent of devices, non-fatal on failure,
+  // Wildfires (NIFC, CWFIS) — same pattern as power outages: independent of devices, non-fatal on failure,
   // refreshed on an interval. Off entirely when runtime-config has no `wildfires` section.
   const wildfireRefreshMs = config.wildfires?.refreshIntervalMs ?? 900000
   useEffect(() => {

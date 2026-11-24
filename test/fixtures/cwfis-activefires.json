@@ -1,0 +1,3170 @@
+{
+ "captured": "2026-11-23T23:50Z, live CWFIS national active fires (geoserver.cwfif.nrcan.gc.ca, public:cwfif_national_activefires)",
+ "query": "WFS 2.0 GetFeature, outputFormat=application/json, srsName=EPSG:4326, CQL_FILTER=record_start<=now AND record_end>now",
+ "note": "complete response, unedited: 90 current fires",
+ "response": {
+  "type": "FeatureCollection",
+  "features": [
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20c9",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -64.6956,
+      45.7418
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 30952788,
+     "agency_code": "NB",
+     "region_code": null,
+     "national_fire_id": "2026_NB_2026396",
+     "agency_fire_id": "2026396",
+     "national_fire_cause": "U",
+     "fire_type_ics": 5,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 0.2,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-11-23T09:49:00Z",
+     "status_date": "2026-11-22T16:50:00Z",
+     "latitude": 45.74177,
+     "longitude": -64.69559,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-11-23T23:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20c8",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -121.7725,
+      52.4861
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 30911930,
+     "agency_code": "BC",
+     "region_code": "C3",
+     "national_fire_id": "2026_BC_2026-C32392",
+     "agency_fire_id": "2026-C32392",
+     "national_fire_cause": "H",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 0.5,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-11-13T15:09:00Z",
+     "status_date": "2026-11-19T08:30:00Z",
+     "latitude": 52.48613,
+     "longitude": -121.77248,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-11-16T23:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20c7",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -120.9398,
+      52.5751
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 30911929,
+     "agency_code": "BC",
+     "region_code": "C3",
+     "national_fire_id": "2026_BC_2026-C32391",
+     "agency_fire_id": "2026-C32391",
+     "national_fire_cause": "H",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 26,
+     "response_type": "MOD",
+     "stage_of_control_status": "BH",
+     "situation_report_date": "2026-11-13T14:39:00Z",
+     "status_date": "2026-11-16T13:30:00Z",
+     "latitude": 52.57508,
+     "longitude": -120.93975,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-11-16T23:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20c6",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -117.9208,
+      51.1348
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 30869144,
+     "agency_code": "PC",
+     "region_code": "RE",
+     "national_fire_id": "2026_PC_2026RE2",
+     "agency_fire_id": "2026RE2",
+     "national_fire_cause": "N",
+     "fire_type_ics": 4,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 111,
+     "response_type": "MON",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-07-26T04:28:00Z",
+     "status_date": "2026-07-27T07:00:00Z",
+     "latitude": 51.1348,
+     "longitude": -117.9208,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-11-09T23:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20c5",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -113.7093,
+      60.3429
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 30867352,
+     "agency_code": "PC",
+     "region_code": "WB",
+     "national_fire_id": "2026_PC_2026WB14",
+     "agency_fire_id": "2026WB14",
+     "national_fire_cause": "N",
+     "fire_type_ics": 4,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 2405,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-06-24T17:09:00Z",
+     "status_date": "2026-06-28T06:00:00Z",
+     "latitude": 60.3429,
+     "longitude": -113.7093,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-11-09T16:28:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20c4",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -113.6464,
+      58.9558
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 30867354,
+     "agency_code": "PC",
+     "region_code": "WB",
+     "national_fire_id": "2026_PC_2026WB16",
+     "agency_fire_id": "2026WB16",
+     "national_fire_cause": "N",
+     "fire_type_ics": 5,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 2439,
+     "response_type": "MOD",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-06-25T01:01:00Z",
+     "status_date": "2026-06-25T06:00:00Z",
+     "latitude": 58.9558,
+     "longitude": -113.6464,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-11-09T16:28:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20c3",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -113.9371,
+      60.0874
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 30867355,
+     "agency_code": "PC",
+     "region_code": "WB",
+     "national_fire_id": "2026_PC_2026WB17",
+     "agency_fire_id": "2026WB17",
+     "national_fire_cause": "N",
+     "fire_type_ics": 5,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 14855,
+     "response_type": "MOD",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-06-26T01:04:00Z",
+     "status_date": "2026-06-25T06:00:00Z",
+     "latitude": 60.0874,
+     "longitude": -113.9371,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-11-09T16:28:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20c2",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -113.3417,
+      60.209
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 30867356,
+     "agency_code": "PC",
+     "region_code": "WB",
+     "national_fire_id": "2026_PC_2026WB19",
+     "agency_fire_id": "2026WB19",
+     "national_fire_cause": "N",
+     "fire_type_ics": 5,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 22238,
+     "response_type": "MOD",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-06-26T01:12:00Z",
+     "status_date": "2026-06-25T06:00:00Z",
+     "latitude": 60.209,
+     "longitude": -113.3417,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-11-09T16:28:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20c1",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -112.8568,
+      60.116
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 30867358,
+     "agency_code": "PC",
+     "region_code": "WB",
+     "national_fire_id": "2026_PC_2026WB20",
+     "agency_fire_id": "2026WB20",
+     "national_fire_cause": "N",
+     "fire_type_ics": 4,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 11769,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-06-26T16:22:00Z",
+     "status_date": "2026-06-26T06:00:00Z",
+     "latitude": 60.116,
+     "longitude": -112.8568,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-11-09T16:28:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20c0",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -114.4418,
+      60.3283
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 30867362,
+     "agency_code": "PC",
+     "region_code": "WB",
+     "national_fire_id": "2026_PC_2026WB24",
+     "agency_fire_id": "2026WB24",
+     "national_fire_cause": "N",
+     "fire_type_ics": 5,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 207,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-08-23T21:35:00Z",
+     "status_date": "2026-08-23T06:00:00Z",
+     "latitude": 60.3283,
+     "longitude": -114.4418,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-11-09T16:28:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20bf",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -113.1578,
+      60.3469
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 30867363,
+     "agency_code": "PC",
+     "region_code": "WB",
+     "national_fire_id": "2026_PC_2026WB3",
+     "agency_fire_id": "2026WB3",
+     "national_fire_cause": "N",
+     "fire_type_ics": 5,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 2.2,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-05-22T00:07:00Z",
+     "status_date": "2026-05-21T06:00:00Z",
+     "latitude": 60.3469,
+     "longitude": -113.1578,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-11-09T16:28:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20be",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -113.1068,
+      60.354
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 30867364,
+     "agency_code": "PC",
+     "region_code": "WB",
+     "national_fire_id": "2026_PC_2026WB4",
+     "agency_fire_id": "2026WB4",
+     "national_fire_cause": "N",
+     "fire_type_ics": 2,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 51780,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-05-22T00:16:00Z",
+     "status_date": "2026-05-31T06:00:00Z",
+     "latitude": 60.354,
+     "longitude": -113.1068,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-11-09T16:28:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20bd",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -113.0924,
+      60.5578
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 30867369,
+     "agency_code": "PC",
+     "region_code": "WB",
+     "national_fire_id": "2026_PC_2026WB9",
+     "agency_fire_id": "2026WB9",
+     "national_fire_cause": "N",
+     "fire_type_ics": 3,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 760,
+     "response_type": "MOD",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-05-30T17:38:00Z",
+     "status_date": "2026-05-30T06:00:00Z",
+     "latitude": 60.5578,
+     "longitude": -113.0924,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-11-09T16:28:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20bc",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -114.9413,
+      49.6832
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 30865507,
+     "agency_code": "BC",
+     "region_code": "N1",
+     "national_fire_id": "2026_BC_2026-N12339",
+     "agency_fire_id": "2026-N12339",
+     "national_fire_cause": "H",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 2.54,
+     "response_type": "MOD",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-10-19T17:18:00Z",
+     "status_date": "2026-11-05T10:30:00Z",
+     "latitude": 49.68317,
+     "longitude": -114.94125,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-11-09T16:28:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20bb",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -115.8238,
+      50.1655
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 30865536,
+     "agency_code": "BC",
+     "region_code": "N2",
+     "national_fire_id": "2026_BC_2026-N22363",
+     "agency_fire_id": "2026-N22363",
+     "national_fire_cause": "H",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 0.15,
+     "response_type": "MOD",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-10-26T13:07:00Z",
+     "status_date": "2026-11-03T13:30:00Z",
+     "latitude": 50.16547,
+     "longitude": -115.8238,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-11-09T16:28:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20ba",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -88.7516,
+      49.598
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 30491546,
+     "agency_code": "ON",
+     "region_code": "NIP",
+     "national_fire_id": "2026_ON_NIP_FIRE_025",
+     "agency_fire_id": "NIP_FIRE_025",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 254,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-07-04T21:28:00Z",
+     "status_date": "2026-07-22T15:40:00Z",
+     "latitude": 49.598,
+     "longitude": -88.7516,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-10-29T15:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20b9",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -88.9017,
+      49.5879
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 30491949,
+     "agency_code": "ON",
+     "region_code": "THU",
+     "national_fire_id": "2026_ON_THU_FIRE_060",
+     "agency_fire_id": "THU_FIRE_060",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 419,
+     "response_type": "FUL",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-07-19T01:13:00Z",
+     "status_date": "2026-08-15T18:09:00Z",
+     "latitude": 49.5879,
+     "longitude": -88.9017,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-10-29T15:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20b8",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -121.4584,
+      49.9475
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 29727787,
+     "agency_code": "BC",
+     "region_code": "V1",
+     "national_fire_id": "2026_BC_2026-V10755",
+     "agency_fire_id": "2026-V10755",
+     "national_fire_cause": "H",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 69705,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-07-04T19:11:00Z",
+     "status_date": "2026-10-23T12:30:00Z",
+     "latitude": 49.94747,
+     "longitude": -121.45838,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-10-23T21:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20b7",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -121.4547,
+      49.8934
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 29727784,
+     "agency_code": "BC",
+     "region_code": "V1",
+     "national_fire_id": "2026_BC_2026-V10742",
+     "agency_fire_id": "2026-V10742",
+     "national_fire_cause": "H",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 9543,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-07-02T12:21:00Z",
+     "status_date": "2026-10-23T12:30:00Z",
+     "latitude": 49.89345,
+     "longitude": -121.45475,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-10-23T21:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20b6",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -123.3775,
+      57.9273
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 29446931,
+     "agency_code": "BC",
+     "region_code": "G9",
+     "national_fire_id": "2026_BC_2026-G92324",
+     "agency_fire_id": "2026-G92324",
+     "national_fire_cause": "H",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 0.5,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-10-08T14:21:00Z",
+     "status_date": "2026-10-21T09:02:00Z",
+     "latitude": 57.9273,
+     "longitude": -123.37745,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-10-21T18:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20b5",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -123.646,
+      57.8834
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 29446930,
+     "agency_code": "BC",
+     "region_code": "G9",
+     "national_fire_id": "2026_BC_2026-G92299",
+     "agency_fire_id": "2026-G92299",
+     "national_fire_cause": "H",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 42,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-09-29T16:27:00Z",
+     "status_date": "2026-10-21T09:02:00Z",
+     "latitude": 57.88342,
+     "longitude": -123.64605,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-10-21T18:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20b4",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -125.3754,
+      52.6884
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 28696087,
+     "agency_code": "BC",
+     "region_code": "C5",
+     "national_fire_id": "2026_BC_2026-C50929",
+     "agency_fire_id": "2026-C50929",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 6224.45,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-07-17T12:51:00Z",
+     "status_date": "2026-10-15T16:02:00Z",
+     "latitude": 52.68845,
+     "longitude": -125.37537,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-10-16T01:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20b3",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -91.3078,
+      48.2768
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 28378854,
+     "agency_code": "ON",
+     "region_code": "FOR",
+     "national_fire_id": "2026_ON_FOR_FIRE_013",
+     "agency_fire_id": "FOR_FIRE_013",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 25476,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-20T19:09:00Z",
+     "status_date": "2026-08-26T15:00:00Z",
+     "latitude": 48.2768,
+     "longitude": -91.3078,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-10-13T14:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20b2",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -121.6993,
+      61.3938
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 27485566,
+     "agency_code": "NT",
+     "region_code": "FS",
+     "national_fire_id": "2026_NT_FS011-26",
+     "agency_fire_id": "FS011-26",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": -1,
+     "percent_contained": -1,
+     "fire_size": 772,
+     "response_type": "FUL",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-01-01T00:00:00Z",
+     "status_date": "2026-11-23T23:45:00Z",
+     "latitude": 61.39383,
+     "longitude": -121.69933,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-10-06T17:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20b1",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -121.3981,
+      61.5054
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 27485569,
+     "agency_code": "NT",
+     "region_code": "FS",
+     "national_fire_id": "2026_NT_FS014-26",
+     "agency_fire_id": "FS014-26",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": -1,
+     "percent_contained": -1,
+     "fire_size": 4671,
+     "response_type": "FUL",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-01-01T00:00:00Z",
+     "status_date": "2026-11-23T23:45:00Z",
+     "latitude": 61.50545,
+     "longitude": -121.39813,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-10-06T17:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20b0",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -121.6966,
+      61.4165
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 27485567,
+     "agency_code": "NT",
+     "region_code": "FS",
+     "national_fire_id": "2026_NT_FS012-26",
+     "agency_fire_id": "FS012-26",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": -1,
+     "percent_contained": -1,
+     "fire_size": 0.1,
+     "response_type": "FUL",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-01-01T00:00:00Z",
+     "status_date": "2026-11-23T23:45:00Z",
+     "latitude": 61.41647,
+     "longitude": -121.69663,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-10-06T17:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20af",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -121.4275,
+      61.7758
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 27485571,
+     "agency_code": "NT",
+     "region_code": "FS",
+     "national_fire_id": "2026_NT_FS016-26",
+     "agency_fire_id": "FS016-26",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": -1,
+     "percent_contained": -1,
+     "fire_size": 66708,
+     "response_type": "FUL",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-01-01T00:00:00Z",
+     "status_date": "2026-11-23T23:45:00Z",
+     "latitude": 61.77583,
+     "longitude": -121.4275,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-10-06T17:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20ae",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -123.7712,
+      48.4874
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 26592624,
+     "agency_code": "BC",
+     "region_code": "V6",
+     "national_fire_id": "2026_BC_2026-V62262",
+     "agency_fire_id": "2026-V62262",
+     "national_fire_cause": "H",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 337.23,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-09-20T16:34:00Z",
+     "status_date": "2026-09-29T09:02:00Z",
+     "latitude": 48.48745,
+     "longitude": -123.77122,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-09-29T18:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20ad",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -122.4369,
+      50.2534
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 25981124,
+     "agency_code": "BC",
+     "region_code": "V3",
+     "national_fire_id": "2026_BC_2026-V30941",
+     "agency_fire_id": "2026-V30941",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 3772,
+     "response_type": "MOD",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-07-17T15:03:00Z",
+     "status_date": "2026-09-24T15:30:00Z",
+     "latitude": 50.25345,
+     "longitude": -122.43692,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-09-25T00:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20ac",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -89.468,
+      50.6828
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 25072967,
+     "agency_code": "ON",
+     "region_code": "THU",
+     "national_fire_id": "2026_ON_THU_FIRE_036",
+     "agency_fire_id": "THU_FIRE_036",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 301240,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-07-12T16:57:00Z",
+     "status_date": "2026-09-17T16:00:00Z",
+     "latitude": 50.6828,
+     "longitude": -89.468,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-09-17T17:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20ab",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -90.1717,
+      49.9828
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 24946481,
+     "agency_code": "ON",
+     "region_code": "DRY",
+     "national_fire_id": "2026_ON_DRY_FIRE_034",
+     "agency_fire_id": "DRY_FIRE_034",
+     "national_fire_cause": "H",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 45800,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-07-13T21:52:00Z",
+     "status_date": "2026-09-16T16:52:00Z",
+     "latitude": 49.9828,
+     "longitude": -90.1717,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-09-16T17:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20aa",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -90.098,
+      49.6301
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 24946482,
+     "agency_code": "ON",
+     "region_code": "DRY",
+     "national_fire_id": "2026_ON_DRY_FIRE_035",
+     "agency_fire_id": "DRY_FIRE_035",
+     "national_fire_cause": "H",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 30158.6,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-07-13T22:07:00Z",
+     "status_date": "2026-09-16T16:00:00Z",
+     "latitude": 49.6301,
+     "longitude": -90.098,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-09-16T17:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20a9",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -108.6513,
+      62.9988
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 24804170,
+     "agency_code": "PC",
+     "region_code": "TH",
+     "national_fire_id": "2026_PC_2026TH1",
+     "agency_fire_id": "2026TH1",
+     "national_fire_cause": "N",
+     "fire_type_ics": 5,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 1313,
+     "response_type": "MON",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-07-19T23:12:00Z",
+     "status_date": "2026-08-04T06:00:00Z",
+     "latitude": 62.9988,
+     "longitude": -108.6513,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-09-15T15:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20a8",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -107.4796,
+      62.8916
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 24804172,
+     "agency_code": "PC",
+     "region_code": "TH",
+     "national_fire_id": "2026_PC_2026TH2",
+     "agency_fire_id": "2026TH2",
+     "national_fire_cause": "N",
+     "fire_type_ics": 5,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 14,
+     "response_type": "MON",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-08-01T21:36:00Z",
+     "status_date": "2026-08-02T06:00:00Z",
+     "latitude": 62.8916,
+     "longitude": -107.4796,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-09-15T15:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20a7",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -121.8087,
+      50.9791
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 24329091,
+     "agency_code": "BC",
+     "region_code": "C4",
+     "national_fire_id": "2026_BC_2026-C40983",
+     "agency_fire_id": "2026-C40983",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 165909.406,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-07-17T19:01:00Z",
+     "status_date": "2026-09-21T08:02:00Z",
+     "latitude": 50.97912,
+     "longitude": -121.80867,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-09-11T21:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20a6",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -90.9869,
+      48.8934
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 23436727,
+     "agency_code": "ON",
+     "region_code": "FOR",
+     "national_fire_id": "2026_ON_FOR_FIRE_014",
+     "agency_fire_id": "FOR_FIRE_014",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 51928.3,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-06-30T21:24:00Z",
+     "status_date": "2026-09-04T17:00:00Z",
+     "latitude": 48.8934,
+     "longitude": -90.9869,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-09-04T20:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20a5",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -125.1412,
+      54.131
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 22262177,
+     "agency_code": "BC",
+     "region_code": "R1",
+     "national_fire_id": "2026_BC_2026-R11970",
+     "agency_fire_id": "2026-R11970",
+     "national_fire_cause": "H",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 0.009,
+     "response_type": "FUL",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-08-25T23:38:00Z",
+     "status_date": "2026-08-26T00:30:00Z",
+     "latitude": 54.131,
+     "longitude": -125.14124,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-26T09:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20a4",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -91.4154,
+      48.5429
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 21984638,
+     "agency_code": "ON",
+     "region_code": "FOR",
+     "national_fire_id": "2026_ON_FOR_FIRE_015",
+     "agency_fire_id": "FOR_FIRE_015",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 42273,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-30T23:23:00Z",
+     "status_date": "2026-08-26T15:00:00Z",
+     "latitude": 48.5429,
+     "longitude": -91.4154,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-24T01:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20a3",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -124.0119,
+      53.4043
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 21072472,
+     "agency_code": "BC",
+     "region_code": "C1",
+     "national_fire_id": "2026_BC_2026-C11112",
+     "agency_fire_id": "2026-C11112",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 1644,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-07-22T17:19:00Z",
+     "status_date": "2026-08-15T18:03:00Z",
+     "latitude": 53.40432,
+     "longitude": -124.01185,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-16T03:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20a2",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -123.9899,
+      53.169
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 21068702,
+     "agency_code": "BC",
+     "region_code": "C1",
+     "national_fire_id": "2026_BC_2026-C10952",
+     "agency_fire_id": "2026-C10952",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 1588,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-07-17T15:55:00Z",
+     "status_date": "2026-08-15T17:03:00Z",
+     "latitude": 53.16905,
+     "longitude": -123.98987,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-16T02:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20a1",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -122.2528,
+      50.0441
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 20482108,
+     "agency_code": "BC",
+     "region_code": "V1",
+     "national_fire_id": "2026_BC_2026-V11112",
+     "agency_fire_id": "2026-V11112",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 1644,
+     "response_type": "FUL",
+     "stage_of_control_status": "BH",
+     "situation_report_date": "2026-07-22T17:19:00Z",
+     "status_date": "2026-08-10T09:02:00Z",
+     "latitude": 50.04413,
+     "longitude": -122.25285,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-10T18:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-20a0",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -79.1022,
+      50.0783
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 20471936,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_413",
+     "agency_fire_id": "413",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 64636.7,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-27T21:10:00Z",
+     "status_date": "2026-07-02T11:54:00Z",
+     "latitude": 50.0783,
+     "longitude": -79.1022,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-10T16:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-209f",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -78.3261,
+      51.605
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 20471778,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_271",
+     "agency_fire_id": "271",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 8,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 31136.9,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-25T20:42:00Z",
+     "status_date": "2026-07-10T21:38:00Z",
+     "latitude": 51.605,
+     "longitude": -78.3261,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-10T16:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-209e",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -78.9553,
+      50.055
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 20471792,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_284",
+     "agency_fire_id": "284",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 3,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 34957.9,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-06-26T18:43:00Z",
+     "status_date": "2026-07-19T18:49:00Z",
+     "latitude": 50.055,
+     "longitude": -78.9553,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-10T16:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-209d",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -67.9417,
+      56.3919
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 20471846,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_332",
+     "agency_fire_id": "332",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 5,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 12892.8,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-28T00:48:00Z",
+     "status_date": "2026-06-29T13:51:00Z",
+     "latitude": 56.3919,
+     "longitude": -67.9417,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-10T16:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-209c",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -70.6275,
+      53.4958
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 20471986,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_459",
+     "agency_fire_id": "459",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 5,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 21174.4,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-28T22:01:00Z",
+     "status_date": "2026-06-28T22:01:00Z",
+     "latitude": 53.4958,
+     "longitude": -70.6275,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-10T16:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-209b",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -78.5522,
+      50.5758
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 20472002,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_473",
+     "agency_fire_id": "473",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 21136,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-27T21:10:00Z",
+     "status_date": "2026-07-02T19:20:00Z",
+     "latitude": 50.5758,
+     "longitude": -78.5522,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-10T16:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-209a",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -74.1025,
+      50.9933
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 20471931,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_409",
+     "agency_fire_id": "409",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 2,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 914.3,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-28T22:00:00Z",
+     "status_date": "2026-06-30T20:59:00Z",
+     "latitude": 50.9933,
+     "longitude": -74.1025,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-10T16:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2099",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -67.0631,
+      58.0272
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 20469537,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_293",
+     "agency_fire_id": "293",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 2,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 6814.5,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-26T17:02:00Z",
+     "status_date": "2026-06-28T13:06:00Z",
+     "latitude": 58.0272,
+     "longitude": -67.0631,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-10T15:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2098",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -68.8053,
+      57.245
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 20469550,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_304",
+     "agency_fire_id": "304",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 2,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 7112.1,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-26T16:59:00Z",
+     "status_date": "2026-06-28T13:06:00Z",
+     "latitude": 57.245,
+     "longitude": -68.8053,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-10T15:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2097",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -70.5256,
+      52.7144
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 20469654,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_399",
+     "agency_fire_id": "399",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 2,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 1307.6,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-23T23:46:00Z",
+     "status_date": "2026-06-30T18:50:00Z",
+     "latitude": 52.7144,
+     "longitude": -70.5256,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-10T15:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2096",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -75.1242,
+      52.3058
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 20465420,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_641",
+     "agency_fire_id": "641",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 0,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 1030,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-07-31T18:53:00Z",
+     "status_date": "2026-08-04T21:38:00Z",
+     "latitude": 52.3058,
+     "longitude": -75.1242,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-10T14:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2095",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -76.9108,
+      51.6831
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 20349901,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_645",
+     "agency_fire_id": "645",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 4,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 0,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-08-06T12:00:00Z",
+     "status_date": "2026-08-07T19:52:00Z",
+     "latitude": 51.6831,
+     "longitude": -76.9108,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-09T13:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2094",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -78.9033,
+      53.0461
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 20173599,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_632",
+     "agency_fire_id": "632",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 0,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 15.5,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-07-31T04:00:00Z",
+     "status_date": "2026-07-31T18:47:00Z",
+     "latitude": 53.0461,
+     "longitude": -78.9033,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-07T22:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2093",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -78.9503,
+      50.8892
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 20148638,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_377",
+     "agency_fire_id": "377",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 0,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 18388.1,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-05-25T21:48:00Z",
+     "status_date": "2026-06-30T14:37:00Z",
+     "latitude": 50.8892,
+     "longitude": -78.9503,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-07T17:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2092",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -76.4897,
+      52.2664
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 19953771,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_633",
+     "agency_fire_id": "633",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 2,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 1.3,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-07-30T04:00:00Z",
+     "status_date": "2026-07-31T20:00:00Z",
+     "latitude": 52.2664,
+     "longitude": -76.4897,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-05T20:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2091",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -66.3097,
+      52.6106
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 19943691,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_504",
+     "agency_fire_id": "504",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 1632.3,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-29T16:48:00Z",
+     "status_date": "2026-06-29T16:48:00Z",
+     "latitude": 52.6106,
+     "longitude": -66.3097,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-05T18:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2090",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -75.2639,
+      56.1803
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 19844402,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_640",
+     "agency_fire_id": "640",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 0,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 0.6,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-07-31T04:00:00Z",
+     "status_date": "2026-08-04T18:39:00Z",
+     "latitude": 56.1803,
+     "longitude": -75.2639,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-04T20:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-208f",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -75.2772,
+      55.9617
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 19841942,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_639",
+     "agency_fire_id": "639",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 0,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 0.2,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-07-31T04:00:00Z",
+     "status_date": "2026-08-04T18:38:00Z",
+     "latitude": 55.9617,
+     "longitude": -75.2772,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-04T19:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-208e",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -79.0561,
+      53.8514
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 19829184,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_635",
+     "agency_fire_id": "635",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 0,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-07-31T04:00:00Z",
+     "status_date": "2026-08-02T21:32:00Z",
+     "latitude": 53.8514,
+     "longitude": -79.0561,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-04T16:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-208d",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -66.5569,
+      56.9258
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 19738011,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_416",
+     "agency_fire_id": "416",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 0,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 20059.1,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-29T17:06:00Z",
+     "status_date": "2026-06-29T17:06:00Z",
+     "latitude": 56.9258,
+     "longitude": -66.5569,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-03T19:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-208c",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -69.2275,
+      56.1703
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 19728492,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_421",
+     "agency_fire_id": "421",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 0,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 11667,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-29T20:02:00Z",
+     "status_date": "2026-06-29T20:02:00Z",
+     "latitude": 56.1703,
+     "longitude": -69.2275,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-03T17:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-208b",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -78.6331,
+      50.2878
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 19722567,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_290",
+     "agency_fire_id": "290",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 3,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 11183.6,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-26T18:53:00Z",
+     "status_date": "2026-07-22T17:05:00Z",
+     "latitude": 50.2878,
+     "longitude": -78.6331,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-03T16:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-208a",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -72.2228,
+      53.5925
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 19722617,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_335",
+     "agency_fire_id": "335",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 2,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 9450.5,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-27T21:07:00Z",
+     "status_date": "2026-07-01T20:05:00Z",
+     "latitude": 53.5925,
+     "longitude": -72.2228,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-03T16:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2089",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -78.9986,
+      54.2378
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 19649510,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_638",
+     "agency_fire_id": "638",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 18.8,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-07-31T04:00:00Z",
+     "status_date": "2026-07-31T04:00:00Z",
+     "latitude": 54.2378,
+     "longitude": -78.9986,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-02T23:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2088",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -113.9608,
+      58.8847
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 19609996,
+     "agency_code": "PC",
+     "region_code": "WB",
+     "national_fire_id": "2026_PC_2026WB23",
+     "agency_fire_id": "2026WB23",
+     "national_fire_cause": "N",
+     "fire_type_ics": 5,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 23.3,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-07-16T02:17:00Z",
+     "status_date": "2026-07-15T06:00:00Z",
+     "latitude": 58.8847,
+     "longitude": -113.9608,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-02T14:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2087",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -77.0572,
+      52.0072
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 19531803,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_327",
+     "agency_fire_id": "327",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 5,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 2161.3,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-28T20:32:00Z",
+     "status_date": "2026-07-21T09:26:00Z",
+     "latitude": 52.0072,
+     "longitude": -77.0572,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-01T20:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2086",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -76.715,
+      52.1392
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 19513872,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_376",
+     "agency_fire_id": "376",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 5,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 3378.8,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-28T20:44:00Z",
+     "status_date": "2026-07-21T12:33:00Z",
+     "latitude": 52.1392,
+     "longitude": -76.715,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-08-01T16:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2085",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -112.8549,
+      58.9658
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 19333861,
+     "agency_code": "PC",
+     "region_code": "WB",
+     "national_fire_id": "2026_PC_2026WB8",
+     "agency_fire_id": "2026WB8",
+     "national_fire_cause": "N",
+     "fire_type_ics": 4,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 1357,
+     "response_type": "MOD",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-05-30T19:49:00Z",
+     "status_date": "2026-05-30T06:00:00Z",
+     "latitude": 58.9658,
+     "longitude": -112.8549,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-07-30T22:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2084",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -113.3894,
+      59.4312
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 19333859,
+     "agency_code": "PC",
+     "region_code": "WB",
+     "national_fire_id": "2026_PC_2026WB6",
+     "agency_fire_id": "2026WB6",
+     "national_fire_cause": "N",
+     "fire_type_ics": 5,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 659,
+     "response_type": "MOD",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-05-28T18:48:00Z",
+     "status_date": "2026-05-28T06:00:00Z",
+     "latitude": 59.4312,
+     "longitude": -113.3894,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-07-30T22:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2083",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -113.6355,
+      59.2882
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 19333860,
+     "agency_code": "PC",
+     "region_code": "WB",
+     "national_fire_id": "2026_PC_2026WB7",
+     "agency_fire_id": "2026WB7",
+     "national_fire_cause": "N",
+     "fire_type_ics": 5,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 42,
+     "response_type": "MOD",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-05-28T23:43:00Z",
+     "status_date": "2026-05-30T06:00:00Z",
+     "latitude": 59.2882,
+     "longitude": -113.6355,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-07-30T22:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2082",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -75.3033,
+      55.4483
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 19312537,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_491",
+     "agency_fire_id": "491",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 2,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 504.8,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-07-01T07:12:00Z",
+     "status_date": "2026-07-01T07:12:00Z",
+     "latitude": 55.4483,
+     "longitude": -75.3033,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-07-30T17:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2081",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -78.3894,
+      51.3631
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 19312312,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_289",
+     "agency_fire_id": "289",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 7,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 3072.2,
+     "response_type": "MOD",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-26T20:56:00Z",
+     "status_date": "2026-07-21T12:32:00Z",
+     "latitude": 51.3631,
+     "longitude": -78.3894,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-07-30T17:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2080",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -67.6639,
+      52.9028
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 19106367,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_358",
+     "agency_fire_id": "358",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 5,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 8484.6,
+     "response_type": "MOD",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-29T19:33:00Z",
+     "status_date": "2026-07-20T16:03:00Z",
+     "latitude": 52.9028,
+     "longitude": -67.6639,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-07-28T15:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-207f",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -69.7017,
+      52.315
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 18836708,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_215",
+     "agency_fire_id": "215",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 0,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 25764.4,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-17T16:56:00Z",
+     "status_date": "2026-06-18T16:26:00Z",
+     "latitude": 52.315,
+     "longitude": -69.7017,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-07-25T21:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-207e",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -76.6408,
+      51.5861
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 18719667,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_559",
+     "agency_fire_id": "559",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 9,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 70.3,
+     "response_type": "MOD",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-07-12T17:53:00Z",
+     "status_date": "2026-07-22T17:55:00Z",
+     "latitude": 51.5861,
+     "longitude": -76.6408,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-07-24T15:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-207d",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -125.1442,
+      54.105
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 18496868,
+     "agency_code": "BC",
+     "region_code": "R1",
+     "national_fire_id": "2026_BC_2026-R11095",
+     "agency_fire_id": "2026-R11095",
+     "national_fire_cause": "H",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 0.009,
+     "response_type": "FUL",
+     "stage_of_control_status": "BH",
+     "situation_report_date": "2026-07-21T19:26:00Z",
+     "status_date": "2026-07-21T21:02:00Z",
+     "latitude": 54.10498,
+     "longitude": -125.14415,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-07-22T06:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-207c",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -79.4517,
+      49.5236
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 18366666,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_545",
+     "agency_fire_id": "545",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 2,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 1434.2,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-07-10T18:50:00Z",
+     "status_date": "2026-07-18T21:40:00Z",
+     "latitude": 49.5236,
+     "longitude": -79.4517,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-07-20T17:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-207b",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -76.7611,
+      51.4564
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 18203309,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_562",
+     "agency_fire_id": "562",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 13,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 22.3,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-07-08T18:42:00Z",
+     "status_date": "2026-07-12T23:12:00Z",
+     "latitude": 51.4564,
+     "longitude": -76.7611,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-07-18T22:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-207a",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -113.5006,
+      60.0181
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 17917967,
+     "agency_code": "PC",
+     "region_code": "WB",
+     "national_fire_id": "2026_PC_2026WB22",
+     "agency_fire_id": "2026WB22",
+     "national_fire_cause": "N",
+     "fire_type_ics": 5,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 1.5,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-07-13T02:49:00Z",
+     "status_date": "2026-07-12T06:00:00Z",
+     "latitude": 60.0181,
+     "longitude": -113.5006,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-07-15T15:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2079",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -71.3172,
+      56.2172
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 17717608,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_432",
+     "agency_fire_id": "432",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 3,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 6113.5,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-29T11:48:00Z",
+     "status_date": "2026-06-29T11:48:00Z",
+     "latitude": 56.2172,
+     "longitude": -71.3172,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-07-13T03:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2078",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -78.6939,
+      51.3103
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 17567772,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_307",
+     "agency_fire_id": "307",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 7,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 1088.2,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-26T19:01:00Z",
+     "status_date": "2026-07-10T21:36:00Z",
+     "latitude": 51.3103,
+     "longitude": -78.6939,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-07-11T03:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2077",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -62.5819,
+      50.5758
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 17538846,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2020_QC_499",
+     "agency_fire_id": "499",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 11.1,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2020-06-30T00:16:00Z",
+     "status_date": "2020-06-30T00:16:00Z",
+     "latitude": 50.5758,
+     "longitude": -62.5819,
+     "fire_year": 2020,
+     "status_year": 2020,
+     "record_start": "2026-07-10T18:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2076",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -78.0989,
+      50.5164
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 17463998,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2026_QC_475",
+     "agency_fire_id": "475",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 354.1,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2026-06-26T17:04:00Z",
+     "status_date": "2026-07-03T12:33:00Z",
+     "latitude": 50.5164,
+     "longitude": -78.0989,
+     "fire_year": 2026,
+     "status_year": 2026,
+     "record_start": "2026-07-09T18:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2075",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -69.1489,
+      53.1167
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 17463582,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2023_QC_270",
+     "agency_fire_id": "270",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 0,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 6167.4,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2023-05-25T18:20:00Z",
+     "status_date": "2023-05-25T18:20:00Z",
+     "latitude": 53.1167,
+     "longitude": -69.1489,
+     "fire_year": 2023,
+     "status_year": 2023,
+     "record_start": "2026-07-09T18:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2074",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -72.8983,
+      53.8775
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 16503902,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2023_QC_245",
+     "agency_fire_id": "245",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 1220.4,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2023-06-23T12:00:00Z",
+     "status_date": "2026-06-23T19:10:00Z",
+     "latitude": 53.8775,
+     "longitude": -72.8983,
+     "fire_year": 2023,
+     "status_year": 2026,
+     "record_start": "2026-06-25T01:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2073",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -71.2486,
+      55.1556
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 16482225,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2023_QC_246",
+     "agency_fire_id": "246",
+     "national_fire_cause": "N",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 0,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 4.7,
+     "response_type": "MON",
+     "stage_of_control_status": "OC",
+     "situation_report_date": "2023-06-23T12:00:00Z",
+     "status_date": "2026-06-23T21:03:00Z",
+     "latitude": 55.1556,
+     "longitude": -71.2486,
+     "fire_year": 2023,
+     "status_year": 2026,
+     "record_start": "2026-06-24T14:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2072",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -75.7269,
+      45.9136
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 14804438,
+     "agency_code": "QC",
+     "region_code": null,
+     "national_fire_id": "2020_QC_165",
+     "agency_fire_id": "165",
+     "national_fire_cause": "H",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": 0,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 0.8,
+     "response_type": "FUL",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2020-05-26T22:32:00Z",
+     "status_date": "2026-05-27T18:50:00Z",
+     "latitude": 45.9136,
+     "longitude": -75.7269,
+     "fire_year": 2020,
+     "status_year": 2026,
+     "record_start": "2026-05-27T19:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2071",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -122.314,
+      51.3349
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 12339701,
+     "agency_code": "BC",
+     "region_code": "C2",
+     "national_fire_id": "2025_BC_2025-C22352",
+     "agency_fire_id": "2025-C22352",
+     "national_fire_cause": "H",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 28,
+     "response_type": "MOD",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-03-23T14:47:00Z",
+     "status_date": "2026-03-26T14:02:00Z",
+     "latitude": 51.33495,
+     "longitude": -122.314,
+     "fire_year": 2025,
+     "status_year": 2026,
+     "record_start": "2026-03-26T23:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   },
+   {
+    "type": "Feature",
+    "id": "cwfif_national_activefires.fid--6a2c1c07_1a20adc21b0_-2070",
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -122.4817,
+      50.5273
+     ]
+    },
+    "geometry_name": "geometry",
+    "properties": {
+     "id": 11880343,
+     "agency_code": "BC",
+     "region_code": "V3",
+     "national_fire_id": "2025_BC_2025-V32337",
+     "agency_fire_id": "2025-V32337",
+     "national_fire_cause": "H",
+     "fire_type_ics": -1,
+     "severity_nearest_dsr": -1,
+     "fire_was_prescribed": 0,
+     "percent_contained": -1,
+     "fire_size": 0.1,
+     "response_type": "MON",
+     "stage_of_control_status": "UC",
+     "situation_report_date": "2026-03-16T10:33:00Z",
+     "status_date": "2026-03-18T18:02:00Z",
+     "latitude": 50.5273,
+     "longitude": -122.4817,
+     "fire_year": 2025,
+     "status_year": 2026,
+     "record_start": "2026-03-19T03:45:00Z",
+     "record_end": "2026-12-31T23:59:59.999Z"
+    }
+   }
+  ],
+  "totalFeatures": 90,
+  "numberMatched": 90,
+  "numberReturned": 90,
+  "timeStamp": "2026-11-24T00:02:41.496Z",
+  "crs": {
+   "type": "name",
+   "properties": {
+    "name": "urn:ogc:def:crs:EPSG::4326"
+   }
+  }
+ }
+}
