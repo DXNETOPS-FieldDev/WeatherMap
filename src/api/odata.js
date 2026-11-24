@@ -95,7 +95,7 @@ function buildDevicesQuery({ id, startTime, endTime }) {
   const { topLimit, resolution } = getConfig().odata
   return (
     '/pc/odata4/api/devices' +
-    '?$select=GlobalID,ID,Name,PrimaryIPAddress,Location,Longitude,Latitude' +
+    '?$select=GlobalID,ID,Name,PrimaryIPAddress,Location,Longitude,Latitude,SupportedProtocols,PolledItemCount' +
     `&$filter=(Latitude ne null) and (groups/any(L1:L1/ID eq ${id}))` +
     '&$expand=cpuandmemorymfs($apply=groupby((DeviceItemID),' +
       'aggregate(' +
@@ -128,8 +128,13 @@ function parseDevicesCsv(text) {
 
 // AppNeta Monitoring Points (e.g. "dev-vk35-Miami-AppNeta") are synthetic
 // probes, not real network devices — excluded by default via the
-// `includeAppNeta` runtime-config flag.
-function isAppNetaDevice(device) {
+// `includeAppNeta` runtime-config flag. So are AppNeta path targets (an ISP
+// hop, a web site): PC lists them as devices too, with no IP address, no
+// protocols and nothing polled, whatever they are named. The AppNeta MPs
+// overlay draws them as targets when it is on.
+export function isAppNetaDevice(device) {
+  if (!device) return false
+  if (!device.ip && device.protocols === '' && device.polledItems === 0) return true
   if (!device.name) return false
   const n = device.name.toLowerCase()
   return n.includes('vk35') || n.includes('appneta')
@@ -149,7 +154,7 @@ function isSdwanController(device) {
   )
 }
 
-function normalizeDevice(row) {
+export function normalizeDevice(row) {
   return {
     id: row.ID,
     globalId: row.GlobalID,
@@ -161,6 +166,9 @@ function normalizeDevice(row) {
     cpu: numOrNull(row['cpuandmemorymfs/Value']),
     memory: numOrNull(row['cpuandmemorymfs/Value1']),
     disk: numOrNull(row['cpuandmemorymfs/Value2']),
+    // '' when PC sent the column empty; undefined when the column wasn't asked for.
+    protocols: 'SupportedProtocols' in row ? (row.SupportedProtocols == null ? '' : String(row.SupportedProtocols)) : undefined,
+    polledItems: numOrNull(row.PolledItemCount),
   }
 }
 

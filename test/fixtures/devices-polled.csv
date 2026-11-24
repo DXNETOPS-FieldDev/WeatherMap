@@ -1,0 +1,8 @@
+"GlobalID","ID","Name","PrimaryIPAddress","Location","Longitude","Latitude","SupportedProtocols","PolledItemCount","cpuandmemorymfs/DeviceItemID","cpuandmemorymfs/Value","cpuandmemorymfs/Value1","cpuandmemorymfs/Value2"
+194,7115,vnf-001-newyork,192.0.2.101,NewYorkCity; US,-74.005974,40.712776,SNMP;ICMP,22,7115,2.3333333333,69.6666666667,7
+97277,309675,router-2.example.com,192.0.2.2,Atlanta/US,-84.389815,33.754466,SNMP;ICMP,42,,,,
+84983,357153,seattle-isp-2,,,-122.33285,47.60614,,0,,,,
+116845,364518,cluster01-vrops1,,,-121.184845,45.601772,,1,,,,
+175183,515655,web.example.com,,,-70.75468,43.070206,,0,,,,
+84987,752085,vk35-seattle-appneta,,,-122.33285,47.60614,,0,,,,
+297797,1078200,den-hq-ap-f1-01,192.0.2.161,,-104.9903,39.7392,ICMP,0,,,,
