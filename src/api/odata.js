@@ -26,7 +26,68 @@ export async function fetchDevices({ id, startTime, endTime, debug }) {
     throw new Error(`Devices query failed: HTTP ${response.status}`)
   }
   const text = await response.text()
-  return parseDevicesCsv(text)
+  const devices = parseDevicesCsv(text)
+  if (debug) return devices
+  return fillComponentMetrics(devices, { startTime, endTime }, { resolution: getConfig().odata.resolution })
+}
+
+// Some devices report CPU and memory only per component — one row per CPU in cpumfs, one per memory pool in
+// memorymfs — and have nothing in the device-level cpuandmemorymfs the devices query reads (measured
+// 2026-11-24: 22 of 109 lab devices, among them Cisco routers and switches). For those, fall back to the
+// component values, averaged across the device's CPUs or pools: the same number PC's own "Average CPU /
+// Memory Utilization" gauges show (checked on a 49-CPU, 4-pool device: 50.26% / 49.43% in both).
+const COMPONENT_FAMILIES = [
+  { set: 'cpumfs', field: 'cpu' },
+  { set: 'memorymfs', field: 'memory' },
+]
+
+export function componentMetricsQuery(set, ids, { startTime, endTime }, resolution) {
+  return (
+    `/pc/odata4/api/${set}` +
+    `?$filter=${encodeURIComponent(`DeviceItemID in (${ids.join(',')})`)}` +
+    `&$apply=${encodeURIComponent('groupby((DeviceItemID),aggregate(im_Utilization with average as Value))')}` +
+    `&starttime=${startTime}` +
+    `&endtime=${endTime}` +
+    `&resolution=${resolution}` +
+    '&$format=application/json'
+  )
+}
+
+/** Map<DeviceItemID, average utilization>. A null average (not collected) is left out, not read as 0. */
+export function parseComponentMetrics(resp) {
+  const out = new Map()
+  for (const row of Array.isArray(resp?.value) ? resp.value : []) {
+    if (typeof row?.Value === 'number' && Number.isFinite(row.Value)) out.set(row.DeviceItemID, row.Value)
+  }
+  return out
+}
+
+/**
+ * Fill each device's missing cpu / memory from its component metrics. Device-level values are never replaced.
+ * Only devices missing a value are queried, in batches. A failed query leaves the devices as they were.
+ */
+// 40 ids per request: the Thresholds variant saw Performance Center answer 400 to 89 ids in one URL.
+export async function fillComponentMetrics(devices, window, { fetchImpl = fetch, resolution, log = console, batchSize = 40 } = {}) {
+  const found = {}
+  try {
+    for (const { set, field } of COMPONENT_FAMILIES) {
+      const ids = devices.filter((d) => d[field] == null && d.id != null).map((d) => d.id)
+      found[field] = new Map()
+      for (let i = 0; i < ids.length; i += batchSize) {
+        const response = await fetchImpl(componentMetricsQuery(set, ids.slice(i, i + batchSize), window, resolution))
+        if (!response.ok) throw new Error(`${set} query failed: HTTP ${response.status}`)
+        for (const [id, v] of parseComponentMetrics(await response.json())) found[field].set(id, v)
+      }
+    }
+  } catch (e) {
+    log.warn(`Component CPU/memory fallback skipped: ${e.message}`)
+    return devices
+  }
+  return devices.map((d) => {
+    const cpu = d.cpu ?? found.cpu.get(d.id) ?? null
+    const memory = d.memory ?? found.memory.get(d.id) ?? null
+    return cpu === d.cpu && memory === d.memory ? d : { ...d, cpu, memory }
+  })
 }
 
 function buildDevicesQuery({ id, startTime, endTime }) {

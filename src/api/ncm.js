@@ -2,6 +2,7 @@ import { getConfig } from '../lib/config.js'
 import {
   buildNcmIndex,
   latestComplianceEventByDevice,
+  ncmDeviceList,
   normalizeComplianceStatus,
 } from '../lib/ncm-compliance.js'
 
@@ -42,13 +43,14 @@ export async function fetchNcmCompliance() {
   if (res.status === 404) return { enabled: false }
   if (!res.ok) return { enabled: true, error: await errorText(res) }
 
-  let devices
+  let body
   try {
-    devices = await res.json()
+    body = await res.json()
   } catch {
     return { enabled: true, error: 'NCM returned a device list that is not JSON' }
   }
-  if (!Array.isArray(devices)) {
+  const devices = ncmDeviceList(body)
+  if (!devices) {
     return { enabled: true, error: 'NCM returned an unexpected device list shape' }
   }
 

@@ -15,6 +15,7 @@ import {
   ncmDeviceLink,
   ncmInfoForDevice,
   nonCompliantDevices,
+  ncmDeviceList,
 } from '../src/lib/ncm-compliance.js'
 
 const NET = '0a110483bfe3cc3fa4211b129a010000'
@@ -48,6 +49,36 @@ const R2 = ncmDevice('R2', { ip: '192.168.102.2', compliance: 'NonCompliant' })
 const R3 = ncmDevice('R3', { ip: '192.168.103.2', compliance: 'NonCompliant' })
 const CE1 = ncmDevice('CE1', { ip: '192.168.100.6' })
 const FLEET = [R1, R2, R3, CE1]
+
+describe('ncmDeviceList', () => {
+  // devices/info as NCM answered on both our Portals on 2026-11-11.
+  const wrapped = (devices) => ({ devices, limit: 10000, offset: 0, totalRecordCount: devices.length })
+
+  test('unwraps the paged object NCM returns', () => {
+    const list = [ncmDevice('R1', { compliance: 'NonCompliant' }), ncmDevice('C1')]
+    assert.deepEqual(ncmDeviceList(wrapped(list)), list)
+  })
+
+  test('the unwrapped list matches map devices', () => {
+    const index = buildNcmIndex(ncmDeviceList(wrapped([ncmDevice('R1', { ip: '192.168.103.1' })])))
+    assert.equal(matchNcmDevice(index, { name: 'R1.mydomain.com' })?.deviceName, 'R1')
+  })
+
+  test('an empty NCM is an empty list, not an error', () => {
+    assert.deepEqual(ncmDeviceList(wrapped([])), [])
+  })
+
+  test('still accepts a bare array', () => {
+    const list = [ncmDevice('C1')]
+    assert.deepEqual(ncmDeviceList(list), list)
+  })
+
+  test('anything else is rejected with null', () => {
+    for (const body of [null, undefined, 'devices', 42, {}, { devices: 'x' }, { devices: null }, { value: [] }]) {
+      assert.equal(ncmDeviceList(body), null, JSON.stringify(body))
+    }
+  })
+})
 
 describe('matchNcmDevice', () => {
   const index = buildNcmIndex(FLEET)
