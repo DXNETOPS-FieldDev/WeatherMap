@@ -761,3 +761,18 @@ body,
 /* Device marker hover tooltip: host name (bold), IP, NCM note. */
 .device-tooltip { font-size: 12px; line-height: 1.4; }
 .device-tooltip-name { font-weight: 600; }
+
+/* AppNeta target popup: each target, then the paths ending at it (links open PC). */
+.appneta-anchor-target + .appneta-anchor-target {
+  margin-top: 6px;
+}
+
+.appneta-anchor-target-name {
+  font-weight: 600;
+}
+
+.appneta-anchor-path {
+  padding-left: 12px;
+  font-size: 0.9em;
+  color: #555;
+}
