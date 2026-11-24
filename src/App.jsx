@@ -21,6 +21,9 @@ import {
   gatewayStatuses,
   describeGatewayStatus,
   isGatewayProblem,
+  withoutGateways,
+  selectTunnels,
+  gatewayLegendRows,
 } from './lib/gateways.js'
 import DeviceMarker from './components/DeviceMarker.jsx'
 import RainviewerLayer from './components/RainviewerLayer.jsx'
@@ -206,6 +209,8 @@ export default function App() {
   const [gatewaysReady, setGatewaysReady] = useState(!gatewaysConfigured)
   const [gatewaysLayerOn, setGatewaysLayerOn] = useState(true)
   const [allGatewaysOn, setAllGatewaysOn] = useState(false)
+  // Gateways the operator unticked in the Sites legend's Gateways section (empty = all selected).
+  const [deselectedGatewayIds, setDeselectedGatewayIds] = useState(() => new Set())
   useEffect(() => {
     if (allGatewaysOn) setGatewaysLayerOn(true)
   }, [allGatewaysOn])
@@ -247,6 +252,12 @@ export default function App() {
   const groupDeviceIds = useMemo(() => new Set(devices.map((d) => d.id)), [devices])
   // Gateways that can end a tunnel on this map: drawable, and not already in
   // the group. Passed to the tunnel fetch as a stable string key.
+  // Every listed gateway that can be drawn, members of the group included: the gateway layer draws these,
+  // the group's markers leave them out, and the selector in the Sites legend lists them.
+  const listedGatewayIds = useMemo(
+    () => new Set(gatewaysToShow({ gateways: gatewayDevices, groupDeviceIds, showAll: true }).map((g) => g.id)),
+    [gatewayDevices, groupDeviceIds],
+  )
   const gatewayEndpointKey = useMemo(
     () => gatewaysToShow({ gateways: gatewayDevices, groupDeviceIds, showAll: true }).map((g) => g.id).join(','),
     [gatewayDevices, groupDeviceIds],
@@ -444,12 +455,12 @@ export default function App() {
   const shownGateways = useMemo(
     () => withNcm(
       withOutages(
-        gatewaysToShow({ gateways: gatewayDevices, tunnels, groupDeviceIds, showAll: allGatewaysOn }),
+        gatewaysToShow({ gateways: gatewayDevices, tunnels, groupDeviceIds, showAll: allGatewaysOn, deselected: deselectedGatewayIds }),
         outages,
       ),
       ncm,
     ),
-    [gatewayDevices, tunnels, groupDeviceIds, allGatewaysOn, outages, ncm],
+    [gatewayDevices, tunnels, groupDeviceIds, allGatewaysOn, deselectedGatewayIds, outages, ncm],
   )
   // Only drawn gateways can anchor a tunnel line: TunnelLayer skips a tunnel
   // whose endpoint isn't here, so unchecking Gateways hides their tunnels too.
@@ -459,8 +470,8 @@ export default function App() {
   )
 
   const devicesById = useMemo(
-    () => new Map([...dedupedDevices, ...drawnGateways].map((d) => [d.id, d])),
-    [dedupedDevices, drawnGateways],
+    () => new Map([...withoutGateways(dedupedDevices, listedGatewayIds), ...drawnGateways].map((d) => [d.id, d])),
+    [dedupedDevices, listedGatewayIds, drawnGateways],
   )
 
   // Per-device visibility toggle for tunnel rendering. Tracked as the
@@ -476,20 +487,39 @@ export default function App() {
       return next
     })
   }, [])
+  // Site rows hide a site's tunnels; the Gateways section picks which gateways' tunnels show (selectTunnels).
   const visibleTunnels = useMemo(
-    () => tunnels.filter(
-      (t) => !hiddenDeviceIds.has(t.sourceId) && !hiddenDeviceIds.has(t.destId),
-    ),
-    [tunnels, hiddenDeviceIds],
+    () => selectTunnels({
+      tunnels,
+      gatewayIds: listedGatewayIds,
+      deselected: deselectedGatewayIds,
+      hiddenSiteIds: hiddenDeviceIds,
+      showGatewayMesh: allGatewaysOn,
+    }),
+    [tunnels, listedGatewayIds, deselectedGatewayIds, hiddenDeviceIds, allGatewaysOn],
   )
+  const toggleGateway = useCallback((id) => {
+    setDeselectedGatewayIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
+  const onlyGateway = useCallback((id) => {
+    setDeselectedGatewayIds(new Set([...listedGatewayIds].filter((g) => g !== id)))
+  }, [listedGatewayIds])
+  const setAllGatewaysSelected = useCallback((selected) => {
+    setDeselectedGatewayIds(selected ? new Set() : new Set(listedGatewayIds))
+  }, [listedGatewayIds])
   // Devices that appear as either endpoint in any tunnel — the universe
   // covered by the tunnel legend's per-site rows. Used by the legend's
   // header "select all" checkbox.
   const tunnelDeviceIds = useMemo(
     () => new Set(
-      tunnels.flatMap((t) => [t.sourceId, t.destId]).filter((id) => id != null),
+      tunnels.flatMap((t) => [t.sourceId, t.destId]).filter((id) => id != null && !listedGatewayIds.has(id)),
     ),
-    [tunnels],
+    [tunnels, listedGatewayIds],
   )
   const setAllTunnelDevicesVisible = useCallback((visible) => {
     setHiddenDeviceIds(visible ? new Set() : new Set(tunnelDeviceIds))
@@ -613,11 +643,13 @@ export default function App() {
     ]),
     [renderableAppnetaMps, orphanAppnetaMps],
   )
+  // Listed gateways that are members of the group are drawn by the gateway layer, not here.
   const clusterDevices = useMemo(
-    () => (appnetaLayerOn
-      ? devicesWithNcm.filter((d) => !appnetaMpIdSet.has(d.id))
-      : devicesWithNcm),
-    [devicesWithNcm, appnetaLayerOn, appnetaMpIdSet],
+    () => withoutGateways(
+      appnetaLayerOn ? devicesWithNcm.filter((d) => !appnetaMpIdSet.has(d.id)) : devicesWithNcm,
+      listedGatewayIds,
+    ),
+    [devicesWithNcm, appnetaLayerOn, appnetaMpIdSet, listedGatewayIds],
   )
   const nonCompliantClusterDevices = useMemo(() => nonCompliantDevices(clusterDevices), [clusterDevices])
   const ncmFilterActive = ncmFilterOn && ncmAvailable
@@ -652,9 +684,15 @@ export default function App() {
   // What the status banner says about gateways: how many are drawn, and on
   // hover, one line per configured gateway saying why it is or isn't shown —
   // so a site where one doesn't appear can tell why from a screenshot.
+  // Tunnels that belong to the site: everything except those between two listed gateways (the backbone),
+  // so the banner's per-gateway counts match the Gateways section of the Sites legend.
+  const siteTunnels = useMemo(
+    () => tunnels.filter((t) => !(listedGatewayIds.has(t.sourceId) && listedGatewayIds.has(t.destId))),
+    [tunnels, listedGatewayIds],
+  )
   const gatewayReport = useMemo(() => {
     if (!gatewaysConfigured || params.debug) return null
-    const statuses = gatewayStatuses(gatewayRefs, gatewayDevices, tunnels, groupDeviceIds)
+    const statuses = gatewayStatuses(gatewayRefs, gatewayDevices, siteTunnels, groupDeviceIds)
     const lines = gatewayError
       ? [`Gateways could not be loaded: ${gatewayError}`]
       : statuses.map((st) => describeGatewayStatus(st, { showAll: allGatewaysOn }))
@@ -664,16 +702,29 @@ export default function App() {
       lines,
       warn: Boolean(gatewayError) || gatewayRefs.truncated || statuses.some(isGatewayProblem),
     }
-  }, [gatewaysConfigured, params.debug, gatewayRefs, gatewayDevices, tunnels, groupDeviceIds,
+  }, [gatewaysConfigured, params.debug, gatewayRefs, gatewayDevices, siteTunnels, groupDeviceIds,
     gatewayError, allGatewaysOn, drawnGateways])
   useOverlayLabels(envControlRef, { 'Power Outages': outagesLabel })
+  // The Gateways section of the Sites legend (null when no gateways are configured).
+  const gatewayRows = useMemo(
+    () => (gatewaysConfigured && !params.debug
+      ? gatewayLegendRows({
+        statuses: gatewayStatuses(gatewayRefs, gatewayDevices, siteTunnels, groupDeviceIds),
+        gateways: gatewayDevices,
+        tunnels,
+        gatewayIds: listedGatewayIds,
+        deselected: deselectedGatewayIds,
+      })
+      : null),
+    [gatewaysConfigured, params.debug, gatewayRefs, gatewayDevices, siteTunnels, tunnels, groupDeviceIds, listedGatewayIds, deselectedGatewayIds],
+  )
 
   return (
     <div className="app">
       <StatusBanner
         loading={loading}
         error={error}
-        count={dedupedDevices.length}
+        count={withoutGateways(dedupedDevices, listedGatewayIds).length}
         shown={ncmFilterActive ? displayedDevices.length : null}
         debug={params.debug}
         gateways={gatewayReport}
@@ -828,6 +879,11 @@ export default function App() {
             hiddenDeviceIds={hiddenDeviceIds}
             onToggleDevice={toggleDeviceVisibility}
             onToggleAll={setAllTunnelDevicesVisible}
+            gatewayIds={listedGatewayIds}
+            gatewayRows={gatewayRows}
+            onToggleGateway={toggleGateway}
+            onOnlyGateway={onlyGateway}
+            onAllGateways={setAllGatewaysSelected}
           />
         )}
         {config.showAppNetaLegend && appnetaLayerOn && (

@@ -145,11 +145,13 @@ describe('gatewaysToShow', () => {
     assert.deepEqual(out.map((d) => d.id), [1, 2])
   })
 
-  test('a gateway already in the group is not drawn twice, even with show-all', () => {
+  // Changed 2026-11-24 (client feedback: their DEL group contains the gateways): a listed gateway that is a
+  // member of the group is drawn AS A GATEWAY, flagged memberOfGroup, so the gateway selector reaches it; the
+  // group's own markers leave it out (withoutGateways), so it is still drawn once.
+  test('a listed gateway that is a member of the group is shown as a gateway, even with no tunnel to it', () => {
     const grp = new Set([100, 1])
-    const tunnels = [tun(10, 100, 1)]
-    assert.deepEqual(gatewaysToShow({ gateways: [SIN], tunnels, groupDeviceIds: grp }), [])
-    assert.deepEqual(gatewaysToShow({ gateways: [SIN], tunnels, groupDeviceIds: grp, showAll: true }), [])
+    const out = gatewaysToShow({ gateways: [SIN], tunnels: [], groupDeviceIds: grp })
+    assert.deepEqual(out.map((d) => [d.id, d.gateway, d.memberOfGroup]), [[1, true, true]])
   })
 
   test('a device without coordinates is never drawn, even with show-all', () => {
@@ -303,7 +305,7 @@ describe('describeGatewayStatus (the words in the status banner tooltip)', () =>
   test('already in the group', () => {
     assert.equal(
       describeGatewayStatus(st(7115, 'ingroup')),
-      'ID 7115: already in this group — shown as one of its devices',
+      'ID 7115: member of this group — shown as a gateway',
     )
   })
 

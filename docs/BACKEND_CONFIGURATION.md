@@ -182,6 +182,9 @@ Instead, list the hubs in `runtime-config.json`:
   be off-screen; its tunnel line leads to it.
 - Gateways need a latitude and longitude in Performance Center, like any
   device on the map.
+- A site's group doesn't need to contain its gateways. If a listed gateway
+  *is* a member of the group, it is still drawn as a gateway (a square) and
+  can be selected like the others.
 - Up to 50 entries are used. Leave the list empty (the default) to turn
   the feature off; WeatherMap then behaves exactly as without it.
 - Takes effect on the next page load; no restart. `setup.sh` doesn't ask
@@ -197,13 +200,23 @@ that is signed in to the Portal (replace the name). The answer lists
 /pc/odata4/api/devices?$select=ID,Name&$filter=Name eq 'SIN-GW-01'&$format=application/json
 ```
 
-**What you see:** gateways are drawn as **squares**, outside the clusters,
-and aren't counted in `Devices (n)`. The Network menu gains **Gateways
-(n)**, to hide them and their tunnels, and **Show all gateways**, which
-also draws listed gateways the group has no tunnel to. The status banner
-adds "+ n gateways"; hover over it to see, for each listed gateway,
-whether it is shown and why not (see
+**What you see:** gateways are drawn as **squares**, outside the clusters
+(and beneath them where they overlap, so a cluster stays clickable), and
+aren't counted in `Devices (n)`. The Network menu gains **Gateways (n)**,
+to hide them all with their tunnels, and **Show all gateways**, which also
+draws listed gateways the group has no tunnel to, and the tunnels between
+two listed gateways. The status banner adds "+ n gateways"; hover over it
+to see, for each listed gateway, whether it is shown and why not (see
 [Troubleshooting](#troubleshooting)).
+
+**Selecting gateways:** with SD-WAN Tunnels on, the **Sites** legend starts
+with a **Gateways** section: one row per listed gateway with its number of
+tunnels from the site. Untick a gateway to hide it and the tunnels that end
+at it; click **only** next to a name to show just that gateway; the header
+box selects all or none. The site rows below work as before. Tunnels between
+two listed gateways (the backbone, not the site's) are hidden unless **Show
+all gateways** is on and both are selected. A listed gateway that can't be
+drawn is shown greyed, with the reason.
 
 ---
 

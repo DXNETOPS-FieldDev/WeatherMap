@@ -109,18 +109,75 @@ function destinationCounts(tunnels) {
 
 /**
  * Which fetched gateway devices to draw, each as a copy flagged `gateway: true`.
- * Automatic mode draws a gateway only when a tunnel ENDS at it (the fetch only
- * returns tunnels starting at the group's devices). `showAll` draws every
- * configured gateway that can be placed. A gateway that is already a member of
- * the group is the group's own marker, and one without coordinates can't be
- * drawn, so neither is ever returned.
+ * Automatic mode draws a gateway outside the group only when a tunnel ENDS at it
+ * (the fetch only returns tunnels starting at the group's devices); `showAll`
+ * draws every configured one that can be placed. A listed gateway that is a
+ * MEMBER of the group is always drawn here, flagged `memberOfGroup`, so the
+ * gateway selector reaches it (the group markers leave it out: withoutGateways).
+ * One without coordinates can't be drawn. `deselected` gateways are left out.
  */
-export function gatewaysToShow({ gateways, tunnels, groupDeviceIds, showAll } = {}) {
+export function gatewaysToShow({ gateways, tunnels, groupDeviceIds, showAll, deselected } = {}) {
   const group = toSet(groupDeviceIds)
+  const off = toSet(deselected)
   const linked = destinationCounts(tunnels)
   return (Array.isArray(gateways) ? gateways : [])
-    .filter((g) => g && hasCoordinates(g) && !group.has(g.id) && (showAll || linked.has(g.id)))
-    .map((g) => ({ ...g, gateway: true }))
+    .filter((g) => g && hasCoordinates(g) && !off.has(g.id) && (group.has(g.id) || showAll || linked.has(g.id)))
+    .map((g) => ({ ...g, gateway: true, ...(group.has(g.id) ? { memberOfGroup: true } : {}) }))
+}
+
+/** The group's devices without the listed gateways, which the gateway layer draws instead. */
+export function withoutGateways(devices, gatewayIds) {
+  const gw = toSet(gatewayIds)
+  if (gw.size === 0) return devices
+  return (Array.isArray(devices) ? devices : []).filter((d) => !gw.has(d?.id))
+}
+
+/**
+ * The tunnels to draw. A tunnel with one end at a listed gateway is drawn when that gateway is selected
+ * and the other end isn't hidden in the site rows. A tunnel between two listed gateways (the backbone, not
+ * the site's) is drawn only with `showGatewayMesh` ("Show all gateways") and both ends selected. Any other
+ * tunnel follows the site rows: drawn unless either end is hidden, as before.
+ */
+export function selectTunnels({ tunnels, gatewayIds, deselected, hiddenSiteIds, showGatewayMesh = false } = {}) {
+  const gw = toSet(gatewayIds)
+  const off = toSet(deselected)
+  const hidden = toSet(hiddenSiteIds)
+  return (Array.isArray(tunnels) ? tunnels : []).filter((t) => {
+    if (!t) return false
+    const a = gw.has(t.sourceId)
+    const b = gw.has(t.destId)
+    if (a && b) return showGatewayMesh && !off.has(t.sourceId) && !off.has(t.destId)
+    if (a) return !off.has(t.sourceId) && !hidden.has(t.destId)
+    if (b) return !off.has(t.destId) && !hidden.has(t.sourceId)
+    return !hidden.has(t.sourceId) && !hidden.has(t.destId)
+  })
+}
+
+/**
+ * Rows for the Gateways section of the Sites legend: one per drawable gateway (sorted by name) with the
+ * number of site tunnels to it and whether it is selected, then one per configured gateway that can't be
+ * drawn, not selectable, with the reason in the banner's words.
+ */
+export function gatewayLegendRows({ statuses, gateways, tunnels, gatewayIds, deselected } = {}) {
+  const gw = toSet(gatewayIds)
+  const off = toSet(deselected)
+  const counts = new Map()
+  for (const t of Array.isArray(tunnels) ? tunnels : []) {
+    if (!t) continue
+    const a = gw.has(t.sourceId)
+    const b = gw.has(t.destId)
+    if (a === b) continue // site-to-site, or gateway-to-gateway
+    const id = a ? t.sourceId : t.destId
+    counts.set(id, (counts.get(id) || 0) + 1)
+  }
+  const drawable = (Array.isArray(gateways) ? gateways : [])
+    .filter((g) => g && gw.has(g.id))
+    .map((g) => ({ id: g.id, name: g.name, tunnels: counts.get(g.id) || 0, selected: !off.has(g.id), selectable: true }))
+    .sort((x, y) => String(x.name).localeCompare(String(y.name)))
+  const problems = (Array.isArray(statuses) ? statuses : [])
+    .filter((st) => st && (st.status === 'nocoordinates' || st.status === 'notfound'))
+    .map((st) => ({ id: null, name: String(st.ref), tunnels: 0, selected: false, selectable: false, reason: describeGatewayStatus(st).replace(/^[^:]*: /, '') }))
+  return [...drawable, ...problems]
 }
 
 /**
@@ -185,7 +242,7 @@ export function describeGatewayStatus(s, { showAll = false } = {}) {
         ? `${who}: not found — no device has this ID`
         : `${who}: not found — no device has exactly this name (names are case-sensitive)`
     case 'ingroup':
-      return `${who}: already in this group — shown as one of its devices`
+      return `${who}: member of this group — shown as a gateway`
     default:
       return `${who}: status unknown`
   }

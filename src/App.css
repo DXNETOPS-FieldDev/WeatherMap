@@ -830,3 +830,10 @@ body,
   letter-spacing: 0.5px;
   vertical-align: 1px;
 }
+
+/* Gateways section of the Sites legend (WeatherMap Beta). */
+.gateway-table { margin-bottom: 6px; }
+.gateway-table .gateway-count { color: #666; font-size: 11px; white-space: nowrap; }
+.gateway-table .gateway-unavailable td { color: #999; }
+.gateway-only { margin-left: 4px; padding: 0 4px; font-size: 10px; border: 1px solid #bbb; border-radius: 3px; background: #f5f5f5; cursor: pointer; }
+.gateway-only:hover { background: #e0e0e0; }

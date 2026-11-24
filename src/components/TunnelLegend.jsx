@@ -31,7 +31,7 @@ function fmt(n) {
   return (Math.round(n * 10) / 10).toFixed(1)
 }
 
-function computeSiteAverages(tunnels, devicesById) {
+function computeSiteAverages(tunnels, devicesById, skipIds) {
   const sums = new Map()
   for (const t of tunnels) {
     for (const id of [t.sourceId, t.destId]) {
@@ -47,6 +47,7 @@ function computeSiteAverages(tunnels, devicesById) {
   }
   const rows = []
   for (const [id, s] of sums) {
+    if (skipIds && skipIds.has(id)) continue
     const device = devicesById.get(id)
     if (!device) continue
     rows.push({
@@ -67,11 +68,44 @@ function escapeHtml(s) {
   }[c]))
 }
 
-function renderContent(div, metricIdx, tunnels, devicesById, hiddenDeviceIds, filter) {
+// The Gateways section (WeatherMap Beta): one row per configured gateway, ticked = its tunnels drawn, with
+// "only" to focus on one; gateways that can't be drawn are listed greyed with the reason.
+function gatewaySectionHtml(rows, filter) {
+  if (!rows || rows.length === 0) return ''
+  const q = (filter || '').trim().toLowerCase()
+  const shown = q ? rows.filter((r) => (r.name || '').toLowerCase().includes(q)) : rows
+  const selectable = rows.filter((r) => r.selectable)
+  const body = shown.map((r) => r.selectable
+    ? `<tr class="gateway-row">` +
+        `<td class="tunnel-legend-check-col"><input type="checkbox" data-gateway-id="${r.id}"${r.selected ? ' checked' : ''} aria-label="Toggle tunnels to ${escapeHtml(r.name || '')}"></td>` +
+        `<td>${escapeHtml(r.name || '?')} <button type="button" class="gateway-only" data-only-gateway="${r.id}" title="Show only this gateway's tunnels">only</button></td>` +
+        `<td class="gateway-count">${r.tunnels} tunnel${r.tunnels === 1 ? '' : 's'}</td>` +
+      `</tr>`
+    : `<tr class="gateway-row gateway-unavailable" title="${escapeHtml(r.reason || '')}">` +
+        `<td class="tunnel-legend-check-col"><input type="checkbox" disabled aria-label="${escapeHtml(r.name || '')}: ${escapeHtml(r.reason || '')}"></td>` +
+        `<td>${escapeHtml(r.name || '?')}</td>` +
+        `<td class="gateway-count">${escapeHtml(r.reason || '')}</td>` +
+      `</tr>`,
+  ).join('')
+  return (
+    `<table class="tunnel-legend-table gateway-table">` +
+      `<thead><tr>` +
+        `<th class="tunnel-legend-check-col">` +
+          (selectable.length ? `<input type="checkbox" data-toggle-all-gateways aria-label="Toggle all gateways">` : '') +
+        `</th>` +
+        `<th colspan="2">Gateways</th>` +
+      `</tr></thead>` +
+      `<tbody>${body || '<tr><td></td><td colspan="2" class="tunnel-legend-empty">No matching gateway.</td></tr>'}</tbody>` +
+    `</table>`
+  )
+}
+
+function renderContent(div, metricIdx, tunnels, devicesById, hiddenDeviceIds, filter, gatewayIds, gatewayRows) {
   const thresholds = getConfig().tunnels.thresholds
   const metric = METRICS[metricIdx]
   const bands = thresholds[metric.key] || [0, 0, 0]
-  const allRows = computeSiteAverages(tunnels || [], devicesById || new Map())
+  const allRows = computeSiteAverages(tunnels || [], devicesById || new Map(), gatewayIds)
+  const gatewayHtml = gatewaySectionHtml(gatewayRows, filter)
   const hidden = hiddenDeviceIds || new Set()
   const q = (filter || '').trim().toLowerCase()
   const rows = q
@@ -90,11 +124,13 @@ function renderContent(div, metricIdx, tunnels, devicesById, hiddenDeviceIds, fi
   if (!wrapEl) return
 
   if (!allRows.length) {
-    wrapEl.innerHTML = '<div class="tunnel-legend-empty">No tunnel data yet.</div>'
+    wrapEl.innerHTML = gatewayHtml + '<div class="tunnel-legend-empty">No tunnel data yet.</div>'
+    setGatewayHeader(wrapEl, gatewayRows)
     return
   }
   if (!rows.length) {
-    wrapEl.innerHTML = `<div class="tunnel-legend-empty">No matches for "${escapeHtml(filter)}".</div>`
+    wrapEl.innerHTML = gatewayHtml + `<div class="tunnel-legend-empty">No matches for "${escapeHtml(filter)}".</div>`
+    setGatewayHeader(wrapEl, gatewayRows)
     return
   }
 
@@ -128,6 +164,7 @@ function renderContent(div, metricIdx, tunnels, devicesById, hiddenDeviceIds, fi
   // table back to the top when the user was scrolled mid-list.
   const prevScroll = wrapEl.scrollTop
   wrapEl.innerHTML =
+    gatewayHtml +
     `<table class="tunnel-legend-table">` +
       `<thead><tr>` +
         `<th class="tunnel-legend-check-col">` +
@@ -138,6 +175,7 @@ function renderContent(div, metricIdx, tunnels, devicesById, hiddenDeviceIds, fi
       `<tbody>${rowsHtml}</tbody>` +
     `</table>`
   wrapEl.scrollTop = prevScroll
+  setGatewayHeader(wrapEl, gatewayRows)
 
   // Tri-state header checkbox: checked when ALL rows are visible,
   // unchecked when ALL are hidden, indeterminate when partial.
@@ -154,6 +192,17 @@ function renderContent(div, metricIdx, tunnels, devicesById, hiddenDeviceIds, fi
   }
 }
 
+// Tri-state "all gateways" header, like the sites' one (indeterminate is a property, not an attribute).
+function setGatewayHeader(wrapEl, gatewayRows) {
+  const cb = wrapEl.querySelector('input[data-toggle-all-gateways]')
+  if (!cb) return
+  const sel = (gatewayRows || []).filter((r) => r.selectable)
+  const all = sel.length > 0 && sel.every((r) => r.selected)
+  const none = sel.length > 0 && sel.every((r) => !r.selected)
+  cb.checked = all
+  cb.indeterminate = !all && !none
+}
+
 /**
  * SDWAN-style "Sites" panel. Control + draggable + resize observer are
  * created ONCE per show (effect deps [map, hidden]); data/metric changes
@@ -162,7 +211,10 @@ function renderContent(div, metricIdx, tunnels, devicesById, hiddenDeviceIds, fi
  * when a map resize coincided with a re-render — keeping the same div +
  * draggable instance avoids that race entirely.
  */
-export default function TunnelLegend({ tunnels, devicesById, hiddenDeviceIds, onToggleDevice, onToggleAll }) {
+export default function TunnelLegend({
+  tunnels, devicesById, hiddenDeviceIds, onToggleDevice, onToggleAll,
+  gatewayIds, gatewayRows, onToggleGateway, onOnlyGateway, onAllGateways,
+}) {
   const map = useMap()
   const [hidden, setHidden] = useState(false)
   const [metricIdx, setMetricIdx] = useState(0)
@@ -180,6 +232,10 @@ export default function TunnelLegend({ tunnels, devicesById, hiddenDeviceIds, on
   useEffect(() => { onToggleRef.current = onToggleDevice }, [onToggleDevice])
   const onToggleAllRef = useRef(onToggleAll)
   useEffect(() => { onToggleAllRef.current = onToggleAll }, [onToggleAll])
+  const gatewayHandlersRef = useRef({})
+  useEffect(() => {
+    gatewayHandlersRef.current = { toggle: onToggleGateway, only: onOnlyGateway, all: onAllGateways }
+  }, [onToggleGateway, onOnlyGateway, onAllGateways])
 
   // Mount the control once per show. Does NOT depend on data/metric, so
   // user-driven drag/CSS-resize state survives all data refreshes.
@@ -247,7 +303,11 @@ export default function TunnelLegend({ tunnels, devicesById, hiddenDeviceIds, on
       const onChange = (e) => {
         const cb = e.target
         if (!(cb && cb.tagName === 'INPUT' && cb.type === 'checkbox')) return
-        if (cb.hasAttribute('data-toggle-all')) {
+        if (cb.hasAttribute('data-toggle-all-gateways')) {
+          gatewayHandlersRef.current.all?.(cb.checked)
+        } else if (cb.dataset.gatewayId != null) {
+          gatewayHandlersRef.current.toggle?.(Number(cb.dataset.gatewayId))
+        } else if (cb.hasAttribute('data-toggle-all')) {
           if (onToggleAllRef.current) onToggleAllRef.current(cb.checked)
         } else if (cb.dataset.deviceId != null) {
           const id = Number(cb.dataset.deviceId)
@@ -256,6 +316,14 @@ export default function TunnelLegend({ tunnels, devicesById, hiddenDeviceIds, on
       }
       div.addEventListener('change', onChange)
       div._onChange = onChange
+      const onClick = (e) => {
+        const btn = e.target && e.target.closest ? e.target.closest('button[data-only-gateway]') : null
+        if (!btn) return
+        e.preventDefault()
+        gatewayHandlersRef.current.only?.(Number(btn.dataset.onlyGateway))
+      }
+      div.addEventListener('click', onClick)
+      div._onClick = onClick
 
       if (typeof ResizeObserver !== 'undefined') {
         resizeObs = new ResizeObserver((entries) => {
@@ -291,6 +359,7 @@ export default function TunnelLegend({ tunnels, devicesById, hiddenDeviceIds, on
       if (draggable) draggable.disable()
       const d = divRef.current
       if (d && d._onChange) d.removeEventListener('change', d._onChange)
+      if (d && d._onClick) d.removeEventListener('click', d._onClick)
       control.remove()
       divRef.current = null
     }
@@ -302,8 +371,8 @@ export default function TunnelLegend({ tunnels, devicesById, hiddenDeviceIds, on
     if (hidden) return
     const div = divRef.current
     if (!div) return
-    renderContent(div, metricIdx, tunnels, devicesById, hiddenDeviceIds, filter)
-  }, [hidden, metricIdx, tunnels, devicesById, hiddenDeviceIds, filter])
+    renderContent(div, metricIdx, tunnels, devicesById, hiddenDeviceIds, filter, gatewayIds, gatewayRows)
+  }, [hidden, metricIdx, tunnels, devicesById, hiddenDeviceIds, filter, gatewayIds, gatewayRows])
 
   return null
 }

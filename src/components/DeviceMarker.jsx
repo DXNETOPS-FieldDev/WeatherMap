@@ -82,7 +82,9 @@ export default function DeviceMarker({ device, weatherApiKey, registerMarker }) 
   const position = useMemo(() => [device.latitude, device.longitude], [device.latitude, device.longitude])
 
   return (
-    <Marker ref={markerRef} position={position} icon={icon}>
+    // A gateway square goes under cluster bubbles and device markers at the same spot, so they stay clickable
+    // (seen 2026-11-24: a gateway over a "3" bubble made the bubble impossible to open).
+    <Marker ref={markerRef} position={position} icon={icon} zIndexOffset={device.gateway ? -1000 : 0}>
       <TabbedPopup device={device} apiKey={weatherApiKey} />
     </Marker>
   )
