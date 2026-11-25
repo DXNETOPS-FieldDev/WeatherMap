@@ -1,7 +1,7 @@
 import { LayerGroup, Marker, Polyline, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import { getConfig } from '../lib/config.js'
-import { targetPopupRows } from '../lib/appnetaTargets.js'
+import { targetPopupRows, anchorSharesMpSpot, groupBySpot } from '../lib/appnetaTargets.js'
 
 // Target-anchor marker — used for the non-MP endpoints of AppNeta paths
 // (ISP labels like "chicago-isp-1", public hostnames like "web.mydomain.com",
@@ -14,6 +14,15 @@ const TARGET_ICON = L.icon({
   iconSize: [32, 32],
   iconAnchor: [16, 16],
   popupAnchor: [0, -16],
+})
+
+// The same globe drawn 18 px down and to the right of its point, for a target at an MP's spot: centred on the
+// point it would cover the MP's bullseye. The paths still end at the true point (the bullseye's centre).
+const TARGET_ICON_BESIDE_MP = L.icon({
+  iconUrl: './appneta-target-icon.png',
+  iconSize: [32, 32],
+  iconAnchor: [-2, -2],
+  popupAnchor: [18, 2],
 })
 
 // AppNeta MP marker — a classic bullseye target: concentric thin rings
@@ -166,25 +175,25 @@ export default function AppNetaLayer({ paths, appnetaMps, targetRecords = new Ma
   const thresholds = cfg.thresholds
   const curveMagnitude = cfg.curveMagnitude ?? 0.9
 
-  // Index paths by an anchor key so multiple paths sharing the same target
-  // coords get their endpoint marker rendered once with a combined popup.
-  const anchors = new Map()
-  for (const p of safePaths) {
-    const key = `${p.targetLat.toFixed(4)},${p.targetLng.toFixed(4)}`
-    let a = anchors.get(key)
-    if (!a) {
-      a = { lat: p.targetLat, lng: p.targetLng, locality: p.targetLocality, paths: [] }
-      anchors.set(key, a)
-    }
-    a.paths.push(p)
-  }
+  // One globe per spot: paths whose targets sit within a few km of each other share it and its popup (the
+  // targets' AppNeta coordinates can differ by a few hundred metres within a city). Each path's line still ends
+  // at its own target's point.
+  const anchors = groupBySpot(safePaths, (p) => p.targetLat, (p) => p.targetLng).map((g) => ({
+    lat: g.lat,
+    lng: g.lng,
+    locality: g.items[0].targetLocality,
+    paths: g.items,
+  }))
+  // One bullseye per spot, its popup listing every MP there: two MPs at the same point would be drawn one
+  // exactly on top of the other.
+  const mpSpots = groupBySpot(safeMps, (m) => m.latitude, (m) => m.longitude)
 
   return (
     <LayerGroup>
-      {safeMps.map((m) => (
+      {mpSpots.map((spot) => (
         <Marker
-          key={`mp-${m.id}`}
-          position={[m.latitude, m.longitude]}
+          key={`mp-${spot.items.map((m) => m.id).join('-')}`}
+          position={[spot.lat, spot.lng]}
           icon={MP_ICON}
           // Stack above the device cluster regardless of click order — a
           // user clicking the SDWan bubble underneath shouldn't be able
@@ -194,32 +203,30 @@ export default function AppNetaLayer({ paths, appnetaMps, targetRecords = new Ma
         >
           <Popup>
             <div className="appneta-popup">
-              <strong>
-                {m.globalId != null ? (
-                  <a
-                    href={`/pc/redirector?ItemID=${m.globalId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {m.name}
-                  </a>
-                ) : (
-                  m.name
-                )}
-              </strong>
-              <br />
-              <small>AppNeta Monitoring Point</small>
-              {m.ip && <><br /><small>{m.ip}</small></>}
+              {spot.items.map((m, i) => (
+                <div key={m.id}>
+                  {i > 0 && <hr />}
+                  <strong>
+                    <LinkOrText
+                      href={m.globalId != null ? `/pc/redirector?ItemID=${m.globalId}` : null}
+                      text={m.name}
+                    />
+                  </strong>
+                  <br />
+                  <small>AppNeta Monitoring Point</small>
+                  {m.ip && <><br /><small>{m.ip}</small></>}
+                </div>
+              ))}
             </div>
           </Popup>
         </Marker>
       ))}
 
-      {[...anchors.values()].map((a, i) => (
+      {anchors.map((a, i) => (
         <Marker
           key={`anchor-${i}`}
           position={[a.lat, a.lng]}
-          icon={TARGET_ICON}
+          icon={anchorSharesMpSpot(a, safeMps) ? TARGET_ICON_BESIDE_MP : TARGET_ICON}
           // Stack above the device cluster, same as MP bullseyes — globe
           // targets often land on cities that also have SDWan devices
           // (NYC, Chicago) and would otherwise be buried.

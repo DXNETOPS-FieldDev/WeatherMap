@@ -49,3 +49,37 @@ export function targetPopupRows(paths, recordsByName) {
     }
   })
 }
+
+// Within this many degrees (about 5 km) two AppNeta markers are drawn on the same spot.
+const SAME_SPOT_DEG = 0.05
+
+const sameSpot = (lat1, lng1, lat2, lng2) =>
+  Math.abs(lat1 - lat2) <= SAME_SPOT_DEG && Math.abs(lng1 - lng2) <= SAME_SPOT_DEG
+
+/**
+ * True when a target globe (`{ lat, lng }`) sits on a monitoring point. A city's ISP targets often carry the
+ * MP's own coordinates, and the globe then covers the bullseye completely, so the layer draws it to one side.
+ */
+export function anchorSharesMpSpot(anchor, mps) {
+  return mps.some(
+    (m) => m.latitude != null && m.longitude != null && sameSpot(m.latitude, m.longitude, anchor.lat, anchor.lng),
+  )
+}
+
+/**
+ * Groups items that sit on the same spot, so each spot gets one marker: `[{ lat, lng, items }]`, in input order,
+ * each group at its first item's point. Two markers there would be drawn one on top of the other, and the one
+ * underneath could not be clicked. Items without coordinates are left out.
+ */
+export function groupBySpot(items, latOf, lngOf) {
+  const groups = []
+  for (const item of items) {
+    const lat = latOf(item)
+    const lng = lngOf(item)
+    if (lat == null || lng == null) continue
+    const g = groups.find((x) => sameSpot(x.lat, x.lng, lat, lng))
+    if (g) g.items.push(item)
+    else groups.push({ lat, lng, items: [item] })
+  }
+  return groups
+}

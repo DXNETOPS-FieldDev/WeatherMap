@@ -1,0 +1,186 @@
+{
+  "_source": "Captured 2026-11-25 from a lab Portal: monitoring points with coordinates (PC OData devices) and the AppNeta targets of their paths (v3/path targetLocation). Names anonymised (MP-<City>, documentation IP, example.com); coordinates as captured. 'sameSpot' captured 2026-11-25 from a second lab Portal: two MPs with identical coordinates (OData float32), and one city's paths, two of them carrying AppNeta coordinates ~600 m from the rest.",
+  "mps": [
+    {
+      "name": "MP-NewYork",
+      "latitude": 40.712776,
+      "longitude": -74.005974
+    },
+    {
+      "name": "MP-Chicago",
+      "latitude": 41.878113,
+      "longitude": -87.6298
+    },
+    {
+      "name": "MP-SanFrancisco-EXT",
+      "latitude": 37.77493,
+      "longitude": -122.41942
+    },
+    {
+      "name": "MP-SanFrancisco",
+      "latitude": 37.77493,
+      "longitude": -122.41942
+    },
+    {
+      "name": "MP-Houston",
+      "latitude": 29.760427,
+      "longitude": -95.369804
+    },
+    {
+      "name": "MP-LongIsland",
+      "latitude": 40.79343,
+      "longitude": -73.41512
+    },
+    {
+      "name": "MP-Miami",
+      "latitude": 25.76168,
+      "longitude": -80.19179
+    },
+    {
+      "name": "MP-Seattle",
+      "latitude": 47.60614,
+      "longitude": -122.33285
+    },
+    {
+      "name": "MP-Dallas",
+      "latitude": 32.776665,
+      "longitude": -96.79699
+    },
+    {
+      "name": "MP-Nashville",
+      "latitude": 36.162663,
+      "longitude": -86.7816
+    },
+    {
+      "name": "MP-Denver",
+      "latitude": 39.739235,
+      "longitude": -104.99025
+    }
+  ],
+  "targets": [
+    {
+      "target": "192.0.2.40",
+      "targetLat": 40.712776,
+      "targetLng": -74.005974,
+      "locality": "New York"
+    },
+    {
+      "target": "chicago-isp-1",
+      "targetLat": 41.878113,
+      "targetLng": -87.6298,
+      "locality": "Chicago"
+    },
+    {
+      "target": "chicago-isp-2",
+      "targetLat": 41.878113,
+      "targetLng": -87.6298,
+      "locality": "Chicago"
+    },
+    {
+      "target": "houston-isp-1",
+      "targetLat": 29.760427,
+      "targetLng": -95.369804,
+      "locality": "Houston"
+    },
+    {
+      "target": "houston-isp-2",
+      "targetLat": 29.760427,
+      "targetLng": -95.369804,
+      "locality": "Houston"
+    },
+    {
+      "target": "miami-isp-1",
+      "targetLat": 25.76168,
+      "targetLng": -80.19179,
+      "locality": "Miami"
+    },
+    {
+      "target": "miami-isp-2",
+      "targetLat": 25.76168,
+      "targetLng": -80.19179,
+      "locality": "Miami"
+    },
+    {
+      "target": "ny-isp-1",
+      "targetLat": 40.712776,
+      "targetLng": -74.005974,
+      "locality": "New York"
+    },
+    {
+      "target": "ny-isp-2",
+      "targetLat": 40.712776,
+      "targetLng": -74.005974,
+      "locality": "New York"
+    },
+    {
+      "target": "sanfran-isp-1",
+      "targetLat": 37.77493,
+      "targetLng": -122.41942,
+      "locality": "San Francisco"
+    },
+    {
+      "target": "sanfran-isp-2",
+      "targetLat": 37.77493,
+      "targetLng": -122.41942,
+      "locality": "San Francisco"
+    },
+    {
+      "target": "seattle-isp-1",
+      "targetLat": 47.60614,
+      "targetLng": -122.33285,
+      "locality": "Seattle"
+    },
+    {
+      "target": "seattle-isp-2",
+      "targetLat": 47.60614,
+      "targetLng": -122.33285,
+      "locality": "Seattle"
+    },
+    {
+      "target": "shop.example.com",
+      "targetLat": 47.60614,
+      "targetLng": -122.33285,
+      "locality": "Seattle"
+    }
+  ],
+  "sameSpot": {
+    "mps": [
+      {
+        "name": "MP-NewYork-A",
+        "latitude": 40.71277618408203,
+        "longitude": -74.00597381591797
+      },
+      {
+        "name": "MP-NewYork-B",
+        "latitude": 40.71277618408203,
+        "longitude": -74.00597381591797
+      }
+    ],
+    "chicagoPaths": [
+      {
+        "target": "chicago-isp-1",
+        "targetLat": 41.878113,
+        "targetLng": -87.6298,
+        "count": 4
+      },
+      {
+        "target": "chicago-isp-2",
+        "targetLat": 41.878113,
+        "targetLng": -87.6298,
+        "count": 4
+      },
+      {
+        "target": "chicago-mp-target",
+        "targetLat": 41.878113,
+        "targetLng": -87.6298,
+        "count": 5
+      },
+      {
+        "target": "chicago-mp-target",
+        "targetLat": 41.88325,
+        "targetLng": -87.632385,
+        "count": 2
+      }
+    ]
+  }
+}
