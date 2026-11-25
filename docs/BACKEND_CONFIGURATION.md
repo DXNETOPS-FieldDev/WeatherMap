@@ -401,7 +401,9 @@ not a WeatherMap setting. Devices still render on the map regardless
 Center lists them as devices (no IP address, no protocols, nothing
 polled). With `includeAppNeta` off (the default) they are hidden along
 with the AppNeta monitoring points; the AppNeta MPs overlay still shows
-them as targets.
+them as targets. Clicking a target globe lists each target, linked to its
+Performance Center page, and under it each path that ends there, linked to
+that path's Network Path page.
 
 ---
 
@@ -550,7 +552,7 @@ this Performance Center version doesn't expose the tunnel metrics
 navigation property. Expected behavior, with a banner explaining it;
 see [Known limitations by Performance Center version](#known-limitations-by-performance-center-version).
 
-**Popup Metrics tab empty (no CPU / memory / disk)** — those metrics
+**Popup Metrics tab empty (no CPU / memory / availability)** — those metrics
 aren't being polled for that device. See
 [Known limitations by Performance Center version](#known-limitations-by-performance-center-version).
 
