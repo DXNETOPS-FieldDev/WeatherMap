@@ -23,12 +23,17 @@
 // (2026-11-24, stable) Availability line + hover tooltip checks: the v1.1.4 dev build passed 9 of 9; a v1.1.3 build
 // passed 8 of 8 with the tooltip check listed under `skipped` (pre-1.1.4, Disk Used); the same v1.1.4 build with the
 // <Tooltip> removed FAILED "hover tooltip names the device" (tooltip not shown), 8 of 9.
+// (2026-11-24) In a small browser window a popup opened under the map's top-right buttons and the Alarms-tab click
+// timed out, on a good build and on the deployed one alike. The script now sets a 1600x1000 viewport first.
 //
 // Every check prints how many items it looked at; a check that inspected nothing FAILS.
 // It changes nothing on the server. It ticks and unticks the Network-menu severities and puts
 // them back.
 
 async (page) => {
+  // Fixed window size: in a small window popups open under the map's top-right buttons and clicks fail.
+  const vp = page.viewportSize()
+  if (!vp || vp.width < 1600 || vp.height < 1000) await page.setViewportSize({ width: 1600, height: 1000 })
   const results = []
   const skipped = []
   const record = (check, pass, inspected, detail) => results.push({ check, pass: Boolean(pass) && inspected > 0, inspected, detail })
